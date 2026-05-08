@@ -1,4 +1,5 @@
 node_modules/
+.npm-cache/
 dist/
 .angular/
 .env
@@ -7,3 +8,5 @@ src/environments/environment.generated.ts
 .DS_Store
 Thumbs.db
 supabase
+
+.vercel
