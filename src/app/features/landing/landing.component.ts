@@ -150,7 +150,7 @@ type Game = {
               </h2>
             </div>
             <p class="max-w-xl text-base font-semibold leading-7 text-black/62">
-              Calcio a 5, calcio a 5 under 14, pallavolo, calcio balilla, carte,
+              Calcio a 5, calcio a 5 under 15, pallavolo, calcio balilla, carte,
               FIFA 26 e ping pong: format diversi, stessa energia competitiva.
             </p>
           </div>
@@ -574,7 +574,7 @@ export class LandingComponent implements OnInit {
       image: "/assets/brand/icona-calcio.png",
     },
     {
-      name: "Calcio a 5 under 14",
+      name: "Calcio a 5 under 15",
       description:
         "Il torneo dedicato ai piu giovani, con spirito di squadra e fair play.",
       image: "/assets/brand/icona-calcio.png",
