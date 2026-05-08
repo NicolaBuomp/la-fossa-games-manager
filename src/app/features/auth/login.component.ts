@@ -56,9 +56,22 @@ export class LoginComponent {
       }
       await this.router.navigateByUrl('/app/dashboard');
     } catch (error) {
-      this.error = error instanceof Error ? error.message : 'Accesso non riuscito.';
+      this.error = this.loginErrorMessage(error);
     } finally {
       this.loading = false;
     }
+  }
+
+  private loginErrorMessage(error: unknown): string {
+    const message = error instanceof Error ? error.message.toLowerCase() : '';
+    if (
+      message.includes('invalid login credentials') ||
+      message.includes('username o password') ||
+      message.includes('invalid credentials')
+    ) {
+      return 'Username o password non corretti.';
+    }
+
+    return 'Accesso non riuscito. Controlla le credenziali e riprova.';
   }
 }

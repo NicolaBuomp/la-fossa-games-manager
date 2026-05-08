@@ -25,7 +25,11 @@ type Game = {
           class="relative z-10 mx-auto flex min-h-[calc(92vh-3.75rem)] w-full max-w-7xl flex-col"
         >
           <nav class="flex items-center justify-between gap-4">
-            <a href="#top" class="flex items-center gap-3">
+            <a
+              href="#top"
+              class="flex items-center gap-3"
+              (click)="scrollToSection($event, 'top')"
+            >
               <img
                 src="/assets/brand/logo-social.png"
                 alt="Logo La Fossa Games"
@@ -42,11 +46,13 @@ type Game = {
               <a
                 href="#sport"
                 class="hidden text-white/70 transition hover:text-fossa sm:inline"
+                (click)="scrollToSection($event, 'sport')"
                 >Sport</a
               >
               <a
                 href="#partecipa"
                 class="hidden text-white/70 transition hover:text-fossa sm:inline"
+                (click)="scrollToSection($event, 'partecipa')"
                 >Partecipa</a
               >
             </div>
@@ -76,12 +82,14 @@ type Game = {
                 <a
                   href="#partecipa"
                   class="rounded-md bg-fossa px-5 py-3 text-sm font-black uppercase tracking-[0.14em] text-ink shadow-[0_0_34px_rgba(255,212,0,0.25)] transition hover:bg-white"
+                  (click)="scrollToSection($event, 'partecipa')"
                 >
                   Partecipa
                 </a>
                 <a
                   href="#sport"
                   class="rounded-md border border-white/20 px-5 py-3 text-sm font-black uppercase tracking-[0.14em] text-white transition hover:border-fossa hover:text-fossa"
+                  (click)="scrollToSection($event, 'sport')"
                 >
                   Scopri i giochi
                 </a>
@@ -106,11 +114,13 @@ type Game = {
                   </p>
                 </div>
                 <div class="px-3 py-4">
-                  <p class="text-2xl font-black text-fossa">LFG</p>
+                  <p class="text-[clamp(1rem,4vw,1.5rem)] font-black text-fossa">
+                    Iscrizioni
+                  </p>
                   <p
                     class="mt-1 text-[0.65rem] font-bold uppercase tracking-[0.18em] text-white/52"
                   >
-                    Community
+                    Aperte
                   </p>
                 </div>
               </div>
@@ -452,6 +462,94 @@ type Game = {
           </form>
         </div>
       </section>
+
+      <footer class="border-t border-fossa/20 bg-[#050505] px-5 py-10 text-white sm:px-8 lg:px-10">
+        <div
+          class="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-end"
+        >
+          <div>
+            <a
+              href="#top"
+              class="inline-flex items-center gap-3"
+              (click)="scrollToSection($event, 'top')"
+            >
+              <img
+                src="/assets/brand/logo-social.png"
+                alt="Logo La Fossa Games"
+                class="h-12 w-12 rounded-full object-cover ring-1 ring-fossa/50"
+              />
+              <span
+                class="text-sm font-black uppercase tracking-[0.24em] text-fossa"
+                >La Fossa Games</span
+              >
+            </a>
+            <p class="mt-5 max-w-xl text-sm font-semibold leading-6 text-white/58">
+              Torneo multisport di Santa Maria La Fossa. Sport, giochi,
+              community e organizzazione locale per l'edizione 2026.
+            </p>
+          </div>
+
+          <div class="grid gap-6 sm:grid-cols-2">
+            <div>
+              <p
+                class="text-xs font-black uppercase tracking-[0.22em] text-white/38"
+              >
+                Navigazione
+              </p>
+              <div class="mt-4 grid gap-3 text-sm font-black uppercase tracking-[0.14em]">
+                <a
+                  href="#top"
+                  class="text-white/72 transition hover:text-fossa"
+                  (click)="scrollToSection($event, 'top')"
+                >
+                  Home
+                </a>
+                <a
+                  href="#sport"
+                  class="text-white/72 transition hover:text-fossa"
+                  (click)="scrollToSection($event, 'sport')"
+                >
+                  Sport
+                </a>
+                <a
+                  href="#partecipa"
+                  class="text-white/72 transition hover:text-fossa"
+                  (click)="scrollToSection($event, 'partecipa')"
+                >
+                  Partecipa
+                </a>
+              </div>
+            </div>
+
+            <div>
+              <p
+                class="text-xs font-black uppercase tracking-[0.22em] text-white/38"
+              >
+                Evento
+              </p>
+              <div class="mt-4 grid gap-3 text-sm font-semibold text-white/64">
+                <span>Santa Maria La Fossa</span>
+                <span>Edizione 1 / 2026</span>
+                <span class="font-black uppercase tracking-[0.14em] text-fossa">
+                  Richieste aperte
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div
+          class="mx-auto mt-8 flex max-w-7xl flex-col gap-3 border-t border-white/10 pt-5 text-xs font-bold uppercase tracking-[0.16em] text-white/38 sm:flex-row sm:items-center sm:justify-between"
+        >
+          <span>&copy; 2026 La Fossa Games</span>
+          <a
+            href="#top"
+            class="transition hover:text-fossa"
+            (click)="scrollToSection($event, 'top')"
+            >Torna su</a
+          >
+        </div>
+      </footer>
     </main>
   `,
 })
@@ -561,6 +659,24 @@ export class LandingComponent implements OnInit {
       ? ` · ${new Intl.DateTimeFormat("it-IT").format(new Date(tournament.date))}`
       : "";
     return `${tournament.name}${date}${fee}`;
+  }
+
+  scrollToSection(event: MouseEvent, sectionId: string): void {
+    event.preventDefault();
+    const section = document.getElementById(sectionId);
+    if (!section) {
+      return;
+    }
+
+    const prefersReducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+
+    section.scrollIntoView({
+      behavior: prefersReducedMotion ? "auto" : "smooth",
+      block: "start",
+    });
+    window.history.replaceState(null, "", `#${sectionId}`);
   }
 
   private emptyParticipationForm() {
