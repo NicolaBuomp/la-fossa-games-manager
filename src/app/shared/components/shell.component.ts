@@ -1,4 +1,4 @@
-import { Component, computed } from '@angular/core';
+import { Component, computed, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 
@@ -23,7 +23,7 @@ interface NavItem {
         </div>
         <nav class="flex-1 space-y-1 px-4">
           @for (item of visibleNav(); track item.path) {
-            <a [routerLink]="item.path" routerLinkActive="bg-ink text-white" class="block rounded-lg px-4 py-3 text-sm font-bold uppercase tracking-wide text-neutral-700 transition hover:bg-black/5">
+            <a [routerLink]="item.path" routerLinkActive="bg-ink text-white" class="block rounded-lg px-4 py-3 text-sm font-bold uppercase tracking-wide text-neutral-700 transition hover:bg-black/5 hover:text-ink">
               {{ item.label }}
             </a>
           }
@@ -38,9 +38,23 @@ interface NavItem {
       <section class="min-w-0 flex-1">
         <header class="sticky top-0 z-20 border-b border-black/10 bg-paper/95 px-5 py-4 backdrop-blur lg:hidden">
           <div class="flex items-center justify-between gap-4">
-            <div>
-              <p class="font-display text-xl uppercase">La Fossa<span class="text-expense">.</span></p>
-              <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-neutral-500">Gestionale evento</p>
+            <div class="flex min-w-0 items-center gap-3">
+              <button
+                type="button"
+                class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white text-ink ring-1 ring-black/10"
+                aria-label="Apri menu"
+                [attr.aria-expanded]="mobileMenuOpen()"
+                (click)="openMobileMenu()">
+                <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <path d="M4 7h16" />
+                  <path d="M4 12h16" />
+                  <path d="M4 17h16" />
+                </svg>
+              </button>
+              <div class="min-w-0">
+                <p class="truncate font-display text-xl uppercase">La Fossa<span class="text-expense">.</span></p>
+                <p class="truncate text-[10px] font-bold uppercase tracking-[0.18em] text-neutral-500">Gestionale evento</p>
+              </div>
             </div>
             <div class="flex items-center gap-2">
               <a routerLink="/app/profile" aria-label="Apri profilo" class="grid h-10 w-10 place-items-center rounded-full bg-white text-ink ring-1 ring-black/10">
@@ -54,25 +68,57 @@ interface NavItem {
           </div>
         </header>
 
-        <main class="mx-auto w-full max-w-7xl px-4 pb-28 pt-5 sm:px-6 lg:px-8 lg:py-8">
+        @if (mobileMenuOpen()) {
+          <div class="fixed inset-0 z-40 bg-black/35 lg:hidden" (click)="closeMobileMenu()"></div>
+          <aside class="fixed inset-y-0 left-0 z-50 flex w-72 max-w-[82vw] flex-col border-r border-black/10 bg-white shadow-2xl lg:hidden">
+            <div class="flex items-start justify-between gap-4 px-5 py-5">
+              <div>
+                <p class="font-display text-2xl uppercase leading-none">La Fossa<br><span class="text-fossa">Games</span></p>
+                <p class="mt-3 text-xs font-semibold uppercase tracking-[0.18em] text-neutral-500">Event manager</p>
+              </div>
+              <button
+                type="button"
+                class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-neutral-100 text-ink"
+                aria-label="Chiudi menu"
+                (click)="closeMobileMenu()">
+                <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <path d="M6 6l12 12" />
+                  <path d="M18 6L6 18" />
+                </svg>
+              </button>
+            </div>
+
+            <nav class="flex-1 space-y-1 px-4">
+              @for (item of visibleNav(); track item.path) {
+                <a
+                  [routerLink]="item.path"
+                  routerLinkActive="bg-ink text-white"
+                  class="flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-bold uppercase tracking-wide text-neutral-700 transition hover:bg-black/5 hover:text-ink"
+                  (click)="closeMobileMenu()">
+                  <span class="grid h-8 w-8 place-items-center rounded-full bg-black/5 text-sm">{{ item.icon }}</span>
+                  <span>{{ item.label }}</span>
+                </a>
+              }
+            </nav>
+
+            <div class="border-t border-black/10 p-4">
+              <p class="truncate text-sm font-semibold">{{ auth.profile()?.full_name || auth.user()?.email }}</p>
+              <p class="mb-3 text-xs uppercase tracking-wider text-neutral-500">{{ auth.profile()?.role }}</p>
+              <button class="w-full rounded-lg bg-neutral-100 px-4 py-2 text-sm font-bold uppercase tracking-wide" (click)="auth.signOut()">Logout</button>
+            </div>
+          </aside>
+        }
+
+        <main class="mx-auto w-full max-w-7xl px-4 pb-8 pt-5 sm:px-6 lg:px-8 lg:py-8">
           <router-outlet />
         </main>
-
-        <nav class="fixed bottom-0 left-0 right-0 z-30 border-t border-black/10 bg-paper lg:hidden">
-          <div class="grid" [style.grid-template-columns]="'repeat(' + visibleNav().length + ', minmax(0, 1fr))'">
-            @for (item of visibleNav(); track item.path) {
-              <a [routerLink]="item.path" routerLinkActive="text-ink" class="flex flex-col items-center gap-1 px-1 py-3 text-center text-neutral-400">
-                <span class="text-base font-black">{{ item.icon }}</span>
-                <span class="text-[9px] font-bold uppercase tracking-wide">{{ item.label }}</span>
-              </a>
-            }
-          </div>
-        </nav>
       </section>
     </div>
   `
 })
 export class ShellComponent {
+  readonly mobileMenuOpen = signal(false);
+
   readonly nav: NavItem[] = [
     { path: '/app/dashboard', label: 'Home', short: 'H', icon: '⌂', adminOnly: true },
     { path: '/app/expenses', label: 'Spese', short: '-', icon: '-', adminOnly: true },
@@ -87,4 +133,12 @@ export class ShellComponent {
   readonly visibleNav = computed(() => this.nav.filter((item) => !item.adminOnly || this.auth.isAdmin()));
 
   constructor(readonly auth: AuthService) {}
+
+  openMobileMenu(): void {
+    this.mobileMenuOpen.set(true);
+  }
+
+  closeMobileMenu(): void {
+    this.mobileMenuOpen.set(false);
+  }
 }
