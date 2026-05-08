@@ -78,6 +78,7 @@ export class ShellComponent {
     { path: '/app/expenses', label: 'Spese', short: '-', icon: '-', adminOnly: true },
     { path: '/app/incomes', label: 'Entrate', short: '+', icon: '+', adminOnly: true },
     { path: '/app/registrations', label: 'Iscritti', short: 'I', icon: '▦' },
+    { path: '/app/participation-requests', label: 'Richieste', short: 'R', icon: '□', adminOnly: true },
     { path: '/app/sponsors', label: 'Sponsor', short: 'S', icon: '◆', adminOnly: true },
     { path: '/app/profile', label: 'Profilo', short: 'P', icon: '◉' },
     { path: '/app/users', label: 'Utenti', short: 'U', icon: '⋯', adminOnly: true }

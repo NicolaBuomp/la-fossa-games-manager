@@ -44,6 +44,11 @@ export const routes: Routes = [
         loadComponent: () => import('./features/registrations/registrations.component').then((m) => m.RegistrationsComponent)
       },
       {
+        path: 'participation-requests',
+        canActivate: [adminGuard],
+        loadComponent: () => import('./features/participation-requests/participation-requests.component').then((m) => m.ParticipationRequestsComponent)
+      },
+      {
         path: 'profile',
         loadComponent: () => import('./features/profile/profile.component').then((m) => m.ProfileComponent)
       },

@@ -127,6 +127,47 @@ export interface TournamentWithTeams extends Tournament {
   tournament_teams: TournamentTeamWithParticipants[];
 }
 
+export interface PublicTournament {
+  id: string;
+  name: string;
+  sport: TournamentSport;
+  fee: number;
+  date: string | null;
+}
+
+export interface ParticipationRequest {
+  id: string;
+  tournament_id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string;
+  privacy_accepted: boolean;
+  whatsapp_accepted: boolean;
+  rules_accepted: boolean;
+  status: 'nuova' | 'in_gestione' | 'contattata' | 'archiviata';
+  updated_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ParticipationRequestNote {
+  id: string;
+  request_id: string;
+  note: string;
+  created_by: string | null;
+  created_at: string;
+}
+
+export interface ParticipationRequestNoteWithProfile extends ParticipationRequestNote {
+  profiles: Pick<Profile, 'full_name' | 'email'> | null;
+}
+
+export interface ParticipationRequestWithTournament extends ParticipationRequest {
+  tournaments: Pick<Tournament, 'name'> | null;
+  participation_request_notes: ParticipationRequestNoteWithProfile[];
+}
+
 export interface AuditLog {
   id: string;
   table_name: string;
@@ -146,3 +187,4 @@ export type InsertRegistration = Omit<Registration, 'id' | 'created_by' | 'updat
 export type InsertTournament = Omit<Tournament, 'id' | 'code' | 'created_by' | 'updated_by' | 'created_at' | 'updated_at'> & { code?: string | null };
 export type InsertTournamentTeam = Omit<TournamentTeam, 'id' | 'created_by' | 'updated_by' | 'created_at' | 'updated_at'>;
 export type InsertTeamParticipant = Omit<TeamParticipant, 'id' | 'created_by' | 'updated_by' | 'created_at' | 'updated_at'>;
+export type InsertParticipationRequest = Omit<ParticipationRequest, 'id' | 'status' | 'updated_by' | 'created_at' | 'updated_at'>;

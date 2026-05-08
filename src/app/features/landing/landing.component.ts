@@ -1,4 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { PublicParticipationService } from '../../core/services/public-participation.service';
+import { PublicTournament } from '../../core/types/models';
 type Game = {
   name: string;
   description: string;
@@ -7,6 +10,7 @@ type Game = {
 
 @Component({
   standalone: true,
+  imports: [FormsModule],
   template: `
     <main class="min-h-screen overflow-hidden bg-[#070707] text-white">
       <section class="relative min-h-[92vh] px-5 pb-10 pt-5 sm:px-8 lg:px-10">
@@ -51,7 +55,7 @@ type Game = {
                   <p class="mt-1 text-[0.65rem] font-bold uppercase tracking-[0.18em] text-white/52">Edizione 1</p>
                 </div>
                 <div class="border-r border-fossa/20 px-3 py-4">
-                  <p class="text-2xl font-black text-fossa">5+</p>
+                  <p class="text-2xl font-black text-fossa">7</p>
                   <p class="mt-1 text-[0.65rem] font-bold uppercase tracking-[0.18em] text-white/52">Sport</p>
                 </div>
                 <div class="px-3 py-4">
@@ -72,11 +76,11 @@ type Game = {
               <h2 class="mt-3 max-w-3xl font-display text-4xl uppercase leading-none sm:text-6xl">Un evento, più campi di gioco.</h2>
             </div>
             <p class="max-w-xl text-base font-semibold leading-7 text-black/62">
-              Calcio a 5, calcio balilla, carte, FIFA 26 e ping pong: format diversi, stessa energia competitiva.
+              Calcio a 5, calcio a 5 under 14, pallavolo, calcio balilla, carte, FIFA 26 e ping pong: format diversi, stessa energia competitiva.
             </p>
           </div>
 
-          <div class="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+          <div class="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
             @for (game of games; track game.name) {
               <article class="group rounded-lg border border-black/10 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:border-fossa">
                 <div class="flex aspect-square items-center justify-center rounded-md bg-black p-5">
@@ -113,21 +117,13 @@ type Game = {
       </section>
 
       <section id="partecipa" class="bg-[#07120e] px-5 py-16 text-white sm:px-8 lg:px-10">
-        <div class="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[1fr_0.82fr] lg:items-center">
+        <div class="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.85fr_1fr] lg:items-start">
           <div>
             <p class="text-xs font-black uppercase tracking-[0.28em] text-fossa">Prossimi passi</p>
-            <h2 class="mt-3 max-w-4xl font-display text-4xl uppercase leading-none text-fossa sm:text-6xl">Resta connesso: presto tante novita.</h2>
+            <h2 class="mt-3 max-w-4xl font-display text-4xl uppercase leading-none text-fossa sm:text-6xl">Richiedi di partecipare.</h2>
             <p class="mt-6 max-w-2xl text-lg font-semibold leading-8 text-white/72">
-              Pubblicheremo date, regolamenti, modalita di iscrizione e aggiornamenti sui canali ufficiali. La pagina restera il punto di ingresso pubblico del progetto.
+              Seleziona il torneo disponibile e lascia i tuoi dati. Gli admin gestiranno la richiesta e ti contatteranno il prima possibile via WhatsApp per conferma, dettagli e prossimi passi.
             </p>
-            <div class="mt-8 flex flex-wrap gap-3">
-              <a href="mailto:info@lafossagames.it" class="rounded-md bg-fossa px-5 py-3 text-sm font-black uppercase tracking-[0.14em] text-ink transition hover:bg-white">
-                Richiedi di partecipare
-              </a>
-            </div>
-          </div>
-
-          <div class="rounded-lg border border-fossa/20 bg-black p-6">
             <img src="/assets/brand/logo-social.png" alt="Logo social La Fossa Games 2026" class="mx-auto h-40 w-40 rounded-full object-cover sm:h-48 sm:w-48" />
             <div class="mt-8 space-y-4">
               <div class="flex items-center justify-between gap-4 border-t border-white/10 pt-4">
@@ -144,17 +140,122 @@ type Game = {
               </div>
             </div>
           </div>
+
+          <form class="rounded-lg border border-fossa/20 bg-black p-5 shadow-2xl sm:p-6" (ngSubmit)="submitParticipation()">
+            <div class="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <p class="text-xs font-black uppercase tracking-[0.24em] text-fossa">Contatto iscrizione</p>
+                <h3 class="mt-2 font-display text-3xl uppercase leading-none">Dati partecipante</h3>
+              </div>
+              @if (loadingTournaments()) {
+                <span class="rounded-full border border-white/10 px-3 py-1 text-xs font-bold text-white/60">Caricamento</span>
+              }
+            </div>
+
+            @if (success()) {
+              <p class="mt-5 rounded-md border border-emerald-400/30 bg-emerald-500/10 p-3 text-sm font-semibold text-emerald-100">
+                Richiesta inviata. Gli admin la prenderanno in carico e ti contatteranno via WhatsApp il prima possibile.
+              </p>
+            }
+
+            @if (error()) {
+              <p class="mt-5 rounded-md border border-red-400/30 bg-red-500/10 p-3 text-sm font-semibold text-red-100">{{ error() }}</p>
+            }
+
+            <div class="mt-5 grid gap-4">
+              <label class="grid gap-2 text-sm font-black uppercase tracking-[0.12em] text-white/72">
+                Torneo
+                <select
+                  required
+                  name="tournament"
+                  [(ngModel)]="participationForm.tournament_id"
+                  class="rounded-md border border-white/10 bg-[#101010] px-3 py-3 text-base font-semibold normal-case tracking-normal text-white outline-none focus:border-fossa">
+                  <option value="" disabled>Seleziona un torneo</option>
+                  @for (tournament of tournaments(); track tournament.id) {
+                    <option [value]="tournament.id">{{ tournamentLabel(tournament) }}</option>
+                  }
+                </select>
+              </label>
+
+              <div class="grid gap-4 sm:grid-cols-2">
+                <label class="grid gap-2 text-sm font-black uppercase tracking-[0.12em] text-white/72">
+                  Nome
+                  <input required name="firstName" [(ngModel)]="participationForm.first_name" autocomplete="given-name" class="rounded-md border border-white/10 bg-[#101010] px-3 py-3 text-base font-semibold normal-case tracking-normal text-white outline-none focus:border-fossa" />
+                </label>
+                <label class="grid gap-2 text-sm font-black uppercase tracking-[0.12em] text-white/72">
+                  Cognome
+                  <input required name="lastName" [(ngModel)]="participationForm.last_name" autocomplete="family-name" class="rounded-md border border-white/10 bg-[#101010] px-3 py-3 text-base font-semibold normal-case tracking-normal text-white outline-none focus:border-fossa" />
+                </label>
+              </div>
+
+              <div class="grid gap-4 sm:grid-cols-2">
+                <label class="grid gap-2 text-sm font-black uppercase tracking-[0.12em] text-white/72">
+                  Email
+                  <input required type="email" name="email" [(ngModel)]="participationForm.email" autocomplete="email" class="rounded-md border border-white/10 bg-[#101010] px-3 py-3 text-base font-semibold normal-case tracking-normal text-white outline-none focus:border-fossa" />
+                </label>
+                <label class="grid gap-2 text-sm font-black uppercase tracking-[0.12em] text-white/72">
+                  Telefono
+                  <input required type="tel" name="phone" [(ngModel)]="participationForm.phone" autocomplete="tel" class="rounded-md border border-white/10 bg-[#101010] px-3 py-3 text-base font-semibold normal-case tracking-normal text-white outline-none focus:border-fossa" />
+                </label>
+              </div>
+
+              <div class="grid gap-3 rounded-md border border-white/10 bg-white/[0.03] p-4">
+                <label class="flex gap-3 text-sm font-semibold leading-6 text-white/74">
+                  <input required type="checkbox" name="privacy" [(ngModel)]="participationForm.privacy_accepted" class="mt-1 h-4 w-4 shrink-0 accent-fossa" />
+                  <span>Accetto il trattamento dei dati personali per la gestione della richiesta di partecipazione.</span>
+                </label>
+                <label class="flex gap-3 text-sm font-semibold leading-6 text-white/74">
+                  <input required type="checkbox" name="whatsapp" [(ngModel)]="participationForm.whatsapp_accepted" class="mt-1 h-4 w-4 shrink-0 accent-fossa" />
+                  <span>Autorizzo il contatto via WhatsApp al numero indicato per informazioni organizzative sul torneo.</span>
+                </label>
+                <label class="flex gap-3 text-sm font-semibold leading-6 text-white/74">
+                  <input required type="checkbox" name="rules" [(ngModel)]="participationForm.rules_accepted" class="mt-1 h-4 w-4 shrink-0 accent-fossa" />
+                  <span>Dichiaro di accettare regolamento, comunicazioni operative e condizioni di partecipazione che saranno confermate dagli admin.</span>
+                </label>
+              </div>
+
+              <button
+                type="submit"
+                [disabled]="submitting() || loadingTournaments()"
+                class="rounded-md bg-fossa px-5 py-3 text-sm font-black uppercase tracking-[0.14em] text-ink transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-60">
+                {{ submitting() ? 'Invio in corso' : 'Invia richiesta' }}
+              </button>
+            </div>
+          </form>
         </div>
       </section>
     </main>
   `
 })
-export class LandingComponent {
+export class LandingComponent implements OnInit {
+  tournaments = signal<PublicTournament[]>([]);
+  loadingTournaments = signal(false);
+  submitting = signal(false);
+  success = signal(false);
+  error = signal('');
+  participationForm = this.emptyParticipationForm();
+
+  constructor(private readonly participation: PublicParticipationService) {}
+
+  ngOnInit(): void {
+    void this.loadTournaments();
+  }
+
   protected readonly games: Game[] = [
     {
       name: 'Calcio a 5',
       description: 'Squadre, gironi e partite ad alta intensita.',
       image: '/assets/brand/icona-calcio.png'
+    },
+    {
+      name: 'Calcio a 5 under 14',
+      description: 'Il torneo dedicato ai piu giovani, con spirito di squadra e fair play.',
+      image: '/assets/brand/icona-calcio-under-14.svg'
+    },
+    {
+      name: 'Pallavolo',
+      description: 'Battute, muri e scambi di squadra sotto rete.',
+      image: '/assets/brand/icona-pallavolo.svg'
     },
     {
       name: 'Calcio balilla',
@@ -177,4 +278,89 @@ export class LandingComponent {
       image: '/assets/brand/icona-ping-pong.png'
     }
   ];
+
+  async loadTournaments(): Promise<void> {
+    this.loadingTournaments.set(true);
+    this.error.set('');
+    try {
+      const tournaments = await this.participation.listAvailableTournaments();
+      this.tournaments.set(tournaments);
+      this.participationForm.tournament_id = tournaments[0]?.id ?? '';
+    } catch (error) {
+      this.error.set(this.message(error));
+    } finally {
+      this.loadingTournaments.set(false);
+    }
+  }
+
+  async submitParticipation(): Promise<void> {
+    this.error.set('');
+    this.success.set(false);
+    if (!this.isFormValid()) {
+      this.error.set('Completa tutti i campi e accetta le condizioni richieste.');
+      return;
+    }
+
+    this.submitting.set(true);
+    try {
+      await this.participation.createRequest({
+        tournament_id: this.participationForm.tournament_id,
+        first_name: this.participationForm.first_name.trim(),
+        last_name: this.participationForm.last_name.trim(),
+        email: this.participationForm.email.trim().toLowerCase(),
+        phone: this.participationForm.phone.trim(),
+        privacy_accepted: this.participationForm.privacy_accepted,
+        whatsapp_accepted: this.participationForm.whatsapp_accepted,
+        rules_accepted: this.participationForm.rules_accepted
+      });
+      const selectedTournamentId = this.participationForm.tournament_id;
+      this.participationForm = this.emptyParticipationForm();
+      this.participationForm.tournament_id = selectedTournamentId;
+      this.success.set(true);
+    } catch (error) {
+      this.error.set(this.message(error));
+    } finally {
+      this.submitting.set(false);
+    }
+  }
+
+  tournamentLabel(tournament: PublicTournament): string {
+    const fee = tournament.fee ? ` · quota ${this.eur(tournament.fee)}` : '';
+    const date = tournament.date ? ` · ${new Intl.DateTimeFormat('it-IT').format(new Date(tournament.date))}` : '';
+    return `${tournament.name}${date}${fee}`;
+  }
+
+  private emptyParticipationForm() {
+    return {
+      tournament_id: '',
+      first_name: '',
+      last_name: '',
+      email: '',
+      phone: '',
+      privacy_accepted: false,
+      whatsapp_accepted: false,
+      rules_accepted: false
+    };
+  }
+
+  private isFormValid(): boolean {
+    return Boolean(
+      this.participationForm.tournament_id &&
+        this.participationForm.first_name.trim() &&
+        this.participationForm.last_name.trim() &&
+        this.participationForm.email.trim() &&
+        this.participationForm.phone.trim() &&
+        this.participationForm.privacy_accepted &&
+        this.participationForm.whatsapp_accepted &&
+        this.participationForm.rules_accepted
+    );
+  }
+
+  private eur(value: number): string {
+    return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(value);
+  }
+
+  private message(error: unknown): string {
+    return error instanceof Error ? error.message : 'Operazione non riuscita. Riprova tra qualche minuto.';
+  }
 }
