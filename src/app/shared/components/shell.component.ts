@@ -6,6 +6,7 @@ interface NavItem {
   path: string;
   label: string;
   short: string;
+  icon: string;
   adminOnly?: boolean;
 }
 
@@ -41,7 +42,15 @@ interface NavItem {
               <p class="font-display text-xl uppercase">La Fossa<span class="text-expense">.</span></p>
               <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-neutral-500">Gestionale evento</p>
             </div>
-            <button class="rounded-full bg-ink px-4 py-2 text-xs font-bold uppercase tracking-wide text-white" (click)="auth.signOut()">Esci</button>
+            <div class="flex items-center gap-2">
+              <a routerLink="/app/profile" aria-label="Apri profilo" class="grid h-10 w-10 place-items-center rounded-full bg-white text-ink ring-1 ring-black/10">
+                <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <path d="M20 21a8 8 0 0 0-16 0" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+              </a>
+              <button class="rounded-full bg-ink px-4 py-2 text-xs font-bold uppercase tracking-wide text-white" (click)="auth.signOut()">Esci</button>
+            </div>
           </div>
         </header>
 
@@ -50,10 +59,10 @@ interface NavItem {
         </main>
 
         <nav class="fixed bottom-0 left-0 right-0 z-30 border-t border-black/10 bg-paper lg:hidden">
-          <div class="grid" [class.grid-cols-6]="auth.isAdmin()" [class.grid-cols-5]="!auth.isAdmin()">
+          <div class="grid" [class.grid-cols-7]="auth.isAdmin()" [class.grid-cols-6]="!auth.isAdmin()">
             @for (item of visibleNav(); track item.path) {
               <a [routerLink]="item.path" routerLinkActive="text-ink" class="flex flex-col items-center gap-1 px-1 py-3 text-center text-neutral-400">
-                <span class="text-base font-black">{{ item.short }}</span>
+                <span class="text-base font-black">{{ item.icon }}</span>
                 <span class="text-[9px] font-bold uppercase tracking-wide">{{ item.label }}</span>
               </a>
             }
@@ -65,12 +74,13 @@ interface NavItem {
 })
 export class ShellComponent {
   readonly nav: NavItem[] = [
-    { path: '/app/dashboard', label: 'Home', short: 'H' },
-    { path: '/app/expenses', label: 'Spese', short: '-' },
-    { path: '/app/incomes', label: 'Entrate', short: '+' },
-    { path: '/app/registrations', label: 'Iscritti', short: 'I' },
-    { path: '/app/sponsors', label: 'Sponsor', short: 'S' },
-    { path: '/app/users', label: 'Utenti', short: 'U', adminOnly: true }
+    { path: '/app/dashboard', label: 'Home', short: 'H', icon: '⌂' },
+    { path: '/app/expenses', label: 'Spese', short: '-', icon: '-' },
+    { path: '/app/incomes', label: 'Entrate', short: '+', icon: '+' },
+    { path: '/app/registrations', label: 'Iscritti', short: 'I', icon: '▦' },
+    { path: '/app/sponsors', label: 'Sponsor', short: 'S', icon: '◆' },
+    { path: '/app/profile', label: 'Profilo', short: 'P', icon: '◉' },
+    { path: '/app/users', label: 'Utenti', short: 'U', icon: '⋯', adminOnly: true }
   ];
 
   readonly visibleNav = computed(() => this.nav.filter((item) => !item.adminOnly || this.auth.isAdmin()));

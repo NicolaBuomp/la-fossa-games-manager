@@ -49,6 +49,11 @@ export class AuthService {
     await this.router.navigateByUrl('/');
   }
 
+  async updatePassword(password: string): Promise<void> {
+    const { error } = await this.supabase.client.auth.updateUser({ password });
+    if (error) throw error;
+  }
+
   async loadProfile(): Promise<void> {
     const user = this.sessionState()?.user;
     if (!user) {

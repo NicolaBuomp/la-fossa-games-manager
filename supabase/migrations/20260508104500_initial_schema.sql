@@ -160,11 +160,45 @@ as $$
   );
 $$;
 
+create or replace function public.update_own_profile_name(profile_full_name text)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  update public.profiles
+  set full_name = nullif(trim(profile_full_name), '')
+  where id = auth.uid();
+end;
+$$;
+
 alter table public.profiles enable row level security;
 alter table public.expenses enable row level security;
 alter table public.incomes enable row level security;
 alter table public.sponsors enable row level security;
 alter table public.registrations enable row level security;
+
+drop policy if exists "profiles_self_read" on public.profiles;
+drop policy if exists "profiles_admin_insert" on public.profiles;
+drop policy if exists "profiles_admin_update" on public.profiles;
+drop policy if exists "profiles_admin_delete" on public.profiles;
+drop policy if exists "expenses_member_read" on public.expenses;
+drop policy if exists "expenses_member_insert" on public.expenses;
+drop policy if exists "expenses_member_update" on public.expenses;
+drop policy if exists "expenses_admin_delete" on public.expenses;
+drop policy if exists "incomes_member_read" on public.incomes;
+drop policy if exists "incomes_member_insert" on public.incomes;
+drop policy if exists "incomes_member_update" on public.incomes;
+drop policy if exists "incomes_admin_delete" on public.incomes;
+drop policy if exists "sponsors_member_read" on public.sponsors;
+drop policy if exists "sponsors_member_insert" on public.sponsors;
+drop policy if exists "sponsors_member_update" on public.sponsors;
+drop policy if exists "sponsors_admin_delete" on public.sponsors;
+drop policy if exists "registrations_member_read" on public.registrations;
+drop policy if exists "registrations_member_insert" on public.registrations;
+drop policy if exists "registrations_member_update" on public.registrations;
+drop policy if exists "registrations_admin_delete" on public.registrations;
 
 create policy "profiles_self_read" on public.profiles
   for select using (id = auth.uid() or public.is_admin());

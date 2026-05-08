@@ -1,6 +1,8 @@
 export type UserRole = 'staff' | 'admin';
 export type SponsorStatus = 'contattato' | 'in_trattativa' | 'confermato' | 'pagato';
 export type SponsorType = 'cash' | 'in_natura';
+export type TournamentSport = 'calcio' | 'pallavolo' | 'altro';
+export type ParticipantGender = 'uomo' | 'donna';
 
 export interface Profile {
   id: string;
@@ -68,7 +70,59 @@ export interface Registration {
   updated_at: string;
 }
 
+export interface Tournament {
+  id: string;
+  code: string | null;
+  name: string;
+  sport: TournamentSport;
+  fee: number;
+  date: string | null;
+  notes: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TournamentTeam {
+  id: string;
+  tournament_id: string;
+  name: string;
+  captain_name: string | null;
+  captain_contact: string | null;
+  vice_captain_name: string | null;
+  vice_captain_contact: string | null;
+  fee: number;
+  paid: boolean;
+  notes: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TeamParticipant {
+  id: string;
+  team_id: string;
+  first_name: string;
+  last_name: string;
+  contact: string | null;
+  gender: ParticipantGender;
+  registered: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TournamentTeamWithParticipants extends TournamentTeam {
+  team_participants: TeamParticipant[];
+}
+
+export interface TournamentWithTeams extends Tournament {
+  tournament_teams: TournamentTeamWithParticipants[];
+}
+
 export type InsertExpense = Omit<Expense, 'id' | 'created_by' | 'created_at' | 'updated_at'>;
 export type InsertIncome = Omit<Income, 'id' | 'created_by' | 'created_at' | 'updated_at'>;
 export type InsertSponsor = Omit<Sponsor, 'id' | 'created_by' | 'created_at' | 'updated_at'>;
 export type InsertRegistration = Omit<Registration, 'id' | 'created_by' | 'created_at' | 'updated_at'>;
+export type InsertTournament = Omit<Tournament, 'id' | 'code' | 'created_by' | 'created_at' | 'updated_at'> & { code?: string | null };
+export type InsertTournamentTeam = Omit<TournamentTeam, 'id' | 'created_by' | 'created_at' | 'updated_at'>;
+export type InsertTeamParticipant = Omit<TeamParticipant, 'id' | 'created_at' | 'updated_at'>;

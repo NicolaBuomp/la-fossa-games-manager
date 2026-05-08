@@ -24,4 +24,9 @@ export class ProfileService {
     const { error } = await this.supabase.client.from('profiles').update({ active }).eq('id', id);
     if (error) throw error;
   }
+
+  async updateOwnFullName(fullName: string): Promise<void> {
+    const { error } = await this.supabase.client.rpc('update_own_profile_name', { profile_full_name: fullName });
+    if (error) throw error;
+  }
 }
