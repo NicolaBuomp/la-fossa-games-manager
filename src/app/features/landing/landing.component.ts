@@ -1,45 +1,180 @@
 import { Component } from '@angular/core';
-import { RouterLink } from '@angular/router';
+type Game = {
+  name: string;
+  description: string;
+  image: string;
+};
 
 @Component({
   standalone: true,
-  imports: [RouterLink],
   template: `
-    <main class="min-h-screen bg-paper text-ink">
-      <section class="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-5 py-6">
-        <nav class="flex items-center justify-between">
-          <p class="font-display text-xl uppercase">La Fossa <span class="text-fossa">Games</span></p>
-          <a routerLink="/login" class="rounded-full bg-ink px-4 py-2 text-sm font-bold uppercase tracking-wide text-white">Login staff</a>
-        </nav>
+    <main class="min-h-screen overflow-hidden bg-[#070707] text-white">
+      <section class="relative min-h-[92vh] px-5 pb-10 pt-5 sm:px-8 lg:px-10">
+        <div class="absolute inset-0 bg-[radial-gradient(circle_at_18%_20%,rgba(255,193,7,0.18),transparent_28%),linear-gradient(135deg,rgba(15,61,46,0)_58%,rgba(15,61,46,0.58)_58%,rgba(15,61,46,0.58)_68%,rgba(15,61,46,0)_68%)]"></div>
+        <div class="absolute left-0 top-0 h-52 w-72 -skew-x-[24deg] border-r border-fossa/35 bg-fossa/5"></div>
 
-        <div class="grid flex-1 items-center gap-8 py-12 lg:grid-cols-[1.05fr_0.95fr]">
+        <div class="relative z-10 mx-auto flex min-h-[calc(92vh-3.75rem)] w-full max-w-7xl flex-col">
+          <nav class="flex items-center justify-between gap-4">
+            <a href="#top" class="flex items-center gap-3">
+              <img src="/assets/brand/logo-social.png" alt="Logo La Fossa Games" class="h-12 w-12 rounded-full object-cover ring-1 ring-fossa/50 sm:h-14 sm:w-14" />
+              <span class="hidden text-sm font-black uppercase tracking-[0.28em] text-fossa sm:block">La Fossa Games</span>
+            </a>
+            <div class="flex items-center gap-2 text-xs font-black uppercase tracking-[0.16em] sm:gap-4">
+              <a href="#sport" class="hidden text-white/70 transition hover:text-fossa sm:inline">Sport</a>
+              <a href="#partecipa" class="hidden text-white/70 transition hover:text-fossa sm:inline">Partecipa</a>
+            </div>
+          </nav>
+
+          <div id="top" class="flex flex-1 items-center py-12 lg:py-16">
+            <div class="max-w-4xl">
+              <p class="mb-5 flex items-center gap-3 text-xs font-black uppercase tracking-[0.32em] text-fossa">
+                <span class="h-px w-10 bg-fossa"></span>
+                Santa Maria La Fossa
+              </p>
+              <h1 class="font-display text-[clamp(4rem,14vw,10.5rem)] uppercase leading-[0.78] text-fossa">
+                La Fossa<br />Games
+              </h1>
+              <p class="mt-7 max-w-2xl text-lg font-semibold leading-8 text-white/78 sm:text-xl">
+                Il torneo multisport di paese che mette insieme campo, tavoli da gioco, console e tifo. Edizione 1, 2026: una competizione aperta, intensa e pensata per vivere insieme la piazza.
+              </p>
+              <div class="mt-8 flex flex-wrap gap-3">
+                <a href="#partecipa" class="rounded-md bg-fossa px-5 py-3 text-sm font-black uppercase tracking-[0.14em] text-ink shadow-[0_0_34px_rgba(255,212,0,0.25)] transition hover:bg-white">
+                  Partecipa
+                </a>
+                <a href="#sport" class="rounded-md border border-white/20 px-5 py-3 text-sm font-black uppercase tracking-[0.14em] text-white transition hover:border-fossa hover:text-fossa">
+                  Scopri i giochi
+                </a>
+              </div>
+              <div class="mt-10 grid max-w-2xl grid-cols-3 overflow-hidden rounded-md border border-fossa/25 bg-black/70 text-center shadow-2xl backdrop-blur">
+                <div class="border-r border-fossa/20 px-3 py-4">
+                  <p class="text-2xl font-black text-fossa">2026</p>
+                  <p class="mt-1 text-[0.65rem] font-bold uppercase tracking-[0.18em] text-white/52">Edizione 1</p>
+                </div>
+                <div class="border-r border-fossa/20 px-3 py-4">
+                  <p class="text-2xl font-black text-fossa">5+</p>
+                  <p class="mt-1 text-[0.65rem] font-bold uppercase tracking-[0.18em] text-white/52">Sport</p>
+                </div>
+                <div class="px-3 py-4">
+                  <p class="text-2xl font-black text-fossa">LFG</p>
+                  <p class="mt-1 text-[0.65rem] font-bold uppercase tracking-[0.18em] text-white/52">Community</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="sport" class="bg-[#f7f2e8] px-5 py-16 text-ink sm:px-8 lg:px-10">
+        <div class="mx-auto max-w-7xl">
+          <div class="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
+            <div>
+              <p class="text-xs font-black uppercase tracking-[0.28em] text-[#0f3d2e]">Le sfide</p>
+              <h2 class="mt-3 max-w-3xl font-display text-4xl uppercase leading-none sm:text-6xl">Un evento, più campi di gioco.</h2>
+            </div>
+            <p class="max-w-xl text-base font-semibold leading-7 text-black/62">
+              Calcio a 5, calcio balilla, carte, FIFA 26 e ping pong: format diversi, stessa energia competitiva.
+            </p>
+          </div>
+
+          <div class="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+            @for (game of games; track game.name) {
+              <article class="group rounded-lg border border-black/10 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:border-fossa">
+                <div class="flex aspect-square items-center justify-center rounded-md bg-black p-5">
+                  <img [src]="game.image" [alt]="game.name" class="h-full w-full object-contain transition group-hover:scale-105" />
+                </div>
+                <h3 class="mt-5 text-xl font-black uppercase leading-none">{{ game.name }}</h3>
+                <p class="mt-3 text-sm font-semibold leading-6 text-black/58">{{ game.description }}</p>
+              </article>
+            }
+          </div>
+        </div>
+      </section>
+
+      <section class="bg-fossa px-5 py-16 text-ink sm:px-8 lg:px-10">
+        <div class="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[1fr_0.8fr] lg:items-end">
           <div>
-            <p class="mb-4 inline-flex rounded-full bg-fossa px-3 py-1 text-xs font-black uppercase tracking-[0.18em]">Gestionale evento sportivo</p>
-            <h1 class="max-w-3xl font-display text-5xl uppercase leading-[0.92] sm:text-7xl lg:text-8xl">
-              La Fossa Games
-            </h1>
-            <p class="mt-6 max-w-2xl text-lg leading-8 text-neutral-700">
-              Area pubblica dell'evento. L'accesso ai dati organizzativi, contabili e di staff e' riservato agli utenti autorizzati.
+            <p class="text-xs font-black uppercase tracking-[0.28em]">Perche nasce</p>
+            <h2 class="mt-3 max-w-4xl font-display text-4xl uppercase leading-none sm:text-6xl">Competizione locale, identità forte.</h2>
+            <p class="mt-6 max-w-3xl text-lg font-semibold leading-8 text-black/72">
+              La Fossa Games nasce per creare un appuntamento riconoscibile: squadre, amici, famiglie e tifosi nello stesso calendario, con una comunicazione curata e un'organizzazione chiara.
+            </p>
+          </div>
+          <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
+            <div class="rounded-md border border-black/15 bg-black px-5 py-4 text-fossa">
+              <p class="text-3xl font-black">Sport</p>
+              <p class="mt-1 text-sm font-bold uppercase tracking-[0.14em]">Campo e tavoli</p>
+            </div>
+            <div class="rounded-md border border-black/15 bg-white px-5 py-4">
+              <p class="text-3xl font-black">Social</p>
+              <p class="mt-1 text-sm font-bold uppercase tracking-[0.14em]">Foto, risultati, storie</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="partecipa" class="bg-[#07120e] px-5 py-16 text-white sm:px-8 lg:px-10">
+        <div class="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[1fr_0.82fr] lg:items-center">
+          <div>
+            <p class="text-xs font-black uppercase tracking-[0.28em] text-fossa">Prossimi passi</p>
+            <h2 class="mt-3 max-w-4xl font-display text-4xl uppercase leading-none text-fossa sm:text-6xl">Resta connesso: presto tante novita.</h2>
+            <p class="mt-6 max-w-2xl text-lg font-semibold leading-8 text-white/72">
+              Pubblicheremo date, regolamenti, modalita di iscrizione e aggiornamenti sui canali ufficiali. La pagina restera il punto di ingresso pubblico del progetto.
             </p>
             <div class="mt-8 flex flex-wrap gap-3">
-              <a routerLink="/login" class="rounded-lg bg-ink px-5 py-3 text-sm font-bold uppercase tracking-wide text-white">Accedi al gestionale</a>
-              <a href="mailto:info@lafossagames.it" class="rounded-lg border border-black/15 bg-white px-5 py-3 text-sm font-bold uppercase tracking-wide">Contatti evento</a>
+              <a href="mailto:info@lafossagames.it" class="rounded-md bg-fossa px-5 py-3 text-sm font-black uppercase tracking-[0.14em] text-ink transition hover:bg-white">
+                Richiedi di partecipare
+              </a>
             </div>
           </div>
 
-          <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
-            <article class="rounded-lg bg-ink p-6 text-white">
-              <p class="text-xs font-bold uppercase tracking-[0.2em] text-white/50">Organizzazione</p>
-              <p class="mt-4 text-3xl font-black">Budget, sponsor e iscrizioni in un unico flusso.</p>
-            </article>
-            <article class="rounded-lg border border-black/10 bg-white p-6">
-              <p class="text-xs font-bold uppercase tracking-[0.2em] text-neutral-500">Accesso protetto</p>
-              <p class="mt-4 text-2xl font-black">Supabase Auth, ruoli staff/admin e policy RLS.</p>
-            </article>
+          <div class="rounded-lg border border-fossa/20 bg-black p-6">
+            <img src="/assets/brand/logo-social.png" alt="Logo social La Fossa Games 2026" class="mx-auto h-40 w-40 rounded-full object-cover sm:h-48 sm:w-48" />
+            <div class="mt-8 space-y-4">
+              <div class="flex items-center justify-between gap-4 border-t border-white/10 pt-4">
+                <span class="text-sm font-bold uppercase tracking-[0.16em] text-white/48">Luogo</span>
+                <span class="text-right font-black">Santa Maria La Fossa</span>
+              </div>
+              <div class="flex items-center justify-between gap-4 border-t border-white/10 pt-4">
+                <span class="text-sm font-bold uppercase tracking-[0.16em] text-white/48">Edizione</span>
+                <span class="text-right font-black">1 / 2026</span>
+              </div>
+              <div class="flex items-center justify-between gap-4 border-t border-white/10 pt-4">
+                <span class="text-sm font-bold uppercase tracking-[0.16em] text-white/48">Stato</span>
+                <span class="text-right font-black text-fossa">In arrivo</span>
+              </div>
+            </div>
           </div>
         </div>
       </section>
     </main>
   `
 })
-export class LandingComponent {}
+export class LandingComponent {
+  protected readonly games: Game[] = [
+    {
+      name: 'Calcio a 5',
+      description: 'Squadre, gironi e partite ad alta intensita.',
+      image: '/assets/brand/icona-calcio.png'
+    },
+    {
+      name: 'Calcio balilla',
+      description: 'Coppie, riflessi e sfide punto su punto.',
+      image: '/assets/brand/icona-calcio-balilla.png'
+    },
+    {
+      name: 'Carte',
+      description: 'Tavoli da gioco per chi sa leggere la mano.',
+      image: '/assets/brand/icona-carte.png'
+    },
+    {
+      name: 'FIFA 26',
+      description: 'Console, controller e finale da vivere sullo schermo.',
+      image: '/assets/brand/icona-fifa-26.png'
+    },
+    {
+      name: 'Ping pong',
+      description: 'Scambi rapidi, ritmo e concentrazione.',
+      image: '/assets/brand/icona-ping-pong.png'
+    }
+  ];
+}
