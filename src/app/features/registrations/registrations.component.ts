@@ -67,7 +67,9 @@ type ModalMode = 'tournament' | 'team' | 'participant' | null;
                 <p class="mt-1 text-sm text-neutral-500">{{ sportLabel(tournament.sport) }} · {{ tournament.tournament_teams.length }} squadre · quota {{ eur(tournament.fee) }}</p>
               </div>
               <div class="flex flex-wrap gap-2">
-                <button class="rounded-md bg-neutral-100 px-3 py-2 text-xs font-bold uppercase" (click)="editTournament(tournament)">Modifica</button>
+                @if (auth.isAdmin()) {
+                  <button class="rounded-md bg-neutral-100 px-3 py-2 text-xs font-bold uppercase" (click)="editTournament(tournament)">Modifica torneo</button>
+                }
                 <button class="rounded-md bg-ink px-3 py-2 text-xs font-bold uppercase text-white" (click)="newTeam(tournament.id)">Aggiungi squadra</button>
               </div>
             </div>
@@ -257,16 +259,21 @@ export class RegistrationsComponent implements OnInit {
   }
 
   editTournament(tournament: Tournament): void {
+    if (!this.auth.isAdmin()) return;
     this.editingTournament.set(tournament);
     this.tournamentForm = { name: tournament.name, sport: tournament.sport, fee: tournament.fee, date: null, notes: null };
     this.modalMode.set('tournament');
   }
 
   async saveTournament(): Promise<void> {
+    const current = this.editingTournament();
+    if (!this.auth.isAdmin() || !current) return;
+
     try {
-      const payload = { ...this.tournamentForm, sport: this.tournamentForm.sport || 'calcio', fee: Number(this.tournamentForm.fee || 0), date: null, notes: null };
-      const current = this.editingTournament();
-      if (!current) return;
+      const payload: Partial<InsertTournament> = {
+        name: this.tournamentForm.name.trim(),
+        fee: Number(this.tournamentForm.fee || 0)
+      };
       const saved = await this.service.updateTournament(current.id, payload);
       this.selectedTournamentId.set(saved.id);
       this.closeModal();
