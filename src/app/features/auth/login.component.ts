@@ -11,7 +11,7 @@ import { AuthService } from '../../core/services/auth.service';
       <section class="w-full max-w-md rounded-lg border border-black/10 bg-white p-6 shadow-sm">
         <a routerLink="/" class="text-xs font-bold uppercase tracking-[0.18em] text-neutral-500">La Fossa Games</a>
         <h1 class="mt-4 font-display text-3xl uppercase">Accesso staff</h1>
-        <p class="mt-2 text-sm leading-6 text-neutral-600">Usa le credenziali Supabase Auth associate a un profilo attivo.</p>
+        <p class="mt-2 text-sm leading-6 text-neutral-600">Usa username e password associati a un profilo attivo.</p>
 
         @if (error) {
           <div class="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{{ error }}</div>
@@ -19,8 +19,8 @@ import { AuthService } from '../../core/services/auth.service';
 
         <form class="mt-6 space-y-4" (ngSubmit)="submit()">
           <label class="block">
-            <span class="text-xs font-bold uppercase tracking-wide text-neutral-500">Email</span>
-            <input name="email" type="email" required [(ngModel)]="email" class="mt-1 w-full rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 outline-none focus:border-ink">
+            <span class="text-xs font-bold uppercase tracking-wide text-neutral-500">Username</span>
+            <input name="username" type="text" autocomplete="username" required [(ngModel)]="username" class="mt-1 w-full rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 outline-none focus:border-ink">
           </label>
           <label class="block">
             <span class="text-xs font-bold uppercase tracking-wide text-neutral-500">Password</span>
@@ -35,7 +35,7 @@ import { AuthService } from '../../core/services/auth.service';
   `
 })
 export class LoginComponent {
-  email = '';
+  username = '';
   password = '';
   loading = false;
   error = '';
@@ -49,7 +49,7 @@ export class LoginComponent {
     this.loading = true;
     this.error = '';
     try {
-      await this.auth.signIn(this.email, this.password);
+      await this.auth.signIn(this.username, this.password);
       if (!this.auth.isActive()) {
         this.error = 'Profilo non attivo o non configurato.';
         return;

@@ -7,10 +7,25 @@ export type ParticipantGender = 'uomo' | 'donna';
 export interface Profile {
   id: string;
   email: string | null;
+  username: string | null;
   full_name: string | null;
   role: UserRole;
   active: boolean;
   created_at: string;
+}
+
+export interface CreateUserInput {
+  firstName: string;
+  lastName: string;
+  username: string;
+  role: UserRole;
+}
+
+export interface CreateUserResult {
+  id: string;
+  email: string;
+  username: string;
+  temporaryPassword: string;
 }
 
 export interface Expense {

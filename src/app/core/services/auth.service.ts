@@ -36,10 +36,24 @@ export class AuthService {
     this.loadingState.set(false);
   }
 
-  async signIn(email: string, password: string): Promise<void> {
+  async signIn(identifier: string, password: string): Promise<void> {
+    const normalizedIdentifier = identifier.trim();
+    const email = normalizedIdentifier.includes('@')
+      ? normalizedIdentifier
+      : await this.emailForUsername(normalizedIdentifier);
+
     const { error } = await this.supabase.client.auth.signInWithPassword({ email, password });
     if (error) throw error;
     await this.loadProfile();
+  }
+
+  private async emailForUsername(username: string): Promise<string> {
+    const { data, error } = await this.supabase.client.rpc('username_login_email', {
+      login_username: username
+    });
+    if (error) throw error;
+    if (!data) throw new Error('Username o password non validi.');
+    return data as string;
   }
 
   async signOut(): Promise<void> {

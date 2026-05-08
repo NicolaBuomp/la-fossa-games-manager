@@ -1,7 +1,7 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ProfileService } from '../../core/services/profile.service';
-import { Profile, UserRole } from '../../core/types/models';
+import { CreateUserResult, Profile, UserRole } from '../../core/types/models';
 import { EmptyStateComponent, StatusBadgeComponent } from '../../shared/components/ui.component';
 
 @Component({
@@ -13,7 +13,7 @@ import { EmptyStateComponent, StatusBadgeComponent } from '../../shared/componen
         <p class="text-xs font-bold uppercase tracking-[0.18em] text-neutral-500">Solo admin</p>
         <h1 class="font-display text-3xl uppercase">Utenti</h1>
         <p class="mt-2 max-w-2xl text-sm leading-6 text-neutral-600">
-          Gestione dei profili applicativi collegati agli utenti Supabase Auth.
+          Gestione dei profili applicativi collegati agli utenti Supabase Auth. I nuovi utenti accedono con username e password iniziale standard, poi la cambiano dal profilo.
         </p>
       </div>
 
@@ -21,8 +21,44 @@ import { EmptyStateComponent, StatusBadgeComponent } from '../../shared/componen
         <p class="rounded-lg bg-red-50 p-3 text-sm text-red-700">{{ error() }}</p>
       }
 
+      @if (createdUser()) {
+        <div class="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
+          <p class="font-bold">Utente creato: {{ createdUser()?.username }}</p>
+          <p class="mt-1">Password iniziale: <span class="font-mono font-bold">{{ createdUser()?.temporaryPassword }}</span></p>
+        </div>
+      }
+
+      <form class="rounded-lg border border-black/10 bg-white p-4" (ngSubmit)="createUser()">
+        <div class="grid gap-3 sm:grid-cols-2">
+          <label class="grid gap-1 text-sm font-bold">
+            Nome
+            <input name="firstName" required [(ngModel)]="form.firstName" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal outline-none focus:border-ink">
+          </label>
+          <label class="grid gap-1 text-sm font-bold">
+            Cognome
+            <input name="lastName" required [(ngModel)]="form.lastName" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal outline-none focus:border-ink">
+          </label>
+          <label class="grid gap-1 text-sm font-bold">
+            Username
+            <input name="username" required pattern="[a-zA-Z0-9._-]{3,32}" [(ngModel)]="form.username" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal outline-none focus:border-ink">
+          </label>
+          <label class="grid gap-1 text-sm font-bold">
+            Tipo utente
+            <select name="role" required [(ngModel)]="form.role" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal outline-none focus:border-ink">
+              <option value="staff">Staff</option>
+              <option value="admin">Admin</option>
+            </select>
+          </label>
+        </div>
+        <div class="mt-4 flex justify-end">
+          <button [disabled]="creating()" class="min-h-11 rounded-lg bg-ink px-4 text-sm font-bold uppercase tracking-wide text-white disabled:opacity-60">
+            {{ creating() ? 'Creazione...' : 'Crea utente' }}
+          </button>
+        </div>
+      </form>
+
       @if (!items().length) {
-        <lfg-empty-state title="Nessun profilo visibile" text="Crea utenti da Supabase Auth e assicurati che il trigger abbia generato i profili." />
+        <lfg-empty-state title="Nessun profilo visibile" text="Crea un nuovo utente dal modulo qui sopra." />
       } @else {
         <div class="grid gap-3">
           @for (item of items(); track item.id) {
@@ -30,7 +66,7 @@ import { EmptyStateComponent, StatusBadgeComponent } from '../../shared/componen
               <div class="flex flex-wrap items-start justify-between gap-3">
                 <div class="min-w-0">
                   <h2 class="truncate text-base font-bold">{{ item.full_name || item.email || item.id }}</h2>
-                  <p class="mt-1 break-all text-xs text-neutral-500">{{ item.email }}</p>
+                  <p class="mt-1 break-all text-xs text-neutral-500">{{ item.username || item.email }}</p>
                 </div>
                 <div class="flex gap-2">
                   <lfg-status-badge [label]="item.role" [className]="item.role === 'admin' ? 'border-fossa bg-fossa text-ink' : 'border-neutral-300 bg-neutral-100 text-neutral-700'" />
@@ -56,6 +92,14 @@ import { EmptyStateComponent, StatusBadgeComponent } from '../../shared/componen
 export class UsersComponent implements OnInit {
   items = signal<Profile[]>([]);
   error = signal('');
+  creating = signal(false);
+  createdUser = signal<CreateUserResult | null>(null);
+  form = {
+    firstName: '',
+    lastName: '',
+    username: '',
+    role: 'staff' as UserRole
+  };
 
   constructor(private readonly profiles: ProfileService) {}
 
@@ -77,6 +121,22 @@ export class UsersComponent implements OnInit {
       await this.load();
     } catch (error) {
       this.error.set(this.message(error));
+    }
+  }
+
+  async createUser(): Promise<void> {
+    this.creating.set(true);
+    this.error.set('');
+    this.createdUser.set(null);
+    try {
+      const created = await this.profiles.createUser(this.form);
+      this.createdUser.set(created);
+      this.form = { firstName: '', lastName: '', username: '', role: 'staff' };
+      await this.load();
+    } catch (error) {
+      this.error.set(this.message(error));
+    } finally {
+      this.creating.set(false);
     }
   }
 

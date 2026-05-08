@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
-import { Profile, UserRole } from '../types/models';
+import { CreateUserInput, CreateUserResult, Profile, UserRole } from '../types/models';
 
 @Injectable({ providedIn: 'root' })
 export class ProfileService {
@@ -13,6 +13,15 @@ export class ProfileService {
       .order('created_at', { ascending: false });
     if (error) throw error;
     return (data ?? []) as Profile[];
+  }
+
+  async createUser(input: CreateUserInput): Promise<CreateUserResult> {
+    const { data, error } = await this.supabase.client.functions.invoke<CreateUserResult>('admin-create-user', {
+      body: input
+    });
+    if (error) throw error;
+    if (!data) throw new Error('Creazione utente non riuscita.');
+    return data;
   }
 
   async updateRole(id: string, role: UserRole): Promise<void> {
