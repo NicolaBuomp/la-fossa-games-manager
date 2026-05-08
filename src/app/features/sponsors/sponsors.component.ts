@@ -2,6 +2,7 @@ import { Component, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../core/services/auth.service';
 import { ExportService } from '../../core/services/export.service';
+import { ProfileService } from '../../core/services/profile.service';
 import { SponsorsService } from '../../core/services/sponsors.service';
 import { SPONSOR_STATUSES } from '../../core/types/constants';
 import { InsertSponsor, Sponsor, SponsorStatus, SponsorType } from '../../core/types/models';
@@ -24,7 +25,7 @@ import { EmptyStateComponent, ModalComponent, StatusBadgeComponent, SummaryCardC
           @for (item of items(); track item.id) {
             <article class="rounded-lg border border-black/10 bg-white p-4">
               <div class="flex flex-wrap justify-between gap-3">
-                <div class="min-w-0"><h2 class="truncate text-base font-bold">{{ item.company_name }}</h2><p class="mt-1 text-xs text-neutral-500">{{ item.contact_name || 'Referente non indicato' }} @if (item.contact_info) { · {{ item.contact_info }} }</p></div>
+                <div class="min-w-0"><h2 class="truncate text-base font-bold">{{ item.company_name }}</h2><p class="mt-1 text-xs text-neutral-500">{{ item.contact_name || 'Referente non indicato' }} @if (item.contact_info) { · {{ item.contact_info }} }</p><p class="mt-1 text-xs font-semibold text-neutral-500">{{ insertMeta(item) }}</p></div>
                 <p class="font-black">{{ eur(item.value) }}</p>
               </div>
               <div class="mt-3 flex flex-wrap gap-2"><lfg-status-badge [label]="statusLabel(item.status)" [className]="statusClass(item.status)" /><span class="rounded-full bg-neutral-100 px-2.5 py-1 text-[10px] font-bold uppercase">{{ item.type === 'cash' ? 'Cash' : 'In natura' }}</span></div>
@@ -57,14 +58,15 @@ import { EmptyStateComponent, ModalComponent, StatusBadgeComponent, SummaryCardC
 })
 export class SponsorsComponent implements OnInit {
   items = signal<Sponsor[]>([]);
+  userNames = signal<Record<string, string>>({});
   error = signal('');
   modalOpen = signal(false);
   editing = signal<Sponsor | null>(null);
   statuses = SPONSOR_STATUSES;
   form: InsertSponsor = this.emptyForm();
-  constructor(readonly auth: AuthService, private readonly service: SponsorsService, private readonly exporter: ExportService) {}
+  constructor(readonly auth: AuthService, private readonly service: SponsorsService, private readonly exporter: ExportService, private readonly profiles: ProfileService) {}
   ngOnInit(): void { void this.load(); }
-  async load(): Promise<void> { try { this.items.set(await this.service.list()); } catch (e) { this.error.set(this.message(e)); } }
+  async load(): Promise<void> { try { const items = await this.service.list(); this.items.set(items); this.userNames.set(await this.profiles.displayNames(items.map((item) => item.created_by))); } catch (e) { this.error.set(this.message(e)); } }
   newItem(): void { this.editing.set(null); this.form = this.emptyForm(); this.modalOpen.set(true); }
   edit(item: Sponsor): void { this.editing.set(item); this.form = { company_name: item.company_name, contact_name: item.contact_name, contact_info: item.contact_info, value: item.value, type: item.type, status: item.status, deliverables: item.deliverables, notes: item.notes }; this.modalOpen.set(true); }
   async save(): Promise<void> { try { const payload = { ...this.form, value: Number(this.form.value || 0) }; const current = this.editing(); if (current) await this.service.update(current.id, payload); else await this.service.create(payload); this.modalOpen.set(false); await this.load(); } catch (e) { this.error.set(this.message(e)); } }
@@ -75,6 +77,8 @@ export class SponsorsComponent implements OnInit {
   statusLabel(status: SponsorStatus): string { return this.statuses.find((item) => item.id === status)?.label ?? status; }
   statusClass(status: SponsorStatus): string { return this.statuses.find((item) => item.id === status)?.className ?? ''; }
   eur(value: number): string { return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(value); }
+  formatDateTime(value: string): string { return new Intl.DateTimeFormat('it-IT', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(value)); }
+  insertMeta(item: Sponsor): string { return `Inserito da ${this.userNames()[item.created_by ?? ''] ?? 'Utente non disponibile'} · ${this.formatDateTime(item.created_at)}`; }
   emptyForm(): InsertSponsor { return { company_name: '', contact_name: '', contact_info: '', type: 'cash' as SponsorType, value: 0, status: 'contattato', deliverables: '', notes: '' }; }
   private message(error: unknown): string { return error instanceof Error ? error.message : 'Operazione non riuscita.'; }
 }

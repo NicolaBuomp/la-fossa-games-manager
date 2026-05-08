@@ -43,6 +43,7 @@ export class RegistrationsService extends CrudService<Registration, InsertRegist
         registration_date: team.created_at.slice(0, 10),
         notes: team.notes,
         created_by: team.created_by,
+        updated_by: team.updated_by,
         created_at: team.created_at,
         updated_at: team.updated_at
       }))

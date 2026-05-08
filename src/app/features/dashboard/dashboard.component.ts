@@ -4,7 +4,8 @@ import { ExpensesService } from '../../core/services/expenses.service';
 import { IncomesService } from '../../core/services/incomes.service';
 import { SponsorsService } from '../../core/services/sponsors.service';
 import { RegistrationsService } from '../../core/services/registrations.service';
-import { Expense, Income, Registration, Sponsor } from '../../core/types/models';
+import { AuditLogService } from '../../core/services/audit-log.service';
+import { AuditLog, Expense, Income, Registration, Sponsor } from '../../core/types/models';
 
 @Component({
   standalone: true,
@@ -44,6 +45,36 @@ import { Expense, Income, Registration, Sponsor } from '../../core/types/models'
       @if (error()) {
         <p class="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{{ error() }}</p>
       }
+
+      <section class="rounded-lg border border-black/10 bg-white p-4 shadow-sm">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p class="text-xs font-bold uppercase tracking-[0.18em] text-neutral-500">Registro modifiche</p>
+            <h2 class="font-display text-2xl uppercase">Ultime attivita</h2>
+          </div>
+        </div>
+
+        @if (!auditLogs().length) {
+          <p class="mt-4 rounded-lg bg-neutral-50 p-4 text-sm text-neutral-500">Nessuna modifica registrata.</p>
+        } @else {
+          <div class="mt-4 divide-y divide-black/5">
+            @for (log of auditLogs(); track log.id) {
+              <div class="grid gap-2 py-3 sm:grid-cols-[1fr_auto] sm:items-center">
+                <div class="min-w-0">
+                  <p class="text-sm font-bold">
+                    {{ actionLabel(log.action) }} {{ tableLabel(log.table_name) }}
+                    <span class="font-normal text-neutral-500">· {{ recordLabel(log) }}</span>
+                  </p>
+                  <p class="mt-1 text-xs text-neutral-500">
+                    {{ actorLabel(log) }} · {{ formatDateTime(log.changed_at) }}
+                  </p>
+                </div>
+                <span class="w-fit rounded-full bg-neutral-100 px-2.5 py-1 text-[10px] font-bold uppercase text-neutral-600">{{ log.action }}</span>
+              </div>
+            }
+          </div>
+        }
+      </section>
     </div>
   `
 })
@@ -52,13 +83,15 @@ export class DashboardComponent implements OnInit {
   incomes = signal<Income[]>([]);
   sponsors = signal<Sponsor[]>([]);
   registrations = signal<Registration[]>([]);
+  auditLogs = signal<AuditLog[]>([]);
   error = signal('');
 
   constructor(
     private readonly expensesService: ExpensesService,
     private readonly incomesService: IncomesService,
     private readonly sponsorsService: SponsorsService,
-    private readonly registrationsService: RegistrationsService
+    private readonly registrationsService: RegistrationsService,
+    private readonly auditLogService: AuditLogService
   ) {}
 
   ngOnInit(): void {
@@ -68,16 +101,18 @@ export class DashboardComponent implements OnInit {
   async load(): Promise<void> {
     this.error.set('');
     try {
-      const [expenses, incomes, sponsors, registrations] = await Promise.all([
+      const [expenses, incomes, sponsors, registrations, auditLogs] = await Promise.all([
         this.expensesService.list(),
         this.incomesService.list(),
         this.sponsorsService.list(),
-        this.registrationsService.list()
+        this.registrationsService.list(),
+        this.auditLogService.recent()
       ]);
       this.expenses.set(expenses);
       this.incomes.set(incomes);
       this.sponsors.set(sponsors);
       this.registrations.set(registrations);
+      this.auditLogs.set(auditLogs);
     } catch (error) {
       this.error.set(error instanceof Error ? error.message : 'Errore nel caricamento dati.');
     }
@@ -88,6 +123,10 @@ export class DashboardComponent implements OnInit {
   }
 
   totalIncome(): number {
+    return this.recordedIncome() + this.sponsorConfirmed() + this.regPaidAmount();
+  }
+
+  recordedIncome(): number {
     return this.incomes().reduce((sum, item) => sum + Number(item.amount || 0), 0);
   }
 
@@ -123,6 +162,48 @@ export class DashboardComponent implements OnInit {
 
   eur(value: number): string {
     return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(value);
+  }
+
+  formatDateTime(value: string): string {
+    return new Intl.DateTimeFormat('it-IT', {
+      dateStyle: 'short',
+      timeStyle: 'short'
+    }).format(new Date(value));
+  }
+
+  actionLabel(action: AuditLog['action']): string {
+    if (action === 'insert') return 'Aggiunto';
+    if (action === 'update') return 'Modificato';
+    return 'Eliminato';
+  }
+
+  tableLabel(tableName: string): string {
+    return (
+      {
+        expenses: 'spesa',
+        incomes: 'entrata',
+        sponsors: 'sponsor',
+        registrations: 'iscrizione',
+        tournaments: 'torneo',
+        tournament_teams: 'squadra',
+        team_participants: 'partecipante'
+      }[tableName] ?? tableName
+    );
+  }
+
+  actorLabel(log: AuditLog): string {
+    return log.changed_by_name || 'Utente non disponibile';
+  }
+
+  recordLabel(log: AuditLog): string {
+    const data = log.new_data ?? log.old_data ?? {};
+    const value =
+      data['company_name'] ??
+      data['description'] ??
+      data['source'] ??
+      data['name'] ??
+      [data['first_name'], data['last_name']].filter(Boolean).join(' ');
+    return typeof value === 'string' && value.trim() ? value : String(log.record_id).slice(0, 8);
   }
 
   protected readonly String = String;

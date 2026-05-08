@@ -23,6 +23,7 @@ export interface Expense {
   payment_method: string | null;
   notes: string | null;
   created_by: string | null;
+  updated_by: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -37,6 +38,7 @@ export interface Income {
   payment_method: string | null;
   notes: string | null;
   created_by: string | null;
+  updated_by: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -52,6 +54,7 @@ export interface Sponsor {
   deliverables: string | null;
   notes: string | null;
   created_by: string | null;
+  updated_by: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -66,6 +69,7 @@ export interface Registration {
   registration_date: string;
   notes: string | null;
   created_by: string | null;
+  updated_by: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -79,6 +83,7 @@ export interface Tournament {
   date: string | null;
   notes: string | null;
   created_by: string | null;
+  updated_by: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -95,6 +100,7 @@ export interface TournamentTeam {
   paid: boolean;
   notes: string | null;
   created_by: string | null;
+  updated_by: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -107,6 +113,8 @@ export interface TeamParticipant {
   contact: string | null;
   gender: ParticipantGender;
   registered: boolean;
+  created_by: string | null;
+  updated_by: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -119,10 +127,22 @@ export interface TournamentWithTeams extends Tournament {
   tournament_teams: TournamentTeamWithParticipants[];
 }
 
-export type InsertExpense = Omit<Expense, 'id' | 'created_by' | 'created_at' | 'updated_at'>;
-export type InsertIncome = Omit<Income, 'id' | 'created_by' | 'created_at' | 'updated_at'>;
-export type InsertSponsor = Omit<Sponsor, 'id' | 'created_by' | 'created_at' | 'updated_at'>;
-export type InsertRegistration = Omit<Registration, 'id' | 'created_by' | 'created_at' | 'updated_at'>;
-export type InsertTournament = Omit<Tournament, 'id' | 'code' | 'created_by' | 'created_at' | 'updated_at'> & { code?: string | null };
-export type InsertTournamentTeam = Omit<TournamentTeam, 'id' | 'created_by' | 'created_at' | 'updated_at'>;
-export type InsertTeamParticipant = Omit<TeamParticipant, 'id' | 'created_at' | 'updated_at'>;
+export interface AuditLog {
+  id: string;
+  table_name: string;
+  record_id: string;
+  action: 'insert' | 'update' | 'delete';
+  changed_by: string | null;
+  changed_by_name: string | null;
+  changed_at: string;
+  old_data: Record<string, unknown> | null;
+  new_data: Record<string, unknown> | null;
+}
+
+export type InsertExpense = Omit<Expense, 'id' | 'created_by' | 'updated_by' | 'created_at' | 'updated_at'>;
+export type InsertIncome = Omit<Income, 'id' | 'created_by' | 'updated_by' | 'created_at' | 'updated_at'>;
+export type InsertSponsor = Omit<Sponsor, 'id' | 'created_by' | 'updated_by' | 'created_at' | 'updated_at'>;
+export type InsertRegistration = Omit<Registration, 'id' | 'created_by' | 'updated_by' | 'created_at' | 'updated_at'>;
+export type InsertTournament = Omit<Tournament, 'id' | 'code' | 'created_by' | 'updated_by' | 'created_at' | 'updated_at'> & { code?: string | null };
+export type InsertTournamentTeam = Omit<TournamentTeam, 'id' | 'created_by' | 'updated_by' | 'created_at' | 'updated_at'>;
+export type InsertTeamParticipant = Omit<TeamParticipant, 'id' | 'created_by' | 'updated_by' | 'created_at' | 'updated_at'>;

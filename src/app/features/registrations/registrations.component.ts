@@ -2,6 +2,7 @@ import { Component, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../core/services/auth.service';
 import { ExportService } from '../../core/services/export.service';
+import { ProfileService } from '../../core/services/profile.service';
 import { RegistrationsService } from '../../core/services/registrations.service';
 import {
   InsertTeamParticipant,
@@ -82,6 +83,7 @@ type ModalMode = 'tournament' | 'team' | 'participant' | null;
                     <div class="min-w-0">
                       <h3 class="truncate text-lg font-black">{{ team.name }}</h3>
                       <p class="mt-1 text-xs font-semibold uppercase tracking-wide text-neutral-500">{{ teamHint(tournament, team) }}</p>
+                      <p class="mt-1 text-xs font-semibold text-neutral-500">{{ insertMeta(team) }}</p>
                     </div>
                     <div class="text-right">
                       <p class="font-black">{{ eur(teamFee(team)) }}</p>
@@ -210,6 +212,7 @@ type ModalMode = 'tournament' | 'team' | 'participant' | null;
 })
 export class RegistrationsComponent implements OnInit {
   tournaments = signal<TournamentWithTeams[]>([]);
+  userNames = signal<Record<string, string>>({});
   selectedTournamentId = signal<string | null>(null);
   error = signal('');
   modalMode = signal<ModalMode>(null);
@@ -220,7 +223,12 @@ export class RegistrationsComponent implements OnInit {
   teamForm: InsertTournamentTeam = this.emptyTeamForm('');
   participantForm: InsertTeamParticipant = this.emptyParticipantForm('');
 
-  constructor(readonly auth: AuthService, private readonly service: RegistrationsService, private readonly exporter: ExportService) {}
+  constructor(
+    readonly auth: AuthService,
+    private readonly service: RegistrationsService,
+    private readonly exporter: ExportService,
+    private readonly profiles: ProfileService
+  ) {}
 
   ngOnInit(): void {
     void this.load();
@@ -231,6 +239,7 @@ export class RegistrationsComponent implements OnInit {
     try {
       const tournaments = await this.service.listTournaments();
       this.tournaments.set(tournaments);
+      this.userNames.set(await this.profiles.displayNames(tournaments.flatMap((tournament) => tournament.tournament_teams.map((team) => team.created_by))));
       if (!this.selectedTournamentId() || !tournaments.some((tournament) => tournament.id === this.selectedTournamentId())) {
         this.selectedTournamentId.set(tournaments[0]?.id ?? null);
       }
@@ -446,6 +455,14 @@ export class RegistrationsComponent implements OnInit {
 
   formatDate(value: string): string {
     return new Intl.DateTimeFormat('it-IT').format(new Date(value));
+  }
+
+  formatDateTime(value: string): string {
+    return new Intl.DateTimeFormat('it-IT', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(value));
+  }
+
+  insertMeta(team: TournamentTeamWithParticipants): string {
+    return `Inserita da ${this.userNames()[team.created_by ?? ''] ?? 'Utente non disponibile'} · ${this.formatDateTime(team.created_at)}`;
   }
 
   emptyTournamentForm(): InsertTournament {

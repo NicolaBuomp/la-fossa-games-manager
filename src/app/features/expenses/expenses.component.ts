@@ -3,8 +3,9 @@ import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../core/services/auth.service';
 import { ExpensesService } from '../../core/services/expenses.service';
 import { ExportService } from '../../core/services/export.service';
+import { ProfileService } from '../../core/services/profile.service';
 import { EXPENSE_CATEGORIES, PAYMENT_METHODS } from '../../core/types/constants';
-import { Expense, InsertExpense } from '../../core/types/models';
+import { Expense, InsertExpense, Profile } from '../../core/types/models';
 import { EmptyStateComponent, ModalComponent, SummaryCardComponent } from '../../shared/components/ui.component';
 
 @Component({
@@ -36,6 +37,7 @@ import { EmptyStateComponent, ModalComponent, SummaryCardComponent } from '../..
                 <div class="min-w-0">
                   <h2 class="truncate text-base font-bold">{{ item.description }}</h2>
                   <p class="mt-1 text-xs text-neutral-500">{{ formatDate(item.date) }} · {{ item.category }} @if (item.paid_by) { · da {{ item.paid_by }} }</p>
+                  <p class="mt-1 text-xs font-semibold text-neutral-500">{{ insertMeta(item) }}</p>
                   @if (item.notes) { <p class="mt-2 text-sm text-neutral-600">{{ item.notes }}</p> }
                 </div>
                 <p class="font-black text-expense">-{{ eur(item.amount) }}</p>
@@ -63,7 +65,14 @@ import { EmptyStateComponent, ModalComponent, SummaryCardComponent } from '../..
           <label class="grid gap-1 text-sm font-bold">Categoria <select name="category" [(ngModel)]="form.category" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal">@for (c of categories; track c) { <option [value]="c">{{ c }}</option> }</select></label>
           <label class="grid gap-1 text-sm font-bold">Metodo <select name="payment_method" [(ngModel)]="form.payment_method" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal">@for (m of methods; track m) { <option [value]="m">{{ m }}</option> }</select></label>
         </div>
-        <label class="grid gap-1 text-sm font-bold">Pagato da <input name="paid_by" [(ngModel)]="form.paid_by" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal"></label>
+        <label class="grid gap-1 text-sm font-bold">Pagato da
+          <select name="paid_by" [(ngModel)]="form.paid_by" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal">
+            <option value="">Non indicato</option>
+            @for (profile of profilesList(); track profile.id) {
+              <option [value]="profileDisplayName(profile)">{{ profileDisplayName(profile) }}</option>
+            }
+          </select>
+        </label>
         <label class="grid gap-1 text-sm font-bold">Note <textarea name="notes" [(ngModel)]="form.notes" rows="3" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal"></textarea></label>
         <button class="rounded-lg bg-ink px-4 py-3 text-sm font-bold uppercase text-white">Salva</button>
       </form>
@@ -72,6 +81,8 @@ import { EmptyStateComponent, ModalComponent, SummaryCardComponent } from '../..
 })
 export class ExpensesComponent implements OnInit {
   items = signal<Expense[]>([]);
+  profilesList = signal<Profile[]>([]);
+  userNames = signal<Record<string, string>>({});
   error = signal('');
   modalOpen = signal(false);
   editing = signal<Expense | null>(null);
@@ -82,13 +93,19 @@ export class ExpensesComponent implements OnInit {
   constructor(
     readonly auth: AuthService,
     private readonly service: ExpensesService,
-    private readonly exporter: ExportService
+    private readonly exporter: ExportService,
+    private readonly profiles: ProfileService
   ) {}
 
   ngOnInit(): void { void this.load(); }
 
   async load(): Promise<void> {
-    try { this.items.set(await this.service.list()); } catch (e) { this.error.set(this.message(e)); }
+    try {
+      const [items, profiles] = await Promise.all([this.service.list(), this.profiles.list()]);
+      this.items.set(items);
+      this.profilesList.set(profiles);
+      this.userNames.set(Object.fromEntries(profiles.map((profile) => [profile.id, this.profileDisplayName(profile)])));
+    } catch (e) { this.error.set(this.message(e)); }
   }
 
   newItem(): void { this.editing.set(null); this.form = this.emptyForm(); this.modalOpen.set(true); }
@@ -114,6 +131,9 @@ export class ExpensesComponent implements OnInit {
   total(): number { return this.items().reduce((sum, item) => sum + Number(item.amount || 0), 0); }
   eur(value: number): string { return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(value); }
   formatDate(value: string): string { return new Intl.DateTimeFormat('it-IT').format(new Date(value)); }
+  formatDateTime(value: string): string { return new Intl.DateTimeFormat('it-IT', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(value)); }
+  insertMeta(item: Expense): string { return `Inserito da ${this.userNames()[item.created_by ?? ''] ?? 'Utente non disponibile'} · ${this.formatDateTime(item.created_at)}`; }
+  profileDisplayName(profile: Profile): string { return profile.full_name?.trim() || profile.email?.trim() || profile.id; }
   emptyForm(): InsertExpense { return { date: new Date().toISOString().slice(0, 10), description: '', category: EXPENSE_CATEGORIES[0], amount: 0, paid_by: '', payment_method: PAYMENT_METHODS[0], notes: '' }; }
   private message(error: unknown): string { return error instanceof Error ? error.message : 'Operazione non riuscita.'; }
 }

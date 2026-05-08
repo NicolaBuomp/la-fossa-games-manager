@@ -29,4 +29,13 @@ export class ProfileService {
     const { error } = await this.supabase.client.rpc('update_own_profile_name', { profile_full_name: fullName });
     if (error) throw error;
   }
+
+  async displayNames(ids: Array<string | null | undefined>): Promise<Record<string, string>> {
+    const userIds = [...new Set(ids.filter((id): id is string => Boolean(id)))];
+    if (!userIds.length) return {};
+
+    const { data, error } = await this.supabase.client.rpc('user_display_names', { user_ids: userIds });
+    if (error) throw error;
+    return Object.fromEntries(((data ?? []) as { id: string; display_name: string }[]).map((item) => [item.id, item.display_name]));
+  }
 }

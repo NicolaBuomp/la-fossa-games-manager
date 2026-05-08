@@ -59,7 +59,7 @@ interface NavItem {
         </main>
 
         <nav class="fixed bottom-0 left-0 right-0 z-30 border-t border-black/10 bg-paper lg:hidden">
-          <div class="grid" [class.grid-cols-7]="auth.isAdmin()" [class.grid-cols-6]="!auth.isAdmin()">
+          <div class="grid" [style.grid-template-columns]="'repeat(' + visibleNav().length + ', minmax(0, 1fr))'">
             @for (item of visibleNav(); track item.path) {
               <a [routerLink]="item.path" routerLinkActive="text-ink" class="flex flex-col items-center gap-1 px-1 py-3 text-center text-neutral-400">
                 <span class="text-base font-black">{{ item.icon }}</span>
@@ -74,11 +74,11 @@ interface NavItem {
 })
 export class ShellComponent {
   readonly nav: NavItem[] = [
-    { path: '/app/dashboard', label: 'Home', short: 'H', icon: '⌂' },
-    { path: '/app/expenses', label: 'Spese', short: '-', icon: '-' },
-    { path: '/app/incomes', label: 'Entrate', short: '+', icon: '+' },
+    { path: '/app/dashboard', label: 'Home', short: 'H', icon: '⌂', adminOnly: true },
+    { path: '/app/expenses', label: 'Spese', short: '-', icon: '-', adminOnly: true },
+    { path: '/app/incomes', label: 'Entrate', short: '+', icon: '+', adminOnly: true },
     { path: '/app/registrations', label: 'Iscritti', short: 'I', icon: '▦' },
-    { path: '/app/sponsors', label: 'Sponsor', short: 'S', icon: '◆' },
+    { path: '/app/sponsors', label: 'Sponsor', short: 'S', icon: '◆', adminOnly: true },
     { path: '/app/profile', label: 'Profilo', short: 'P', icon: '◉' },
     { path: '/app/users', label: 'Utenti', short: 'U', icon: '⋯', adminOnly: true }
   ];

@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
 import { adminGuard } from './core/guards/admin.guard';
+import { appHomeGuard } from './core/guards/app-home.guard';
 import { ShellComponent } from './shared/components/shell.component';
 
 export const routes: Routes = [
@@ -17,21 +18,25 @@ export const routes: Routes = [
     component: ShellComponent,
     canActivate: [authGuard],
     children: [
-      { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
+      { path: '', pathMatch: 'full', canActivate: [appHomeGuard], children: [] },
       {
         path: 'dashboard',
+        canActivate: [adminGuard],
         loadComponent: () => import('./features/dashboard/dashboard.component').then((m) => m.DashboardComponent)
       },
       {
         path: 'expenses',
+        canActivate: [adminGuard],
         loadComponent: () => import('./features/expenses/expenses.component').then((m) => m.ExpensesComponent)
       },
       {
         path: 'incomes',
+        canActivate: [adminGuard],
         loadComponent: () => import('./features/incomes/incomes.component').then((m) => m.IncomesComponent)
       },
       {
         path: 'sponsors',
+        canActivate: [adminGuard],
         loadComponent: () => import('./features/sponsors/sponsors.component').then((m) => m.SponsorsComponent)
       },
       {
