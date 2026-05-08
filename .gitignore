@@ -3,5 +3,6 @@ dist/
 .angular/
 .env
 .env.local
+src/environments/environment.generated.ts
 .DS_Store
 Thumbs.db

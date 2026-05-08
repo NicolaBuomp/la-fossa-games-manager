@@ -1,8 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title">
-  <title id="title">Calcio a 5 under 14</title>
-  <g fill="#FFD400">
-    <circle cx="205" cy="206" r="118"/>
-    <path fill="#000" d="m205 103 33 24-13 39h-41l-13-39 34-24Zm-75 69 39 12 13 40-32 24-35-26 15-50Zm150 0 15 50-35 26-32-24 13-40 39-12Zm-96 72h42l24 32-16 45h-58l-16-45 24-32Zm-68 9 33 24 12 39-37 25-39-37 31-51Zm178 0 31 51-39 37-37-25 12-39 33-24Z"/>
-    <path d="M152 354h112v34H152v-34Zm-24 58h168v38H128v-38Zm219-266h35v182h-35V146Zm-58 0h47v35h-47v-35Zm93 0h46v35h-46v-35Zm-78 147h109v35H304v-35Z"/>
-  </g>
-</svg>
