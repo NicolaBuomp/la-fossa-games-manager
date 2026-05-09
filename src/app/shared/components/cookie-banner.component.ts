@@ -11,34 +11,33 @@ const ONE_YEAR_SECONDS = 60 * 60 * 24 * 365;
   template: `
     @if (visible()) {
       <section
-        class="fixed inset-x-0 bottom-0 z-[70] border-t border-white/10 bg-[#050505]/95 px-5 py-4 text-white shadow-2xl backdrop-blur sm:px-6"
+        class="fixed inset-x-0 bottom-0 z-[70] p-3 text-white sm:inset-x-auto sm:bottom-5 sm:right-5 sm:w-[min(28rem,calc(100vw-2.5rem))]"
         aria-label="Preferenze cookie"
       >
         <div
-          class="mx-auto flex max-w-7xl flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
+          class="rounded-lg border border-white/10 bg-[#050505]/95 p-4 shadow-2xl backdrop-blur"
         >
-          <div class="max-w-3xl">
-            <p class="text-sm font-black uppercase tracking-[0.18em] text-fossa">
+          <div>
+            <p class="text-xs font-black uppercase tracking-[0.18em] text-fossa">
               Cookie
             </p>
-            <p class="mt-2 text-sm font-semibold leading-6 text-white/72">
-              Usiamo cookie tecnici necessari al funzionamento del sito. Puoi
-              accettare o rifiutare eventuali cookie non essenziali; al momento
-              non vengono caricati strumenti di tracciamento esterni.
+            <p class="mt-2 text-xs font-semibold leading-5 text-white/72 sm:text-sm">
+              Usiamo cookie tecnici necessari. Al momento non carichiamo
+              strumenti di tracciamento esterni.
             </p>
           </div>
 
-          <div class="flex shrink-0 flex-col gap-2 sm:flex-row">
+          <div class="mt-3 grid grid-cols-2 gap-2">
             <button
               type="button"
-              class="rounded-md border border-white/20 px-4 py-3 text-xs font-black uppercase tracking-[0.14em] text-white transition hover:border-fossa hover:text-fossa"
+              class="rounded-md border border-white/20 px-4 py-2.5 text-xs font-black uppercase tracking-[0.14em] text-white transition hover:border-fossa hover:text-fossa"
               (click)="reject()"
             >
               Rifiuta
             </button>
             <button
               type="button"
-              class="rounded-md bg-fossa px-4 py-3 text-xs font-black uppercase tracking-[0.14em] text-ink transition hover:bg-white"
+              class="rounded-md bg-fossa px-4 py-2.5 text-xs font-black uppercase tracking-[0.14em] text-ink transition hover:bg-white"
               (click)="accept()"
             >
               Accetta

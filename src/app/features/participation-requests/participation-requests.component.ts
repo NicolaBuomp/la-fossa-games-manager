@@ -39,10 +39,6 @@ type RequestStatus = ParticipationRequest['status'];
               </div>
 
               <div class="mt-4 grid gap-3 sm:grid-cols-2">
-                <a class="rounded-lg bg-neutral-50 px-3 py-3 text-sm font-bold ring-1 ring-black/5" [href]="'mailto:' + request.email">
-                  <span class="block text-[10px] uppercase tracking-wide text-neutral-500">Email</span>
-                  {{ request.email }}
-                </a>
                 <a class="rounded-lg bg-neutral-50 px-3 py-3 text-sm font-bold ring-1 ring-black/5" [href]="whatsappUrl(request.phone)" target="_blank" rel="noopener">
                   <span class="block text-[10px] uppercase tracking-wide text-neutral-500">WhatsApp</span>
                   {{ request.phone }}
