@@ -230,8 +230,8 @@ type Countdown = {
                 class="mt-5 max-w-2xl text-base font-semibold leading-7 text-white/78"
               >
                 Cinque giorni. Sei sport. Una piazza sola. Tornei aperti a
-                tutti, dal calcio a 5 alla briscola - si gioca per vincere, ma
-                soprattutto per stare insieme e divertirsi.
+                tutti, dal calcio a 5 alla briscola — si gioca per vincere, e
+                soprattutto per stare insieme.
               </p>
               <div class="mt-5 flex flex-wrap gap-3">
                 <a
@@ -289,7 +289,7 @@ type Countdown = {
                   <p
                     class="text-xs font-black uppercase tracking-[0.2em] text-white/50"
                   >
-                    Manca all'inizio
+                    Al via tra
                   </p>
                   <p
                     class="text-sm font-black uppercase tracking-[0.14em] text-fossa"
@@ -320,7 +320,7 @@ type Countdown = {
           </div>
           <a
             href="#sport"
-            class="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5 text-[0.6rem] font-black uppercase tracking-[0.22em] text-white/30 transition hover:text-fossa"
+            class="absolute bottom-6 left-1/2 -translate-x-1/2 hidden flex-col items-center gap-1.5 text-[0.6rem] font-black uppercase tracking-[0.22em] text-white/30 transition hover:text-fossa sm:flex"
             (click)="scrollToSection($event, 'sport')"
             aria-label="Scorri verso i tornei"
           >
@@ -408,19 +408,17 @@ type Countdown = {
               [title]="game.name"
               (close)="closeGameDetails()"
             >
-              <div
-                class="grid gap-4 text-ink sm:grid-cols-[9rem_1fr] sm:items-start sm:gap-5"
-              >
-                <div
-                  class="mx-auto flex h-32 w-32 shrink-0 items-center justify-center rounded-xl border border-black/10 bg-[#f8f8f8] p-4 sm:mx-0"
-                >
-                  <img
-                    [src]="game.image"
-                    [alt]="game.name"
-                    class="h-full w-full object-contain"
-                  />
+              <div class="text-ink">
+                <div class="flex justify-center">
+                  <div class="flex h-20 w-20 items-center justify-center rounded-2xl bg-[#111] p-4">
+                    <img
+                      [src]="game.image"
+                      [alt]="game.name"
+                      class="h-full w-full object-contain"
+                    />
+                  </div>
                 </div>
-                <div class="min-w-0">
+                <div class="mt-5">
                   <p
                     class="text-sm font-semibold leading-6 text-black/68 sm:text-base sm:leading-7"
                   >
@@ -435,8 +433,7 @@ type Countdown = {
                       Regolamento
                     </p>
                     <p class="mt-2 text-sm font-black leading-6">
-                      Il regolamento ufficiale di questo torneo arriverà a
-                      giorni.
+                      Il regolamento ufficiale sarà disponibile a breve.
                     </p>
                   </div>
                   <button
@@ -633,7 +630,7 @@ type Countdown = {
             <h2
               class="mt-3 max-w-4xl font-display text-4xl uppercase leading-none text-fossa sm:text-6xl"
             >
-              Richiedi la tua iscrizione o informazioni sponsor.
+              Partecipa o diventa sponsor.
             </h2>
             <p
               class="mt-6 max-w-2xl text-lg font-semibold leading-8 text-white/72"
