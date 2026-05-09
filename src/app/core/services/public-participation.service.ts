@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
-import { InsertParticipationRequest, PublicTournament } from '../types/models';
+import { InsertParticipationRequest, InsertSponsor, PublicTournament } from '../types/models';
 
 @Injectable({ providedIn: 'root' })
 export class PublicParticipationService {
@@ -21,6 +21,11 @@ export class PublicParticipationService {
 
   async createRequest(payload: InsertParticipationRequest): Promise<void> {
     const { error } = await this.supabase.client.from('participation_requests').insert(payload);
+    if (error) throw error;
+  }
+
+  async createSponsorLead(payload: InsertSponsor): Promise<void> {
+    const { error } = await this.supabase.client.from('sponsors').insert(payload);
     if (error) throw error;
   }
 }

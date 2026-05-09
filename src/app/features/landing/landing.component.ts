@@ -2,6 +2,9 @@ import { Component, OnDestroy, OnInit, signal } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { PublicParticipationService } from "../../core/services/public-participation.service";
 import { PublicTournament } from "../../core/types/models";
+
+type ContactReason = "participation" | "sponsor";
+
 type Game = {
   name: string;
   description: string;
@@ -60,7 +63,7 @@ type Countdown = {
                 href="#partecipa"
                 class="hidden text-white/70 transition hover:text-fossa sm:inline"
                 (click)="scrollToSection($event, 'partecipa')"
-                >Partecipa</a
+                >Contatti</a
               >
             </div>
           </nav>
@@ -91,7 +94,7 @@ type Countdown = {
                   class="rounded-md bg-fossa px-5 py-3 text-sm font-black uppercase tracking-[0.14em] text-ink shadow-[0_0_34px_rgba(255,212,0,0.25)] transition hover:bg-white"
                   (click)="scrollToSection($event, 'partecipa')"
                 >
-                  Partecipa
+                  Contattaci
                 </a>
                 <a
                   href="#sport"
@@ -267,19 +270,19 @@ type Countdown = {
             <p
               class="text-xs font-black uppercase tracking-[0.28em] text-fossa"
             >
-              Iscrizioni
+              Iscrizioni e sponsor
             </p>
             <h2
               class="mt-3 max-w-4xl font-display text-4xl uppercase leading-none text-fossa sm:text-6xl"
             >
-              Richiedi la tua iscrizione.
+              Richiedi la tua iscrizione o informazioni sponsor.
             </h2>
             <p
               class="mt-6 max-w-2xl text-lg font-semibold leading-8 text-white/72"
             >
-              Scegli il torneo, lascia un numero WhatsApp e invia la richiesta.
-              Ti ricontatteremo per confermare disponibilità, dettagli e prossimi
-              passi.
+              Scegli se vuoi partecipare a un torneo o ricevere informazioni
+              sulle sponsorizzazioni, lascia un numero WhatsApp e ti
+              ricontatteremo con dettagli e prossimi passi.
             </p>
             <img
               src="/assets/brand/logo-social.png"
@@ -320,10 +323,10 @@ type Countdown = {
                 <p
                   class="text-xs font-black uppercase tracking-[0.24em] text-fossa"
                 >
-                  Richiesta iscrizione
+                  Richiesta contatto
                 </p>
                 <h3 class="mt-2 font-display text-2xl uppercase leading-none sm:text-3xl">
-                  Dati partecipante
+                  {{ formTitle() }}
                 </h3>
               </div>
               @if (loadingTournaments()) {
@@ -338,8 +341,7 @@ type Countdown = {
               <p
                 class="mt-5 rounded-md border border-emerald-400/30 bg-emerald-500/10 p-3 text-sm font-semibold text-emerald-100"
               >
-                Richiesta inviata. Ti ricontatteremo via WhatsApp il prima
-                possibile.
+                {{ successMessage() }}
               </p>
             }
 
@@ -352,6 +354,22 @@ type Countdown = {
             }
 
             <div class="mt-5 grid gap-4">
+              <label
+                class="grid gap-2 text-sm font-black uppercase tracking-[0.12em] text-white/72"
+              >
+                Motivo del contatto
+                <select
+                  required
+                  name="contactReason"
+                  [(ngModel)]="participationForm.reason"
+                  class="rounded-md border border-white/10 bg-[#101010] px-3 py-3 text-base font-semibold normal-case tracking-normal text-white outline-none focus:border-fossa"
+                >
+                  <option value="participation">Informazioni torneo</option>
+                  <option value="sponsor">Informazioni sponsor</option>
+                </select>
+              </label>
+
+              @if (participationForm.reason === "participation") {
               <label
                 class="grid gap-2 text-sm font-black uppercase tracking-[0.12em] text-white/72"
               >
@@ -370,6 +388,20 @@ type Countdown = {
                   }
                 </select>
               </label>
+              } @else {
+                <label
+                  class="grid gap-2 text-sm font-black uppercase tracking-[0.12em] text-white/72"
+                >
+                  Azienda o attività
+                  <input
+                    required
+                    name="companyName"
+                    [(ngModel)]="participationForm.company_name"
+                    autocomplete="organization"
+                    class="rounded-md border border-white/10 bg-[#101010] px-3 py-3 text-base font-semibold normal-case tracking-normal text-white outline-none focus:border-fossa"
+                  />
+                </label>
+              }
 
               <div class="grid gap-4 sm:grid-cols-2">
                 <label
@@ -427,7 +459,7 @@ type Countdown = {
                   />
                   <span
                     >Accetto il trattamento dei dati personali per la gestione
-                    della richiesta di partecipazione.</span
+                    della richiesta di contatto.</span
                   >
                 </label>
                 <label
@@ -441,10 +473,11 @@ type Countdown = {
                     class="mt-1 h-4 w-4 shrink-0 accent-fossa"
                   />
                   <span
-                    >Autorizzo il contatto via WhatsApp per conferme e
-                    comunicazioni organizzative sul torneo.</span
+                    >Autorizzo il contatto via WhatsApp per conferme, dettagli
+                    organizzativi e informazioni richieste.</span
                   >
                 </label>
+                @if (participationForm.reason === "participation") {
                 <label
                   class="flex gap-3 text-sm font-semibold leading-6 text-white/74"
                 >
@@ -460,14 +493,15 @@ type Countdown = {
                     e condizioni di partecipazione.</span
                   >
                 </label>
+                }
               </div>
 
               <button
                 type="submit"
-                [disabled]="submitting() || loadingTournaments()"
+                [disabled]="submitting() || (participationForm.reason === 'participation' && loadingTournaments())"
                 class="rounded-md bg-fossa px-5 py-3 text-sm font-black uppercase tracking-[0.14em] text-ink transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {{ submitting() ? "Invio in corso" : "Invia richiesta" }}
+                {{ submitting() ? "Invio in corso" : submitLabel() }}
               </button>
             </div>
           </form>
@@ -527,7 +561,7 @@ type Countdown = {
                   class="text-white/72 transition hover:text-fossa"
                   (click)="scrollToSection($event, 'partecipa')"
                 >
-                  Partecipa
+                  Contatti
                 </a>
               </div>
             </div>
@@ -657,18 +691,34 @@ export class LandingComponent implements OnInit, OnDestroy {
 
     this.submitting.set(true);
     try {
-      await this.participation.createRequest({
-        tournament_id: this.participationForm.tournament_id,
-        first_name: this.participationForm.first_name.trim(),
-        last_name: this.participationForm.last_name.trim(),
-        phone: this.participationForm.phone.trim(),
-        privacy_accepted: this.participationForm.privacy_accepted,
-        whatsapp_accepted: this.participationForm.whatsapp_accepted,
-        rules_accepted: this.participationForm.rules_accepted,
-      });
+      if (this.participationForm.reason === "sponsor") {
+        await this.participation.createSponsorLead({
+          company_name: this.participationForm.company_name.trim(),
+          contact_name: `${this.participationForm.first_name.trim()} ${this.participationForm.last_name.trim()}`,
+          contact_info: this.participationForm.phone.trim(),
+          type: "cash",
+          value: 0,
+          status: "contattato",
+          deliverables: "Richiesta informazioni sponsor dal sito pubblico",
+          notes:
+            "Lead sponsor generato dal form pubblico. Ricontattare via WhatsApp.",
+        });
+      } else {
+        await this.participation.createRequest({
+          tournament_id: this.participationForm.tournament_id,
+          first_name: this.participationForm.first_name.trim(),
+          last_name: this.participationForm.last_name.trim(),
+          phone: this.participationForm.phone.trim(),
+          privacy_accepted: this.participationForm.privacy_accepted,
+          whatsapp_accepted: this.participationForm.whatsapp_accepted,
+          rules_accepted: this.participationForm.rules_accepted,
+        });
+      }
       const selectedTournamentId = this.participationForm.tournament_id;
+      const selectedReason = this.participationForm.reason;
       this.participationForm = this.emptyParticipationForm();
       this.participationForm.tournament_id = selectedTournamentId;
+      this.participationForm.reason = selectedReason;
       this.success.set(true);
     } catch (error) {
       this.error.set(this.message(error));
@@ -695,6 +745,24 @@ export class LandingComponent implements OnInit, OnDestroy {
     ];
   }
 
+  formTitle(): string {
+    return this.participationForm.reason === "sponsor"
+      ? "Dati sponsor"
+      : "Dati contatto";
+  }
+
+  submitLabel(): string {
+    return this.participationForm.reason === "sponsor"
+      ? "Invia richiesta sponsor"
+      : "Invia richiesta";
+  }
+
+  successMessage(): string {
+    return this.participationForm.reason === "sponsor"
+      ? "Richiesta sponsor inviata. Ti ricontatteremo via WhatsApp il prima possibile."
+      : "Richiesta informazioni torneo inviata. Ti ricontatteremo via WhatsApp il prima possibile.";
+  }
+
   scrollToSection(event: MouseEvent, sectionId: string): void {
     event.preventDefault();
     const section = document.getElementById(sectionId);
@@ -715,7 +783,9 @@ export class LandingComponent implements OnInit, OnDestroy {
 
   private emptyParticipationForm() {
     return {
+      reason: "participation" as ContactReason,
       tournament_id: "",
+      company_name: "",
       first_name: "",
       last_name: "",
       phone: "",
@@ -726,14 +796,22 @@ export class LandingComponent implements OnInit, OnDestroy {
   }
 
   private isFormValid(): boolean {
-    return Boolean(
-      this.participationForm.tournament_id &&
+    const hasContactData = Boolean(
       this.participationForm.first_name.trim() &&
-      this.participationForm.last_name.trim() &&
-      this.participationForm.phone.trim() &&
-      this.participationForm.privacy_accepted &&
-      this.participationForm.whatsapp_accepted &&
-      this.participationForm.rules_accepted,
+        this.participationForm.last_name.trim() &&
+        this.participationForm.phone.trim() &&
+        this.participationForm.privacy_accepted &&
+        this.participationForm.whatsapp_accepted,
+    );
+
+    if (this.participationForm.reason === "sponsor") {
+      return Boolean(hasContactData && this.participationForm.company_name.trim());
+    }
+
+    return Boolean(
+      hasContactData &&
+        this.participationForm.tournament_id &&
+        this.participationForm.rules_accepted,
     );
   }
 

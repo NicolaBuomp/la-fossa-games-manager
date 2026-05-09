@@ -16,7 +16,7 @@ import {
 
 const DEFAULT_TOURNAMENTS: { code: string; name: string; sport: TournamentSport }[] = [
   { code: 'calcio-a-5', name: 'Calcio a 5', sport: 'calcio' },
-  { code: 'calcio-a-5-under-14', name: 'Calcio a 5 Under 14', sport: 'calcio' },
+  { code: 'calcio-a-5-under-15', name: 'Calcio a 5 Under 15', sport: 'calcio' },
   { code: 'pallavolo', name: 'Pallavolo', sport: 'pallavolo' },
   { code: 'briscola', name: 'Briscola', sport: 'altro' },
   { code: 'fifa', name: 'Fifa', sport: 'altro' },
