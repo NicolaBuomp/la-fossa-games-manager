@@ -79,6 +79,24 @@ type Countdown = {
                 (click)="scrollToSection($event, 'partecipa')"
                 >Contatti</a
               >
+              <a
+                href="https://www.instagram.com/lafossagames?igsh=MXZuMTBhNjA3NjRjaw%3D%3D&utm_source=qr"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Instagram"
+                class="hidden h-8 w-8 items-center justify-center rounded-md border border-white/15 text-white/50 transition hover:border-fossa/50 hover:text-fossa sm:flex"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+              </a>
+              <a
+                href="https://www.facebook.com/profile.php?id=61589316541437"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Facebook"
+                class="hidden h-8 w-8 items-center justify-center rounded-md border border-white/15 text-white/50 transition hover:border-fossa/50 hover:text-fossa sm:flex"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+              </a>
               <button
                 type="button"
                 class="flex h-9 w-9 items-center justify-center rounded-md border border-white/15 text-white/70 transition hover:border-fossa/50 hover:text-fossa sm:hidden"
@@ -223,6 +241,27 @@ type Countdown = {
               </div>
             </div>
           </div>
+        <a
+          href="#sport"
+          class="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5 text-[0.6rem] font-black uppercase tracking-[0.22em] text-white/30 transition hover:text-fossa"
+          (click)="scrollToSection($event, 'sport')"
+          aria-label="Scorri verso i tornei"
+        >
+          Scopri
+          <svg
+            class="animate-bounce"
+            width="16"
+            height="16"
+            viewBox="0 0 16 16"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polyline points="3,5 8,11 13,5" />
+          </svg>
+        </a>
         </div>
       </section>
 
@@ -254,17 +293,17 @@ type Countdown = {
           </div>
 
           <div
-            class="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7"
+            class="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4 xl:grid-cols-7"
           >
             @for (game of games; track game.name) {
               <button
                 type="button"
-                class="group flex w-full min-h-0 touch-manipulation flex-col rounded-lg border border-black/10 bg-white p-4 text-left shadow-sm transition hover:-translate-y-1 hover:border-fossa focus:outline-none focus:ring-4 focus:ring-fossa/45 sm:min-h-[22rem] sm:p-5"
+                class="group flex w-full touch-manipulation flex-col rounded-lg border border-black/10 bg-white p-3 text-left shadow-sm transition hover:-translate-y-1 hover:border-fossa focus:outline-none focus:ring-4 focus:ring-fossa/45 sm:p-5"
                 [attr.aria-label]="'Apri dettagli ' + game.name"
                 (click)="openGameDetails(game)"
               >
                 <div
-                  class="flex h-40 items-center justify-center rounded-md bg-black p-4 sm:h-auto sm:aspect-square sm:p-5"
+                  class="aspect-square w-full items-center justify-center rounded-md bg-black p-4 sm:p-5 flex"
                 >
                   <img
                     [src]="game.image"
@@ -362,6 +401,20 @@ type Countdown = {
               amici, famiglie e tifosi: un appuntamento riconoscibile, curato
               nell'organizzazione e semplice da seguire.
             </p>
+            <div class="mt-8 grid grid-cols-3 gap-4 border-t border-black/15 pt-8">
+              <div>
+                <p class="font-display text-5xl uppercase leading-none sm:text-6xl">7</p>
+                <p class="mt-2 text-xs font-black uppercase tracking-[0.18em] text-black/58">Tornei</p>
+              </div>
+              <div>
+                <p class="font-display text-5xl uppercase leading-none sm:text-6xl">5</p>
+                <p class="mt-2 text-xs font-black uppercase tracking-[0.18em] text-black/58">Giorni</p>
+              </div>
+              <div>
+                <p class="font-display text-5xl uppercase leading-none sm:text-6xl">1ª</p>
+                <p class="mt-2 text-xs font-black uppercase tracking-[0.18em] text-black/58">Edizione</p>
+              </div>
+            </div>
           </div>
           <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
             <div
@@ -421,11 +474,22 @@ type Countdown = {
           <div class="mt-10 grid gap-4 lg:grid-cols-3">
             @for (tier of sponsorTiers; track tier.name) {
               <article
-                class="rounded-lg border border-white/10 bg-white/[0.04] p-5 shadow-2xl transition hover:-translate-y-1 hover:border-fossa/70 sm:p-6"
+                class="relative rounded-lg border p-5 shadow-2xl transition hover:-translate-y-1 sm:p-6"
+                [class]="tier.name === 'Gold'
+                  ? 'border-[#ffd400]/50 bg-[#ffd400]/[0.06] ring-1 ring-[#ffd400]/20 shadow-[0_0_48px_rgba(255,212,0,0.10)]'
+                  : 'border-white/10 bg-white/[0.04] hover:border-fossa/70'"
               >
+                @if (tier.name === 'Gold') {
+                  <span
+                    class="absolute -top-3 left-5 rounded-full bg-[#ffd400] px-3 py-0.5 text-[0.65rem] font-black uppercase tracking-[0.18em] text-black"
+                  >
+                    Consigliato
+                  </span>
+                }
                 <div class="flex items-center gap-4">
                   <div
                     class="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border text-3xl font-black"
+                    [class]="tier.name === 'Gold' ? 'shadow-[0_0_20px_rgba(255,212,0,0.35)]' : ''"
                     [style.border-color]="tier.color"
                     [style.color]="tier.color"
                   >
@@ -580,7 +644,7 @@ type Countdown = {
                   name="contactReason"
                   [(ngModel)]="participationForm.reason"
                   (ngModelChange)="onReasonChange()"
-                  class="rounded-md border border-white/10 bg-[#101010] px-3 py-3 text-base font-semibold normal-case tracking-normal text-white outline-none focus:border-fossa"
+                  class="rounded-md border border-white/20 bg-[#101010] px-3 py-3 text-base font-semibold normal-case tracking-normal text-white outline-none transition focus:border-fossa focus:ring-2 focus:ring-fossa/20"
                 >
                   <option value="participation">Informazioni torneo</option>
                   <option value="sponsor">Informazioni sponsor</option>
@@ -596,7 +660,7 @@ type Countdown = {
                     required
                     name="tournament"
                     [(ngModel)]="participationForm.tournament_id"
-                    class="rounded-md border border-white/10 bg-[#101010] px-3 py-3 text-base font-semibold normal-case tracking-normal text-white outline-none focus:border-fossa"
+                    class="rounded-md border border-white/20 bg-[#101010] px-3 py-3 text-base font-semibold normal-case tracking-normal text-white outline-none transition focus:border-fossa focus:ring-2 focus:ring-fossa/20"
                   >
                     <option value="" disabled>Seleziona un torneo</option>
                     @for (tournament of tournaments(); track tournament.id) {
@@ -616,7 +680,7 @@ type Countdown = {
                     name="companyName"
                     [(ngModel)]="participationForm.company_name"
                     autocomplete="organization"
-                    class="rounded-md border border-white/10 bg-[#101010] px-3 py-3 text-base font-semibold normal-case tracking-normal text-white outline-none focus:border-fossa"
+                    class="rounded-md border border-white/20 bg-[#101010] px-3 py-3 text-base font-semibold normal-case tracking-normal text-white outline-none transition focus:border-fossa focus:ring-2 focus:ring-fossa/20"
                   />
                 </label>
               }
@@ -631,7 +695,7 @@ type Countdown = {
                     name="firstName"
                     [(ngModel)]="participationForm.first_name"
                     autocomplete="given-name"
-                    class="rounded-md border border-white/10 bg-[#101010] px-3 py-3 text-base font-semibold normal-case tracking-normal text-white outline-none focus:border-fossa"
+                    class="rounded-md border border-white/20 bg-[#101010] px-3 py-3 text-base font-semibold normal-case tracking-normal text-white outline-none transition focus:border-fossa focus:ring-2 focus:ring-fossa/20"
                   />
                 </label>
                 <label
@@ -643,7 +707,7 @@ type Countdown = {
                     name="lastName"
                     [(ngModel)]="participationForm.last_name"
                     autocomplete="family-name"
-                    class="rounded-md border border-white/10 bg-[#101010] px-3 py-3 text-base font-semibold normal-case tracking-normal text-white outline-none focus:border-fossa"
+                    class="rounded-md border border-white/20 bg-[#101010] px-3 py-3 text-base font-semibold normal-case tracking-normal text-white outline-none transition focus:border-fossa focus:ring-2 focus:ring-fossa/20"
                   />
                 </label>
               </div>
@@ -658,7 +722,7 @@ type Countdown = {
                   name="phone"
                   [(ngModel)]="participationForm.phone"
                   autocomplete="tel"
-                  class="rounded-md border border-white/10 bg-[#101010] px-3 py-3 text-base font-semibold normal-case tracking-normal text-white outline-none focus:border-fossa"
+                  class="rounded-md border border-white/20 bg-[#101010] px-3 py-3 text-base font-semibold normal-case tracking-normal text-white outline-none transition focus:border-fossa focus:ring-2 focus:ring-fossa/20"
                 />
               </label>
 
@@ -813,6 +877,35 @@ type Countdown = {
                 <span class="font-black uppercase tracking-[0.14em] text-fossa">
                   Richieste aperte
                 </span>
+              </div>
+              <p
+                class="mt-6 text-xs font-black uppercase tracking-[0.22em] text-white/38"
+              >
+                Seguici
+              </p>
+              <div class="mt-4 flex gap-3">
+                <a
+                  href="https://www.instagram.com/lafossagames?igsh=MXZuMTBhNjA3NjRjaw%3D%3D&utm_source=qr"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Instagram La Fossa Games"
+                  class="flex h-9 w-9 items-center justify-center rounded-md border border-white/10 text-white/50 transition hover:border-fossa/50 hover:text-fossa"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                  </svg>
+                </a>
+                <a
+                  href="https://www.facebook.com/profile.php?id=61589316541437"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Facebook La Fossa Games"
+                  class="flex h-9 w-9 items-center justify-center rounded-md border border-white/10 text-white/50 transition hover:border-fossa/50 hover:text-fossa"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                  </svg>
+                </a>
               </div>
             </div>
           </div>
