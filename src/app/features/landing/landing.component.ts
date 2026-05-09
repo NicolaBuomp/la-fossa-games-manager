@@ -29,6 +29,20 @@ type Countdown = {
 @Component({
   standalone: true,
   imports: [FormsModule, ModalComponent],
+  styles: [`
+    @keyframes shimmer {
+      0%   { background-position: -200% center; }
+      100% { background-position:  200% center; }
+    }
+    .hero-title {
+      background: linear-gradient(90deg, #ffd400 35%, #fffbe6 50%, #ffd400 65%);
+      background-size: 250% auto;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: shimmer 5s linear infinite;
+    }
+  `],
   template: `
     <main class="min-h-screen overflow-hidden bg-[#070707] text-white">
       <section class="relative min-h-screen px-5 pb-8 pt-5 sm:px-8 lg:px-10">
@@ -145,7 +159,7 @@ type Countdown = {
                 Santa Maria La Fossa
               </p>
               <h1
-                class="font-display text-[clamp(3.4rem,10vw,6.85rem)] uppercase leading-[0.8] text-fossa"
+                class="hero-title font-display text-[clamp(3.4rem,10vw,6.85rem)] uppercase leading-[0.8]"
               >
                 La Fossa<br />Games
               </h1>
