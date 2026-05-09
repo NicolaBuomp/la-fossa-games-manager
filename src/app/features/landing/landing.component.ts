@@ -79,8 +79,44 @@ type Countdown = {
                 (click)="scrollToSection($event, 'partecipa')"
                 >Contatti</a
               >
+              <button
+                type="button"
+                class="flex h-9 w-9 items-center justify-center rounded-md border border-white/15 text-white/70 transition hover:border-fossa/50 hover:text-fossa sm:hidden"
+                [attr.aria-label]="mobileMenuOpen() ? 'Chiudi menu' : 'Apri menu'"
+                [attr.aria-expanded]="mobileMenuOpen()"
+                (click)="mobileMenuOpen.set(!mobileMenuOpen())"
+              >
+                @if (mobileMenuOpen()) {
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="2" y1="2" x2="14" y2="14"/><line x1="14" y1="2" x2="2" y2="14"/></svg>
+                } @else {
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="2" y1="4" x2="14" y2="4"/><line x1="2" y1="8" x2="14" y2="8"/><line x1="2" y1="12" x2="14" y2="12"/></svg>
+                }
+              </button>
             </div>
           </nav>
+
+          @if (mobileMenuOpen()) {
+            <div class="relative z-20 mt-2 rounded-md border border-white/10 bg-black/90 py-2 backdrop-blur sm:hidden">
+              <a
+                href="#sport"
+                class="block px-5 py-3 text-xs font-black uppercase tracking-[0.2em] text-white/70 transition hover:bg-white/5 hover:text-fossa"
+                (click)="mobileMenuOpen.set(false); scrollToSection($event, 'sport')"
+                >Sport</a
+              >
+              <a
+                href="#sponsor"
+                class="block px-5 py-3 text-xs font-black uppercase tracking-[0.2em] text-white/70 transition hover:bg-white/5 hover:text-fossa"
+                (click)="mobileMenuOpen.set(false); scrollToSection($event, 'sponsor')"
+                >Sponsor</a
+              >
+              <a
+                href="#partecipa"
+                class="block px-5 py-3 text-xs font-black uppercase tracking-[0.2em] text-white/70 transition hover:bg-white/5 hover:text-fossa"
+                (click)="mobileMenuOpen.set(false); scrollToSection($event, 'partecipa')"
+                >Contatti</a
+              >
+            </div>
+          }
 
           <div id="top" class="flex flex-1 items-center py-6 lg:py-8">
             <div class="max-w-4xl">
@@ -543,6 +579,7 @@ type Countdown = {
                   required
                   name="contactReason"
                   [(ngModel)]="participationForm.reason"
+                  (ngModelChange)="onReasonChange()"
                   class="rounded-md border border-white/10 bg-[#101010] px-3 py-3 text-base font-semibold normal-case tracking-normal text-white outline-none focus:border-fossa"
                 >
                   <option value="participation">Informazioni torneo</option>
@@ -802,6 +839,7 @@ export class LandingComponent implements OnInit, OnDestroy {
   submitting = signal(false);
   success = signal(false);
   error = signal("");
+  mobileMenuOpen = signal(false);
   participationForm = this.emptyParticipationForm();
   protected readonly eventDateRange = "22-26 giugno 2026";
   protected readonly eventAddress =
@@ -975,7 +1013,7 @@ export class LandingComponent implements OnInit, OnDestroy {
   countdownItems(): { label: string; value: string }[] {
     const countdown = this.countdown();
     return [
-      { label: "Giorni", value: String(countdown.days) },
+      { label: "Giorni", value: String(countdown.days).padStart(2, "0") },
       { label: "Ore", value: this.twoDigits(countdown.hours) },
       { label: "Min", value: this.twoDigits(countdown.minutes) },
       { label: "Sec", value: this.twoDigits(countdown.seconds) },
@@ -1018,8 +1056,14 @@ export class LandingComponent implements OnInit, OnDestroy {
     window.history.replaceState(null, "", `#${sectionId}`);
   }
 
+  onReasonChange(): void {
+    this.success.set(false);
+    this.error.set("");
+  }
+
   selectSponsorContact(event: MouseEvent): void {
     this.participationForm.reason = "sponsor";
+    this.onReasonChange();
     this.scrollToSection(event, "partecipa");
   }
 
@@ -1040,7 +1084,7 @@ export class LandingComponent implements OnInit, OnDestroy {
       this.participationForm.tournament_id = matchingTournament.id;
     }
     this.closeGameDetails();
-    this.scrollToElement("partecipa");
+    this.scrollToSection(new MouseEvent("click"), "partecipa");
   }
 
   private emptyParticipationForm() {
@@ -1101,23 +1145,6 @@ export class LandingComponent implements OnInit, OnDestroy {
 
   private twoDigits(value: number): string {
     return value.toString().padStart(2, "0");
-  }
-
-  private scrollToElement(sectionId: string): void {
-    const section = document.getElementById(sectionId);
-    if (!section) {
-      return;
-    }
-
-    const prefersReducedMotion = window.matchMedia(
-      "(prefers-reduced-motion: reduce)",
-    ).matches;
-
-    section.scrollIntoView({
-      behavior: prefersReducedMotion ? "auto" : "smooth",
-      block: "start",
-    });
-    window.history.replaceState(null, "", `#${sectionId}`);
   }
 
   private sameTournamentName(
