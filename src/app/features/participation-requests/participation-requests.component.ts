@@ -3,13 +3,13 @@ import { FormsModule } from '@angular/forms';
 import { ParticipationRequestsService } from '../../core/services/participation-requests.service';
 import { RequestBadgesService } from '../../core/services/request-badges.service';
 import { ParticipationRequest, ParticipationRequestNoteWithProfile, ParticipationRequestWithTournament } from '../../core/types/models';
-import { EmptyStateComponent, StatusBadgeComponent } from '../../shared/components/ui.component';
+import { ConfirmModalComponent, EmptyStateComponent, StatusBadgeComponent } from '../../shared/components/ui.component';
 
 type RequestStatus = ParticipationRequest['status'];
 
 @Component({
   standalone: true,
-  imports: [FormsModule, EmptyStateComponent, StatusBadgeComponent],
+  imports: [FormsModule, EmptyStateComponent, StatusBadgeComponent, ConfirmModalComponent],
   template: `
     <section class="space-y-4">
       <div class="flex flex-wrap items-end justify-between gap-3">
@@ -66,8 +66,12 @@ type RequestStatus = ParticipationRequest['status'];
                   Nuova nota admin
                   <input class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal" [ngModel]="noteDrafts()[request.id] || ''" (ngModelChange)="setNoteDraft(request.id, $event)" />
                 </label>
-                <button class="rounded-lg bg-ink px-4 py-3 text-sm font-bold uppercase text-white" (click)="addNote(request)">Aggiungi nota</button>
-                <button class="rounded-lg bg-red-50 px-4 py-3 text-sm font-bold uppercase text-red-700" (click)="remove(request)">Elimina</button>
+                <button
+                  [disabled]="savingNoteId() === request.id"
+                  class="rounded-lg bg-ink px-4 py-3 text-sm font-bold uppercase text-white disabled:opacity-60"
+                  (click)="addNote(request)"
+                >{{ savingNoteId() === request.id ? 'Salvataggio…' : 'Aggiungi nota' }}</button>
+                <button class="rounded-lg bg-red-50 px-4 py-3 text-sm font-bold uppercase text-red-700" (click)="askRemove(request)">Elimina</button>
               </div>
 
               @if (request.participation_request_notes.length) {
@@ -91,6 +95,13 @@ type RequestStatus = ParticipationRequest['status'];
         </div>
       }
     </section>
+
+    <lfg-confirm
+      [open]="!!confirmPending()"
+      [message]="confirmMessage()"
+      (confirm)="doConfirm()"
+      (cancel)="confirmPending.set(null)"
+    />
   `
 })
 export class ParticipationRequestsComponent implements OnInit {
@@ -98,6 +109,9 @@ export class ParticipationRequestsComponent implements OnInit {
   noteDrafts = signal<Record<string, string>>({});
   loading = signal(false);
   error = signal('');
+  savingNoteId = signal<string | null>(null);
+  confirmPending = signal<(() => Promise<void>) | null>(null);
+  confirmMessage = signal('');
 
   constructor(
     private readonly service: ParticipationRequestsService,
@@ -114,7 +128,9 @@ export class ParticipationRequestsComponent implements OnInit {
     try {
       const requests = await this.service.list();
       this.requests.set(requests);
-      this.noteDrafts.set(Object.fromEntries(requests.map((request) => [request.id, ''])));
+      // Preserve existing drafts — only initialize keys that don't exist yet
+      const existing = this.noteDrafts();
+      this.noteDrafts.set(Object.fromEntries(requests.map((r) => [r.id, existing[r.id] ?? ''])));
       await this.badges.refresh();
     } catch (error) {
       this.error.set(this.message(error));
@@ -138,27 +154,36 @@ export class ParticipationRequestsComponent implements OnInit {
   }
 
   async addNote(request: ParticipationRequestWithTournament): Promise<void> {
+    const notes = this.noteDrafts()[request.id] ?? '';
+    const normalizedNotes = notes.trim();
+    if (!normalizedNotes || this.savingNoteId() === request.id) return;
+    this.savingNoteId.set(request.id);
     try {
-      const notes = this.noteDrafts()[request.id] ?? '';
-      const normalizedNotes = notes.trim();
-      if (!normalizedNotes) return;
       await this.service.addNote(request.id, normalizedNotes);
       this.setNoteDraft(request.id, '');
       await this.load();
     } catch (error) {
       this.error.set(this.message(error));
+    } finally {
+      this.savingNoteId.set(null);
     }
   }
 
-  async remove(request: ParticipationRequestWithTournament): Promise<void> {
-    if (!confirm(`Eliminare la richiesta di ${request.first_name} ${request.last_name}?`)) return;
-    try {
-      await this.service.remove(request.id);
-      this.requests.update((requests) => requests.filter((item) => item.id !== request.id));
-      await this.badges.refresh();
-    } catch (error) {
-      this.error.set(this.message(error));
-    }
+  askRemove(request: ParticipationRequestWithTournament): void {
+    this.confirmMessage.set(`Eliminare la richiesta di ${request.first_name} ${request.last_name}?`);
+    this.confirmPending.set(async () => {
+      try {
+        await this.service.remove(request.id);
+        this.requests.update((requests) => requests.filter((item) => item.id !== request.id));
+        await this.badges.refresh();
+      } catch (error) { this.error.set(this.message(error)); }
+    });
+  }
+
+  async doConfirm(): Promise<void> {
+    const fn = this.confirmPending();
+    this.confirmPending.set(null);
+    if (fn) await fn();
   }
 
   whatsappUrl(phone: string): string {

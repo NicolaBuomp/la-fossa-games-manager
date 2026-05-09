@@ -13,13 +13,13 @@ import {
   TournamentTeamWithParticipants,
   TournamentWithTeams
 } from '../../core/types/models';
-import { EmptyStateComponent, ModalComponent, StatusBadgeComponent, SummaryCardComponent } from '../../shared/components/ui.component';
+import { ConfirmModalComponent, EmptyStateComponent, ModalComponent, StatusBadgeComponent, SummaryCardComponent } from '../../shared/components/ui.component';
 
 type ModalMode = 'tournament' | 'team' | 'participant' | null;
 
 @Component({
   standalone: true,
-  imports: [FormsModule, EmptyStateComponent, ModalComponent, StatusBadgeComponent, SummaryCardComponent],
+  imports: [FormsModule, EmptyStateComponent, ModalComponent, StatusBadgeComponent, SummaryCardComponent, ConfirmModalComponent],
   template: `
     <section class="space-y-4">
       <div class="flex flex-wrap items-end justify-between gap-3">
@@ -133,7 +133,7 @@ type ModalMode = 'tournament' | 'team' | 'participant' | null;
                             <div class="flex gap-2">
                               <button class="rounded-md bg-neutral-100 px-2.5 py-1.5 text-[10px] font-bold uppercase" (click)="editParticipant(participant)">Modifica</button>
                               @if (auth.isAdmin()) {
-                                <button class="rounded-md bg-red-50 px-2.5 py-1.5 text-[10px] font-bold uppercase text-red-700" (click)="removeParticipant(participant)">Elimina</button>
+                                <button class="rounded-md bg-red-50 px-2.5 py-1.5 text-[10px] font-bold uppercase text-red-700" (click)="askRemoveParticipant(participant)">Elimina</button>
                               }
                             </div>
                           </div>
@@ -149,7 +149,7 @@ type ModalMode = 'tournament' | 'team' | 'participant' | null;
                       <button class="rounded-md bg-neutral-100 px-3 py-1.5 text-xs font-bold uppercase" (click)="newParticipant(team.id)">Aggiungi persona</button>
                     }
                     @if (auth.isAdmin()) {
-                      <button class="rounded-md bg-red-50 px-3 py-1.5 text-xs font-bold uppercase text-red-700" (click)="removeTeam(team)">Elimina squadra</button>
+                      <button class="rounded-md bg-red-50 px-3 py-1.5 text-xs font-bold uppercase text-red-700" (click)="askRemoveTeam(team)">Elimina squadra</button>
                     }
                   </div>
                 </article>
@@ -166,7 +166,7 @@ type ModalMode = 'tournament' | 'team' | 'participant' | null;
           <label class="grid gap-1 text-sm font-bold">Nome torneo <input required name="tournamentName" [(ngModel)]="tournamentForm.name" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal"></label>
           <label class="grid gap-1 text-sm font-bold">Quota torneo <input type="number" min="0" step="0.01" name="tournamentFee" [(ngModel)]="tournamentForm.fee" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal"></label>
         </div>
-        <button class="rounded-lg bg-ink px-4 py-3 text-sm font-bold uppercase text-white">Salva torneo</button>
+        <button [disabled]="saving()" class="rounded-lg bg-ink px-4 py-3 text-sm font-bold uppercase text-white disabled:opacity-60">{{ saving() ? 'Salvataggio…' : 'Salva torneo' }}</button>
       </form>
     </lfg-modal>
 
@@ -185,7 +185,7 @@ type ModalMode = 'tournament' | 'team' | 'participant' | null;
         }
         <label class="flex items-center gap-3 rounded-lg bg-neutral-50 p-3 text-sm font-bold"><input type="checkbox" name="teamPaid" [(ngModel)]="teamForm.paid" class="h-5 w-5 accent-emerald-600"> Squadra pagata</label>
         <label class="grid gap-1 text-sm font-bold">Note <textarea rows="3" name="teamNotes" [(ngModel)]="teamForm.notes" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal"></textarea></label>
-        <button class="rounded-lg bg-ink px-4 py-3 text-sm font-bold uppercase text-white">Salva squadra</button>
+        <button [disabled]="saving()" class="rounded-lg bg-ink px-4 py-3 text-sm font-bold uppercase text-white disabled:opacity-60">{{ saving() ? 'Salvataggio…' : 'Salva squadra' }}</button>
       </form>
     </lfg-modal>
 
@@ -207,9 +207,18 @@ type ModalMode = 'tournament' | 'team' | 'participant' | null;
             <label class="flex items-center gap-3 rounded-lg bg-neutral-50 p-3 text-sm font-bold"><input type="checkbox" name="participantRegistered" [(ngModel)]="participantForm.registered" class="h-5 w-5 accent-emerald-600"> Tesserato</label>
           </div>
         }
-        <button class="rounded-lg bg-ink px-4 py-3 text-sm font-bold uppercase text-white">Salva partecipante</button>
+        <button [disabled]="saving()" class="rounded-lg bg-ink px-4 py-3 text-sm font-bold uppercase text-white disabled:opacity-60">
+          {{ saving() ? 'Salvataggio…' : 'Salva partecipante' }}
+        </button>
       </form>
     </lfg-modal>
+
+    <lfg-confirm
+      [open]="!!confirmPending()"
+      [message]="confirmMessage()"
+      (confirm)="doConfirm()"
+      (cancel)="confirmPending.set(null)"
+    />
   `
 })
 export class RegistrationsComponent implements OnInit {
@@ -221,6 +230,9 @@ export class RegistrationsComponent implements OnInit {
   editingTournament = signal<Tournament | null>(null);
   editingTeam = signal<TournamentTeamWithParticipants | null>(null);
   editingParticipant = signal<TeamParticipant | null>(null);
+  saving = signal(false);
+  confirmPending = signal<(() => Promise<void>) | null>(null);
+  confirmMessage = signal('');
   tournamentForm: InsertTournament = this.emptyTournamentForm();
   teamForm: InsertTournamentTeam = this.emptyTeamForm('');
   participantForm: InsertTeamParticipant = this.emptyParticipantForm('');
@@ -267,8 +279,8 @@ export class RegistrationsComponent implements OnInit {
 
   async saveTournament(): Promise<void> {
     const current = this.editingTournament();
-    if (!this.auth.isAdmin() || !current) return;
-
+    if (!this.auth.isAdmin() || !current || this.saving()) return;
+    this.saving.set(true);
     try {
       const payload: Partial<InsertTournament> = {
         name: this.tournamentForm.name.trim(),
@@ -280,17 +292,15 @@ export class RegistrationsComponent implements OnInit {
       await this.load();
     } catch (error) {
       this.error.set(this.message(error));
-    }
+    } finally { this.saving.set(false); }
   }
 
-  async removeTournament(tournament: Tournament): Promise<void> {
-    if (!confirm(`Eliminare il torneo "${tournament.name}" con tutte le squadre e i partecipanti?`)) return;
-    try {
-      await this.service.removeTournament(tournament.id);
-      await this.load();
-    } catch (error) {
-      this.error.set(this.message(error));
-    }
+  askRemoveTournament(tournament: Tournament): void {
+    this.confirmMessage.set(`Eliminare il torneo "${tournament.name}" con tutte le squadre e i partecipanti?`);
+    this.confirmPending.set(async () => {
+      try { await this.service.removeTournament(tournament.id); await this.load(); }
+      catch (error) { this.error.set(this.message(error)); }
+    });
   }
 
   newTeam(tournamentId: string): void {
@@ -316,6 +326,8 @@ export class RegistrationsComponent implements OnInit {
   }
 
   async saveTeam(): Promise<void> {
+    if (this.saving()) return;
+    this.saving.set(true);
     try {
       const isFootball = this.selectedTeamSport() === 'calcio';
       const payload = {
@@ -334,7 +346,7 @@ export class RegistrationsComponent implements OnInit {
       await this.load();
     } catch (error) {
       this.error.set(this.message(error));
-    }
+    } finally { this.saving.set(false); }
   }
 
   async togglePaid(team: TournamentTeamWithParticipants): Promise<void> {
@@ -346,14 +358,12 @@ export class RegistrationsComponent implements OnInit {
     }
   }
 
-  async removeTeam(team: TournamentTeamWithParticipants): Promise<void> {
-    if (!confirm(`Eliminare la squadra "${team.name}" con tutti i partecipanti?`)) return;
-    try {
-      await this.service.removeTeam(team.id);
-      await this.load();
-    } catch (error) {
-      this.error.set(this.message(error));
-    }
+  askRemoveTeam(team: TournamentTeamWithParticipants): void {
+    this.confirmMessage.set(`Eliminare la squadra "${team.name}" con tutti i partecipanti?`);
+    this.confirmPending.set(async () => {
+      try { await this.service.removeTeam(team.id); await this.load(); }
+      catch (error) { this.error.set(this.message(error)); }
+    });
   }
 
   newParticipant(teamId: string): void {
@@ -379,6 +389,8 @@ export class RegistrationsComponent implements OnInit {
   }
 
   async saveParticipant(): Promise<void> {
+    if (this.saving()) return;
+    this.saving.set(true);
     try {
       const current = this.editingParticipant();
       const team = this.findTeam(this.participantForm.team_id);
@@ -401,17 +413,21 @@ export class RegistrationsComponent implements OnInit {
       await this.load();
     } catch (error) {
       this.error.set(this.message(error));
-    }
+    } finally { this.saving.set(false); }
   }
 
-  async removeParticipant(participant: TeamParticipant): Promise<void> {
-    if (!confirm(`Eliminare "${participant.first_name} ${participant.last_name}"?`)) return;
-    try {
-      await this.service.removeParticipant(participant.id);
-      await this.load();
-    } catch (error) {
-      this.error.set(this.message(error));
-    }
+  askRemoveParticipant(participant: TeamParticipant): void {
+    this.confirmMessage.set(`Eliminare "${participant.first_name} ${participant.last_name}"?`);
+    this.confirmPending.set(async () => {
+      try { await this.service.removeParticipant(participant.id); await this.load(); }
+      catch (error) { this.error.set(this.message(error)); }
+    });
+  }
+
+  async doConfirm(): Promise<void> {
+    const fn = this.confirmPending();
+    this.confirmPending.set(null);
+    if (fn) await fn();
   }
 
   closeModal(): void {

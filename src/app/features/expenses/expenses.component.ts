@@ -6,11 +6,11 @@ import { ExportService } from '../../core/services/export.service';
 import { ProfileService } from '../../core/services/profile.service';
 import { EXPENSE_CATEGORIES, PAYMENT_METHODS } from '../../core/types/constants';
 import { Expense, InsertExpense, Profile } from '../../core/types/models';
-import { EmptyStateComponent, ModalComponent, SummaryCardComponent } from '../../shared/components/ui.component';
+import { ConfirmModalComponent, EmptyStateComponent, ModalComponent, SummaryCardComponent } from '../../shared/components/ui.component';
 
 @Component({
   standalone: true,
-  imports: [FormsModule, EmptyStateComponent, ModalComponent, SummaryCardComponent],
+  imports: [FormsModule, EmptyStateComponent, ModalComponent, SummaryCardComponent, ConfirmModalComponent],
   template: `
     <section class="space-y-4">
       <div class="flex flex-wrap items-end justify-between gap-3">
@@ -45,7 +45,7 @@ import { EmptyStateComponent, ModalComponent, SummaryCardComponent } from '../..
               <div class="mt-4 flex justify-end gap-2 border-t border-black/5 pt-3">
                 <button class="rounded-md bg-neutral-100 px-3 py-1.5 text-xs font-bold uppercase" (click)="edit(item)">Modifica</button>
                 @if (auth.isAdmin()) {
-                  <button class="rounded-md bg-red-50 px-3 py-1.5 text-xs font-bold uppercase text-red-700" (click)="remove(item)">Elimina</button>
+                  <button class="rounded-md bg-red-50 px-3 py-1.5 text-xs font-bold uppercase text-red-700" (click)="askRemove(item)">Elimina</button>
                 }
               </div>
             </article>
@@ -58,7 +58,7 @@ import { EmptyStateComponent, ModalComponent, SummaryCardComponent } from '../..
       <form class="grid gap-4" (ngSubmit)="save()">
         <label class="grid gap-1 text-sm font-bold">Descrizione <input required name="description" [(ngModel)]="form.description" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal"></label>
         <div class="grid gap-3 sm:grid-cols-2">
-          <label class="grid gap-1 text-sm font-bold">Importo <input required type="number" step="0.01" name="amount" [(ngModel)]="form.amount" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal"></label>
+          <label class="grid gap-1 text-sm font-bold">Importo <input required type="number" min="0" step="0.01" name="amount" [(ngModel)]="form.amount" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal"></label>
           <label class="grid gap-1 text-sm font-bold">Data <input required type="date" name="date" [(ngModel)]="form.date" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal"></label>
         </div>
         <div class="grid gap-3 sm:grid-cols-2">
@@ -74,9 +74,18 @@ import { EmptyStateComponent, ModalComponent, SummaryCardComponent } from '../..
           </select>
         </label>
         <label class="grid gap-1 text-sm font-bold">Note <textarea name="notes" [(ngModel)]="form.notes" rows="3" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal"></textarea></label>
-        <button class="rounded-lg bg-ink px-4 py-3 text-sm font-bold uppercase text-white">Salva</button>
+        <button [disabled]="saving()" class="rounded-lg bg-ink px-4 py-3 text-sm font-bold uppercase text-white disabled:opacity-60">
+          {{ saving() ? 'Salvataggio…' : 'Salva' }}
+        </button>
       </form>
     </lfg-modal>
+
+    <lfg-confirm
+      [open]="!!confirmPending()"
+      [message]="confirmMessage()"
+      (confirm)="doConfirm()"
+      (cancel)="confirmPending.set(null)"
+    />
   `
 })
 export class ExpensesComponent implements OnInit {
@@ -86,6 +95,9 @@ export class ExpensesComponent implements OnInit {
   error = signal('');
   modalOpen = signal(false);
   editing = signal<Expense | null>(null);
+  saving = signal(false);
+  confirmPending = signal<(() => Promise<void>) | null>(null);
+  confirmMessage = signal('');
   categories = EXPENSE_CATEGORIES;
   methods = PAYMENT_METHODS;
   form: InsertExpense = this.emptyForm();
@@ -108,10 +120,13 @@ export class ExpensesComponent implements OnInit {
     } catch (e) { this.error.set(this.message(e)); }
   }
 
-  newItem(): void { this.editing.set(null); this.form = this.emptyForm(); this.modalOpen.set(true); }
-  edit(item: Expense): void { this.editing.set(item); this.form = { date: item.date, description: item.description, category: item.category, amount: item.amount, paid_by: item.paid_by, payment_method: item.payment_method, notes: item.notes }; this.modalOpen.set(true); }
+  newItem(): void { this.error.set(''); this.editing.set(null); this.form = this.emptyForm(); this.modalOpen.set(true); }
+  edit(item: Expense): void { this.error.set(''); this.editing.set(item); this.form = { date: item.date, description: item.description, category: item.category, amount: item.amount, paid_by: item.paid_by, payment_method: item.payment_method, notes: item.notes }; this.modalOpen.set(true); }
 
   async save(): Promise<void> {
+    if (this.saving()) return;
+    this.saving.set(true);
+    this.error.set('');
     try {
       const payload = { ...this.form, amount: Number(this.form.amount || 0) };
       const current = this.editing();
@@ -120,11 +135,21 @@ export class ExpensesComponent implements OnInit {
       this.modalOpen.set(false);
       await this.load();
     } catch (e) { this.error.set(this.message(e)); }
+    finally { this.saving.set(false); }
   }
 
-  async remove(item: Expense): Promise<void> {
-    if (!confirm(`Eliminare la spesa "${item.description}"?`)) return;
-    try { await this.service.remove(item.id); await this.load(); } catch (e) { this.error.set(this.message(e)); }
+  askRemove(item: Expense): void {
+    this.confirmMessage.set(`Eliminare la spesa "${item.description}"?`);
+    this.confirmPending.set(async () => {
+      try { await this.service.remove(item.id); await this.load(); }
+      catch (e) { this.error.set(this.message(e)); }
+    });
+  }
+
+  async doConfirm(): Promise<void> {
+    const fn = this.confirmPending();
+    this.confirmPending.set(null);
+    if (fn) await fn();
   }
 
   export(): void { this.exporter.downloadCsv('spese-la-fossa-games.csv', this.items() as unknown as Record<string, unknown>[]); }

@@ -1,4 +1,4 @@
-import { Component, EventEmitter, HostListener, Input, Output } from '@angular/core';
+import { Component, EventEmitter, HostListener, Input, Output, signal } from '@angular/core';
 
 @Component({
   selector: 'lfg-summary-card',
@@ -90,4 +90,51 @@ export class ModalComponent {
 export class StatusBadgeComponent {
   @Input({ required: true }) label = '';
   @Input() className = 'border-neutral-300 bg-neutral-100 text-neutral-700';
+}
+
+@Component({
+  selector: 'lfg-confirm',
+  standalone: true,
+  template: `
+    @if (open) {
+      <div
+        class="fixed inset-0 z-[60] flex items-center justify-center bg-black/55 p-4"
+        (click)="cancel.emit()"
+      >
+        <section
+          role="alertdialog"
+          aria-modal="true"
+          class="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl"
+          (click)="$event.stopPropagation()"
+        >
+          <h3 class="font-display text-xl uppercase leading-tight">Conferma</h3>
+          <p class="mt-3 text-sm leading-6 text-neutral-600">{{ message }}</p>
+          <div class="mt-6 flex justify-end gap-3">
+            <button
+              type="button"
+              class="rounded-lg bg-neutral-100 px-4 py-2.5 text-sm font-bold uppercase transition hover:bg-neutral-200"
+              (click)="cancel.emit()"
+            >Annulla</button>
+            <button
+              type="button"
+              class="rounded-lg bg-red-600 px-4 py-2.5 text-sm font-bold uppercase text-white transition hover:bg-red-700"
+              (click)="confirm.emit()"
+            >{{ confirmLabel }}</button>
+          </div>
+        </section>
+      </div>
+    }
+  `
+})
+export class ConfirmModalComponent {
+  @Input() open = false;
+  @Input() message = '';
+  @Input() confirmLabel = 'Elimina';
+  @Output() confirm = new EventEmitter<void>();
+  @Output() cancel = new EventEmitter<void>();
+
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    if (this.open) this.cancel.emit();
+  }
 }

@@ -24,7 +24,23 @@ import { EmptyStateComponent, StatusBadgeComponent } from '../../shared/componen
       @if (createdUser()) {
         <div class="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
           <p class="font-bold">Utente creato: {{ createdUser()?.username }}</p>
-          <p class="mt-1">Password iniziale: <span class="font-mono font-bold">{{ createdUser()?.temporaryPassword }}</span></p>
+          <div class="mt-2 flex flex-wrap items-center gap-3">
+            <span class="text-emerald-800">Password iniziale:</span>
+            <span class="font-mono font-bold tracking-widest">
+              {{ showPassword() ? createdUser()?.temporaryPassword : '••••••••' }}
+            </span>
+            <button
+              type="button"
+              class="rounded-md bg-emerald-100 px-3 py-1 text-xs font-bold uppercase text-emerald-800 transition hover:bg-emerald-200"
+              (click)="showPassword.set(!showPassword())"
+            >{{ showPassword() ? 'Nascondi' : 'Mostra' }}</button>
+            <button
+              type="button"
+              class="rounded-md bg-emerald-100 px-3 py-1 text-xs font-bold uppercase text-emerald-800 transition hover:bg-emerald-200"
+              (click)="copyPassword()"
+            >{{ copied() ? 'Copiata ✓' : 'Copia' }}</button>
+          </div>
+          <p class="mt-2 text-xs text-emerald-700">Comunica la password all'utente in modo sicuro, poi chiudi questa sezione.</p>
         </div>
       }
 
@@ -94,6 +110,8 @@ export class UsersComponent implements OnInit {
   error = signal('');
   creating = signal(false);
   createdUser = signal<CreateUserResult | null>(null);
+  showPassword = signal(false);
+  copied = signal(false);
   form = {
     firstName: '',
     lastName: '',
@@ -128,6 +146,8 @@ export class UsersComponent implements OnInit {
     this.creating.set(true);
     this.error.set('');
     this.createdUser.set(null);
+    this.showPassword.set(false);
+    this.copied.set(false);
     try {
       const created = await this.profiles.createUser(this.form);
       this.createdUser.set(created);
@@ -138,6 +158,15 @@ export class UsersComponent implements OnInit {
     } finally {
       this.creating.set(false);
     }
+  }
+
+  copyPassword(): void {
+    const pwd = this.createdUser()?.temporaryPassword;
+    if (!pwd) return;
+    void navigator.clipboard.writeText(pwd).then(() => {
+      this.copied.set(true);
+      setTimeout(() => this.copied.set(false), 2000);
+    });
   }
 
   async toggleActive(item: Profile): Promise<void> {

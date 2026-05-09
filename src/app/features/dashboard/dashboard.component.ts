@@ -19,7 +19,9 @@ import { AuditLog, Expense, Income, Registration, Sponsor } from '../../core/typ
           <p class="text-xs font-bold uppercase tracking-[0.18em] text-neutral-500">Dashboard interna</p>
           <h1 class="font-display text-3xl uppercase sm:text-5xl">Riepilogo evento</h1>
         </div>
-        <button class="rounded-lg bg-white px-4 py-2 text-sm font-bold uppercase tracking-wide shadow-sm ring-1 ring-black/10" (click)="load()">Aggiorna</button>
+        <button [disabled]="loading()" class="rounded-lg bg-white px-4 py-2 text-sm font-bold uppercase tracking-wide shadow-sm ring-1 ring-black/10 disabled:opacity-60" (click)="load()">
+          {{ loading() ? 'Aggiornamento…' : 'Aggiorna' }}
+        </button>
       </div>
 
       @if (hasPendingRequests()) {
@@ -127,6 +129,7 @@ export class DashboardComponent implements OnInit {
   registrations = signal<Registration[]>([]);
   auditLogs = signal<AuditLog[]>([]);
   error = signal('');
+  loading = signal(false);
 
   constructor(
     private readonly expensesService: ExpensesService,
@@ -142,6 +145,8 @@ export class DashboardComponent implements OnInit {
   }
 
   async load(): Promise<void> {
+    if (this.loading()) return;
+    this.loading.set(true);
     this.error.set('');
     try {
       const [expenses, incomes, sponsors, registrations, auditLogs] = await Promise.all([
@@ -159,6 +164,8 @@ export class DashboardComponent implements OnInit {
       await this.badges.refresh();
     } catch (error) {
       this.error.set(error instanceof Error ? error.message : 'Errore nel caricamento dati.');
+    } finally {
+      this.loading.set(false);
     }
   }
 
