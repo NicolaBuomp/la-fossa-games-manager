@@ -11,6 +11,13 @@ type Game = {
   image: string;
 };
 
+type SponsorTier = {
+  name: string;
+  color: string;
+  description: string;
+  perks: string[];
+};
+
 type Countdown = {
   days: number;
   hours: number;
@@ -58,6 +65,12 @@ type Countdown = {
                 class="hidden text-white/70 transition hover:text-fossa sm:inline"
                 (click)="scrollToSection($event, 'sport')"
                 >Sport</a
+              >
+              <a
+                href="#sponsor"
+                class="hidden text-white/70 transition hover:text-fossa sm:inline"
+                (click)="scrollToSection($event, 'sponsor')"
+                >Sponsor</a
               >
               <a
                 href="#partecipa"
@@ -255,6 +268,79 @@ type Countdown = {
                 Risultati e storie
               </p>
             </div>
+          </div>
+        </div>
+      </section>
+
+      <section
+        id="sponsor"
+        class="scroll-mt-6 bg-[#090909] px-5 py-16 text-white sm:px-8 lg:px-10"
+      >
+        <div class="mx-auto max-w-7xl">
+          <div class="flex flex-col justify-between gap-5 lg:flex-row lg:items-end">
+            <div>
+              <p class="text-xs font-black uppercase tracking-[0.28em] text-fossa">
+                Scegli la tua visibilità
+              </p>
+              <h2 class="mt-3 max-w-4xl font-display text-4xl uppercase leading-none text-fossa sm:text-6xl">
+                Tipologie sponsor disponibili.
+              </h2>
+            </div>
+            <div class="max-w-xl">
+              <p class="text-base font-semibold leading-7 text-white/68">
+                Tre livelli di presenza per aziende e attività che vogliono
+                sostenere La Fossa Games e comparire nei momenti chiave
+                dell'evento.
+              </p>
+              <a
+                href="#partecipa"
+                class="mt-5 inline-flex rounded-md bg-fossa px-5 py-3 text-sm font-black uppercase tracking-[0.14em] text-ink transition hover:bg-white"
+                (click)="selectSponsorContact($event)"
+              >
+                Richiedi informazioni sponsor
+              </a>
+            </div>
+          </div>
+
+          <div class="mt-10 grid gap-4 lg:grid-cols-3">
+            @for (tier of sponsorTiers; track tier.name) {
+              <article
+                class="rounded-lg border border-white/10 bg-white/[0.04] p-5 shadow-2xl transition hover:-translate-y-1 hover:border-fossa/70 sm:p-6"
+              >
+                <div class="flex items-center gap-4">
+                  <div
+                    class="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border text-3xl font-black"
+                    [style.border-color]="tier.color"
+                    [style.color]="tier.color"
+                  >
+                    ★
+                  </div>
+                  <div class="min-w-0">
+                    <h3
+                      class="font-display text-4xl uppercase italic leading-none sm:text-5xl"
+                      [style.color]="tier.color"
+                    >
+                      {{ tier.name }}
+                    </h3>
+                    <div class="mt-3 h-px w-full" [style.background-color]="tier.color"></div>
+                  </div>
+                </div>
+                <p class="mt-5 text-sm font-semibold leading-6 text-white/58">
+                  {{ tier.description }}
+                </p>
+                <ul class="mt-6 grid gap-4">
+                  @for (perk of tier.perks; track perk) {
+                    <li class="grid grid-cols-[auto_1fr] gap-3 text-sm font-bold uppercase leading-6 tracking-[0.08em] text-white/82">
+                      <span
+                        class="mt-1 h-2.5 w-2.5 rounded-full"
+                        [style.background-color]="tier.color"
+                      ></span>
+                      <span>{{ perk }}</span>
+                    </li>
+                  }
+                </ul>
+              </article>
+            }
           </div>
         </div>
       </section>
@@ -557,6 +643,13 @@ type Countdown = {
                   Sport
                 </a>
                 <a
+                  href="#sponsor"
+                  class="text-white/72 transition hover:text-fossa"
+                  (click)="scrollToSection($event, 'sponsor')"
+                >
+                  Sponsor
+                </a>
+                <a
                   href="#partecipa"
                   class="text-white/72 transition hover:text-fossa"
                   (click)="scrollToSection($event, 'partecipa')"
@@ -662,6 +755,40 @@ export class LandingComponent implements OnInit, OnDestroy {
       name: "Ping pong",
       description: "Scambi rapidi, ritmo alto e concentrazione.",
       image: "/assets/brand/icona-ping-pong.png",
+    },
+  ];
+
+  protected readonly sponsorTiers: SponsorTier[] = [
+    {
+      name: "Gold",
+      color: "#ffd400",
+      description: "La presenza più completa per massima riconoscibilità prima e durante l'evento.",
+      perks: [
+        "Logo su cartellone dedicato",
+        "Visibilità sui social e sito web",
+        "Premiazioni e menzioni durante l'evento",
+        "Attività promozionali",
+      ],
+    },
+    {
+      name: "Silver",
+      color: "#c8c8c8",
+      description: "Una soluzione intermedia per essere presenti sui materiali principali dell'evento.",
+      perks: [
+        "Logo su cartellone dedicato 2x1",
+        "Visibilità sui social e sito web",
+        "Menzioni durante l'evento",
+      ],
+    },
+    {
+      name: "Bronzo",
+      color: "#d98945",
+      description: "La formula essenziale per sostenere l'iniziativa e comparire nella comunicazione sponsor.",
+      perks: [
+        "Logo su cartellone insieme agli altri sponsor",
+        "Visibilità sui social",
+        "Menzioni durante l'evento",
+      ],
     },
   ];
 
@@ -779,6 +906,11 @@ export class LandingComponent implements OnInit, OnDestroy {
       block: "start",
     });
     window.history.replaceState(null, "", `#${sectionId}`);
+  }
+
+  selectSponsorContact(event: MouseEvent): void {
+    this.participationForm.reason = "sponsor";
+    this.scrollToSection(event, "partecipa");
   }
 
   private emptyParticipationForm() {
