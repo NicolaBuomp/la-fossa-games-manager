@@ -1004,12 +1004,17 @@ type Countdown = {
           class="mx-auto mt-8 flex max-w-7xl flex-col gap-3 border-t border-white/10 pt-5 text-xs font-bold uppercase tracking-[0.16em] text-white/38 sm:flex-row sm:items-center sm:justify-between"
         >
           <span>&copy; 2026 La Fossa Games</span>
-          <a
-            href="#top"
-            class="transition hover:text-fossa"
-            (click)="scrollToSection($event, 'top')"
-            >Torna su</a
-          >
+          <div class="flex flex-wrap items-center gap-x-5 gap-y-2">
+            <a href="/login" class="text-white/30 transition hover:text-fossa">
+              Area manager
+            </a>
+            <a
+              href="#top"
+              class="transition hover:text-fossa"
+              (click)="scrollToSection($event, 'top')"
+              >Torna su</a
+            >
+          </div>
         </div>
       </footer>
     </main>
