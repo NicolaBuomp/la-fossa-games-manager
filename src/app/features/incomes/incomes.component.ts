@@ -4,6 +4,7 @@ import { AuthService } from '../../core/services/auth.service';
 import { ExportService } from '../../core/services/export.service';
 import { IncomesService } from '../../core/services/incomes.service';
 import { ProfileService } from '../../core/services/profile.service';
+import { LoadingService } from '../../core/services/loading.service';
 import { INCOME_CATEGORIES, PAYMENT_METHODS } from '../../core/types/constants';
 import { Income, InsertIncome, Profile } from '../../core/types/models';
 import { ConfirmModalComponent, EmptyStateComponent, ModalComponent, SummaryCardComponent } from '../../shared/components/ui.component';
@@ -106,18 +107,21 @@ export class IncomesComponent implements OnInit {
     readonly auth: AuthService,
     private readonly service: IncomesService,
     private readonly exporter: ExportService,
-    private readonly profiles: ProfileService
+    private readonly profiles: ProfileService,
+    private readonly globalLoading: LoadingService
   ) {}
 
   ngOnInit(): void { void this.load(); }
 
   async load(): Promise<void> {
+    this.globalLoading.start();
     try {
       const [items, profiles] = await Promise.all([this.service.list(), this.profiles.list()]);
       this.items.set(items);
       this.profilesList.set(profiles);
       this.userNames.set(Object.fromEntries(profiles.map((profile) => [profile.id, this.profileDisplayName(profile)])));
     } catch (e) { this.error.set(this.message(e)); }
+    finally { this.globalLoading.stop(); }
   }
 
   newItem(): void { this.error.set(''); this.editing.set(null); this.form = this.emptyForm(); this.modalOpen.set(true); }

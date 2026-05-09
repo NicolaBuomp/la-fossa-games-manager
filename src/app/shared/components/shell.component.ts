@@ -2,6 +2,7 @@ import { Component, OnInit, computed, signal } from '@angular/core';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { filter } from 'rxjs';
 import { AuthService } from '../../core/services/auth.service';
+import { LoadingService } from '../../core/services/loading.service';
 import { RequestBadgesService } from '../../core/services/request-badges.service';
 
 interface NavItem {
@@ -18,6 +19,9 @@ interface NavItem {
   standalone: true,
   imports: [RouterOutlet, RouterLink, RouterLinkActive],
   template: `
+    @if (globalLoading.active()) {
+      <div class="fixed inset-x-0 top-0 z-[100] h-0.5 animate-pulse bg-fossa"></div>
+    }
     <div class="min-h-screen bg-paper text-ink lg:flex">
       <aside class="hidden lg:flex lg:w-72 lg:flex-col lg:border-r lg:border-black/10 lg:bg-white">
         <div class="px-6 py-7">
@@ -147,6 +151,7 @@ export class ShellComponent implements OnInit {
 
   constructor(
     readonly auth: AuthService,
+    readonly globalLoading: LoadingService,
     private readonly badges: RequestBadgesService,
     private readonly router: Router
   ) {}

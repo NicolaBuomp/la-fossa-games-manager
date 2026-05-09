@@ -5,6 +5,7 @@ import { ExportService } from '../../core/services/export.service';
 import { ProfileService } from '../../core/services/profile.service';
 import { RequestBadgesService } from '../../core/services/request-badges.service';
 import { SponsorsService } from '../../core/services/sponsors.service';
+import { LoadingService } from '../../core/services/loading.service';
 import { SPONSOR_STATUSES } from '../../core/types/constants';
 import { InsertSponsor, Sponsor, SponsorStatus, SponsorType } from '../../core/types/models';
 import { ConfirmModalComponent, EmptyStateComponent, ModalComponent, StatusBadgeComponent, SummaryCardComponent } from '../../shared/components/ui.component';
@@ -110,18 +111,21 @@ export class SponsorsComponent implements OnInit {
     private readonly service: SponsorsService,
     private readonly exporter: ExportService,
     private readonly profiles: ProfileService,
-    private readonly badges: RequestBadgesService
+    private readonly badges: RequestBadgesService,
+    private readonly globalLoading: LoadingService
   ) {}
 
   ngOnInit(): void { void this.load(); }
 
   async load(): Promise<void> {
+    this.globalLoading.start();
     try {
       const items = await this.service.list();
       this.items.set(items);
       this.userNames.set(await this.profiles.displayNames(items.map((item) => item.created_by)));
       await this.badges.refresh();
     } catch (e) { this.error.set(this.message(e)); }
+    finally { this.globalLoading.stop(); }
   }
 
   newItem(): void { this.error.set(''); this.editing.set(null); this.form = this.emptyForm(); this.modalOpen.set(true); }

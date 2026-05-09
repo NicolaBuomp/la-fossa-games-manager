@@ -2,6 +2,7 @@ import { Component, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ParticipationRequestsService } from '../../core/services/participation-requests.service';
 import { RequestBadgesService } from '../../core/services/request-badges.service';
+import { LoadingService } from '../../core/services/loading.service';
 import { ParticipationRequest, ParticipationRequestNoteWithProfile, ParticipationRequestWithTournament } from '../../core/types/models';
 import { ConfirmModalComponent, EmptyStateComponent, StatusBadgeComponent } from '../../shared/components/ui.component';
 
@@ -115,7 +116,8 @@ export class ParticipationRequestsComponent implements OnInit {
 
   constructor(
     private readonly service: ParticipationRequestsService,
-    private readonly badges: RequestBadgesService
+    private readonly badges: RequestBadgesService,
+    private readonly globalLoading: LoadingService
   ) {}
 
   ngOnInit(): void {
@@ -124,6 +126,7 @@ export class ParticipationRequestsComponent implements OnInit {
 
   async load(): Promise<void> {
     this.loading.set(true);
+    this.globalLoading.start();
     this.error.set('');
     try {
       const requests = await this.service.list();
@@ -136,6 +139,7 @@ export class ParticipationRequestsComponent implements OnInit {
       this.error.set(this.message(error));
     } finally {
       this.loading.set(false);
+      this.globalLoading.stop();
     }
   }
 

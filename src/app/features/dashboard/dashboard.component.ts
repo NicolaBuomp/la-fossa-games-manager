@@ -7,6 +7,7 @@ import { SponsorsService } from '../../core/services/sponsors.service';
 import { RegistrationsService } from '../../core/services/registrations.service';
 import { AuditLogService } from '../../core/services/audit-log.service';
 import { RequestBadgesService } from '../../core/services/request-badges.service';
+import { LoadingService } from '../../core/services/loading.service';
 import { AuditLog, Expense, Income, Registration, Sponsor } from '../../core/types/models';
 
 @Component({
@@ -137,7 +138,8 @@ export class DashboardComponent implements OnInit {
     private readonly sponsorsService: SponsorsService,
     private readonly registrationsService: RegistrationsService,
     private readonly auditLogService: AuditLogService,
-    private readonly badges: RequestBadgesService
+    private readonly badges: RequestBadgesService,
+    private readonly globalLoading: LoadingService
   ) {}
 
   ngOnInit(): void {
@@ -147,6 +149,7 @@ export class DashboardComponent implements OnInit {
   async load(): Promise<void> {
     if (this.loading()) return;
     this.loading.set(true);
+    this.globalLoading.start();
     this.error.set('');
     try {
       const [expenses, incomes, sponsors, registrations, auditLogs] = await Promise.all([
@@ -166,6 +169,7 @@ export class DashboardComponent implements OnInit {
       this.error.set(error instanceof Error ? error.message : 'Errore nel caricamento dati.');
     } finally {
       this.loading.set(false);
+      this.globalLoading.stop();
     }
   }
 
