@@ -262,10 +262,10 @@ type Countdown = {
               (close)="closeGameDetails()"
             >
               <div
-                class="grid gap-5 text-ink sm:grid-cols-[9rem_1fr] sm:items-start"
+                class="grid gap-4 text-ink sm:grid-cols-[9rem_1fr] sm:items-start sm:gap-5"
               >
                 <div
-                  class="flex aspect-square items-center justify-center rounded-md bg-black p-5"
+                  class="mx-auto flex h-32 w-32 shrink-0 items-center justify-center rounded-xl border border-black/10 bg-[#f8f8f8] p-4 sm:mx-0"
                 >
                   <img
                     [src]="game.image"
@@ -274,11 +274,13 @@ type Countdown = {
                   />
                 </div>
                 <div class="min-w-0">
-                  <p class="text-base font-semibold leading-7 text-black/68">
+                  <p
+                    class="text-sm font-semibold leading-6 text-black/68 sm:text-base sm:leading-7"
+                  >
                     {{ game.description }}
                   </p>
                   <div
-                    class="mt-5 rounded-md border border-black/10 bg-[#f7f2e8] p-4"
+                    class="mt-4 rounded-md border border-black/10 bg-[#f7f2e8] p-3.5 sm:mt-5 sm:p-4"
                   >
                     <p
                       class="text-[0.68rem] font-black uppercase tracking-[0.18em] text-black/48"
