@@ -98,8 +98,8 @@ type Countdown = {
               <p
                 class="mt-5 max-w-2xl text-base font-semibold leading-7 text-white/78"
               >
-                Sei sport, sette tornei e cinque giorni di tifo a Santa Maria La Fossa.
-                Dal 22 al 26 giugno 2026: tornei aperti, sfide vere e una
+                Sei sport, sette tornei e cinque giorni di tifo a Santa Maria La
+                Fossa. Dal 22 al 26 giugno 2026: tornei aperti, sfide vere e una
                 piazza da vivere insieme.
               </p>
               <div class="mt-5 flex flex-wrap gap-3">
@@ -138,7 +138,9 @@ type Countdown = {
                   </p>
                 </div>
                 <div class="px-3 py-3">
-                  <p class="text-[clamp(1rem,4vw,1.5rem)] font-black text-fossa">
+                  <p
+                    class="text-[clamp(1rem,4vw,1.5rem)] font-black text-fossa"
+                  >
                     Iscrizioni
                   </p>
                   <p
@@ -153,20 +155,30 @@ type Countdown = {
                 class="mt-3 max-w-2xl rounded-md border border-white/10 bg-white/[0.04] p-3 backdrop-blur"
               >
                 <div class="flex flex-wrap items-center justify-between gap-2">
-                  <p class="text-xs font-black uppercase tracking-[0.2em] text-white/50">
+                  <p
+                    class="text-xs font-black uppercase tracking-[0.2em] text-white/50"
+                  >
                     Manca all'inizio
                   </p>
-                  <p class="text-sm font-black uppercase tracking-[0.14em] text-fossa">
+                  <p
+                    class="text-sm font-black uppercase tracking-[0.14em] text-fossa"
+                  >
                     22-26 giugno 2026
                   </p>
                 </div>
                 <div class="mt-3 grid grid-cols-4 gap-2 text-center">
                   @for (item of countdownItems(); track item.label) {
-                    <div class="rounded-md bg-black/70 px-2 py-2.5 ring-1 ring-fossa/20">
-                      <p class="text-[clamp(1.25rem,4vw,1.85rem)] font-black leading-none text-fossa">
+                    <div
+                      class="rounded-md bg-black/70 px-2 py-2.5 ring-1 ring-fossa/20"
+                    >
+                      <p
+                        class="text-[clamp(1.25rem,4vw,1.85rem)] font-black leading-none text-fossa"
+                      >
                         {{ item.value }}
                       </p>
-                      <p class="mt-2 text-[0.6rem] font-bold uppercase tracking-[0.16em] text-white/48">
+                      <p
+                        class="mt-2 text-[0.6rem] font-bold uppercase tracking-[0.16em] text-white/48"
+                      >
                         {{ item.label }}
                       </p>
                     </div>
@@ -199,8 +211,8 @@ type Countdown = {
               </h2>
             </div>
             <p class="max-w-xl text-base font-semibold leading-7 text-black/62">
-              Calcio a 5 e under 15, pallavolo, calcio balilla, briscola, FIFA 26
-              e ping pong: ogni torneo ha il suo ritmo, tutti hanno la stessa
+              Calcio a 5 e under 15, pallavolo, calcio balilla, briscola, FIFA
+              26 e ping pong: ogni torneo ha il suo ritmo, tutti hanno la stessa
               voglia di vincere.
             </p>
           </div>
@@ -211,12 +223,12 @@ type Countdown = {
             @for (game of games; track game.name) {
               <button
                 type="button"
-                class="group flex h-full min-h-[22rem] touch-manipulation flex-col rounded-lg border border-black/10 bg-white p-5 text-left shadow-sm transition hover:-translate-y-1 hover:border-fossa focus:outline-none focus:ring-4 focus:ring-fossa/45"
+                class="group flex w-full min-h-0 touch-manipulation flex-col rounded-lg border border-black/10 bg-white p-4 text-left shadow-sm transition hover:-translate-y-1 hover:border-fossa focus:outline-none focus:ring-4 focus:ring-fossa/45 sm:min-h-[22rem] sm:p-5"
                 [attr.aria-label]="'Apri dettagli ' + game.name"
                 (click)="openGameDetails(game)"
               >
                 <div
-                  class="flex aspect-square items-center justify-center rounded-md bg-black p-5"
+                  class="flex h-40 items-center justify-center rounded-md bg-black p-4 sm:h-auto sm:aspect-square sm:p-5"
                 >
                   <img
                     [src]="game.image"
@@ -224,13 +236,19 @@ type Countdown = {
                     class="h-full w-full object-contain transition group-hover:scale-105"
                   />
                 </div>
-                <h3 class="mt-5 text-xl font-black uppercase leading-none">
+                <h3
+                  class="mt-4 text-lg font-black uppercase leading-none sm:mt-5 sm:text-xl"
+                >
                   {{ game.name }}
                 </h3>
-                <p class="mt-3 text-sm font-semibold leading-6 text-black/58">
+                <p
+                  class="mt-2.5 text-sm font-semibold leading-6 text-black/58 sm:mt-3"
+                >
                   {{ game.description }}
                 </p>
-                <span class="mt-auto pt-5 text-xs font-black uppercase tracking-[0.16em] text-[#0f3d2e]">
+                <span
+                  class="mt-auto pt-4 text-xs font-black uppercase tracking-[0.16em] text-[#0f3d2e] sm:pt-5"
+                >
                   Dettagli
                 </span>
               </button>
@@ -238,9 +256,17 @@ type Countdown = {
           </div>
 
           @if (selectedGame(); as game) {
-            <lfg-modal [open]="true" [title]="game.name" (close)="closeGameDetails()">
-              <div class="grid gap-5 text-ink sm:grid-cols-[9rem_1fr] sm:items-start">
-                <div class="flex aspect-square items-center justify-center rounded-md bg-black p-5">
+            <lfg-modal
+              [open]="true"
+              [title]="game.name"
+              (close)="closeGameDetails()"
+            >
+              <div
+                class="grid gap-5 text-ink sm:grid-cols-[9rem_1fr] sm:items-start"
+              >
+                <div
+                  class="flex aspect-square items-center justify-center rounded-md bg-black p-5"
+                >
                   <img
                     [src]="game.image"
                     [alt]="game.name"
@@ -251,12 +277,17 @@ type Countdown = {
                   <p class="text-base font-semibold leading-7 text-black/68">
                     {{ game.description }}
                   </p>
-                  <div class="mt-5 rounded-md border border-black/10 bg-[#f7f2e8] p-4">
-                    <p class="text-[0.68rem] font-black uppercase tracking-[0.18em] text-black/48">
+                  <div
+                    class="mt-5 rounded-md border border-black/10 bg-[#f7f2e8] p-4"
+                  >
+                    <p
+                      class="text-[0.68rem] font-black uppercase tracking-[0.18em] text-black/48"
+                    >
                       Regolamento
                     </p>
                     <p class="mt-2 text-sm font-black leading-6">
-                      Il regolamento ufficiale di questo torneo arriverà a giorni.
+                      Il regolamento ufficiale di questo torneo arriverà a
+                      giorni.
                     </p>
                   </div>
                   <button
@@ -318,12 +349,18 @@ type Countdown = {
         class="scroll-mt-6 bg-[#090909] px-5 py-16 text-white sm:px-8 lg:px-10"
       >
         <div class="mx-auto max-w-7xl">
-          <div class="flex flex-col justify-between gap-5 lg:flex-row lg:items-end">
+          <div
+            class="flex flex-col justify-between gap-5 lg:flex-row lg:items-end"
+          >
             <div>
-              <p class="text-xs font-black uppercase tracking-[0.28em] text-fossa">
+              <p
+                class="text-xs font-black uppercase tracking-[0.28em] text-fossa"
+              >
                 Scegli la tua visibilità
               </p>
-              <h2 class="mt-3 max-w-4xl font-display text-4xl uppercase leading-none text-fossa sm:text-6xl">
+              <h2
+                class="mt-3 max-w-4xl font-display text-4xl uppercase leading-none text-fossa sm:text-6xl"
+              >
                 Tipologie sponsor disponibili.
               </h2>
             </div>
@@ -363,7 +400,10 @@ type Countdown = {
                     >
                       {{ tier.name }}
                     </h3>
-                    <div class="mt-3 h-px w-full" [style.background-color]="tier.color"></div>
+                    <div
+                      class="mt-3 h-px w-full"
+                      [style.background-color]="tier.color"
+                    ></div>
                   </div>
                 </div>
                 <p class="mt-5 text-sm font-semibold leading-6 text-white/58">
@@ -371,7 +411,9 @@ type Countdown = {
                 </p>
                 <ul class="mt-6 grid gap-4">
                   @for (perk of tier.perks; track perk) {
-                    <li class="grid grid-cols-[auto_1fr] gap-3 text-sm font-bold uppercase leading-6 tracking-[0.08em] text-white/82">
+                    <li
+                      class="grid grid-cols-[auto_1fr] gap-3 text-sm font-bold uppercase leading-6 tracking-[0.08em] text-white/82"
+                    >
                       <span
                         class="mt-1 h-2.5 w-2.5 rounded-full"
                         [style.background-color]="tier.color"
@@ -417,21 +459,29 @@ type Countdown = {
               class="mx-auto h-40 w-40 rounded-full object-cover sm:h-48 sm:w-48"
             />
             <div class="mt-8 space-y-4">
-              <div class="grid gap-2 border-t border-white/10 pt-4 sm:grid-cols-[auto_1fr] sm:items-start sm:gap-4">
+              <div
+                class="grid gap-2 border-t border-white/10 pt-4 sm:grid-cols-[auto_1fr] sm:items-start sm:gap-4"
+              >
                 <span
                   class="text-sm font-bold uppercase tracking-[0.16em] text-white/48"
                   >Luogo</span
                 >
                 <span class="font-black sm:text-right">{{ eventAddress }}</span>
               </div>
-              <div class="grid gap-2 border-t border-white/10 pt-4 sm:grid-cols-[auto_1fr] sm:items-start sm:gap-4">
+              <div
+                class="grid gap-2 border-t border-white/10 pt-4 sm:grid-cols-[auto_1fr] sm:items-start sm:gap-4"
+              >
                 <span
                   class="text-sm font-bold uppercase tracking-[0.16em] text-white/48"
                   >Date</span
                 >
-                <span class="font-black sm:text-right">{{ eventDateRange }}</span>
+                <span class="font-black sm:text-right">{{
+                  eventDateRange
+                }}</span>
               </div>
-              <div class="grid gap-2 border-t border-white/10 pt-4 sm:grid-cols-[auto_1fr] sm:items-start sm:gap-4">
+              <div
+                class="grid gap-2 border-t border-white/10 pt-4 sm:grid-cols-[auto_1fr] sm:items-start sm:gap-4"
+              >
                 <span
                   class="text-sm font-bold uppercase tracking-[0.16em] text-white/48"
                   >Edizione</span
@@ -452,7 +502,9 @@ type Countdown = {
                 >
                   Richiesta contatto
                 </p>
-                <h3 class="mt-2 font-display text-2xl uppercase leading-none sm:text-3xl">
+                <h3
+                  class="mt-2 font-display text-2xl uppercase leading-none sm:text-3xl"
+                >
                   {{ formTitle() }}
                 </h3>
               </div>
@@ -497,24 +549,24 @@ type Countdown = {
               </label>
 
               @if (participationForm.reason === "participation") {
-              <label
-                class="grid gap-2 text-sm font-black uppercase tracking-[0.12em] text-white/72"
-              >
-                Torneo
-                <select
-                  required
-                  name="tournament"
-                  [(ngModel)]="participationForm.tournament_id"
-                  class="rounded-md border border-white/10 bg-[#101010] px-3 py-3 text-base font-semibold normal-case tracking-normal text-white outline-none focus:border-fossa"
+                <label
+                  class="grid gap-2 text-sm font-black uppercase tracking-[0.12em] text-white/72"
                 >
-                  <option value="" disabled>Seleziona un torneo</option>
-                  @for (tournament of tournaments(); track tournament.id) {
-                    <option [value]="tournament.id">
-                      {{ tournamentLabel(tournament) }}
-                    </option>
-                  }
-                </select>
-              </label>
+                  Torneo
+                  <select
+                    required
+                    name="tournament"
+                    [(ngModel)]="participationForm.tournament_id"
+                    class="rounded-md border border-white/10 bg-[#101010] px-3 py-3 text-base font-semibold normal-case tracking-normal text-white outline-none focus:border-fossa"
+                  >
+                    <option value="" disabled>Seleziona un torneo</option>
+                    @for (tournament of tournaments(); track tournament.id) {
+                      <option [value]="tournament.id">
+                        {{ tournamentLabel(tournament) }}
+                      </option>
+                    }
+                  </select>
+                </label>
               } @else {
                 <label
                   class="grid gap-2 text-sm font-black uppercase tracking-[0.12em] text-white/72"
@@ -605,27 +657,31 @@ type Countdown = {
                   >
                 </label>
                 @if (participationForm.reason === "participation") {
-                <label
-                  class="flex gap-3 text-sm font-semibold leading-6 text-white/74"
-                >
-                  <input
-                    required
-                    type="checkbox"
-                    name="rules"
-                    [(ngModel)]="participationForm.rules_accepted"
-                    class="mt-1 h-4 w-4 shrink-0 accent-fossa"
-                  />
-                  <span
-                    >Dichiaro di accettare regolamento, comunicazioni operative
-                    e condizioni di partecipazione.</span
+                  <label
+                    class="flex gap-3 text-sm font-semibold leading-6 text-white/74"
                   >
-                </label>
+                    <input
+                      required
+                      type="checkbox"
+                      name="rules"
+                      [(ngModel)]="participationForm.rules_accepted"
+                      class="mt-1 h-4 w-4 shrink-0 accent-fossa"
+                    />
+                    <span
+                      >Dichiaro di accettare regolamento, comunicazioni
+                      operative e condizioni di partecipazione.</span
+                    >
+                  </label>
                 }
               </div>
 
               <button
                 type="submit"
-                [disabled]="submitting() || (participationForm.reason === 'participation' && loadingTournaments())"
+                [disabled]="
+                  submitting() ||
+                  (participationForm.reason === 'participation' &&
+                    loadingTournaments())
+                "
                 class="rounded-md bg-fossa px-5 py-3 text-sm font-black uppercase tracking-[0.14em] text-ink transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {{ submitting() ? "Invio in corso" : submitLabel() }}
@@ -635,7 +691,9 @@ type Countdown = {
         </div>
       </section>
 
-      <footer class="border-t border-fossa/20 bg-[#050505] px-5 py-10 text-white sm:px-8 lg:px-10">
+      <footer
+        class="border-t border-fossa/20 bg-[#050505] px-5 py-10 text-white sm:px-8 lg:px-10"
+      >
         <div
           class="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-end"
         >
@@ -655,7 +713,9 @@ type Countdown = {
                 >La Fossa Games</span
               >
             </a>
-            <p class="mt-5 max-w-xl text-sm font-semibold leading-6 text-white/58">
+            <p
+              class="mt-5 max-w-xl text-sm font-semibold leading-6 text-white/58"
+            >
               Cinque giorni di sport, giochi e comunità a Santa Maria La Fossa,
               dal 22 al 26 giugno 2026.
             </p>
@@ -668,7 +728,9 @@ type Countdown = {
               >
                 Navigazione
               </p>
-              <div class="mt-4 grid gap-3 text-sm font-black uppercase tracking-[0.14em]">
+              <div
+                class="mt-4 grid gap-3 text-sm font-black uppercase tracking-[0.14em]"
+              >
                 <a
                   href="#top"
                   class="text-white/72 transition hover:text-fossa"
@@ -790,7 +852,8 @@ export class LandingComponent implements OnInit, OnDestroy {
     },
     {
       name: "FIFA 26",
-      description: "Console, controller e partite da vivere fino all'ultimo gol.",
+      description:
+        "Console, controller e partite da vivere fino all'ultimo gol.",
       image: "/assets/brand/icona-fifa-26.png",
     },
     {
@@ -804,7 +867,8 @@ export class LandingComponent implements OnInit, OnDestroy {
     {
       name: "Gold",
       color: "#ffd400",
-      description: "La presenza più completa per massima riconoscibilità prima e durante l'evento.",
+      description:
+        "La presenza più completa per massima riconoscibilità prima e durante l'evento.",
       perks: [
         "Logo su cartellone dedicato",
         "Visibilità sui social e sito web",
@@ -815,7 +879,8 @@ export class LandingComponent implements OnInit, OnDestroy {
     {
       name: "Silver",
       color: "#c8c8c8",
-      description: "Una soluzione intermedia per essere presenti sui materiali principali dell'evento.",
+      description:
+        "Una soluzione intermedia per essere presenti sui materiali principali dell'evento.",
       perks: [
         "Logo su cartellone dedicato 2x1",
         "Visibilità sui social e sito web",
@@ -825,7 +890,8 @@ export class LandingComponent implements OnInit, OnDestroy {
     {
       name: "Bronzo",
       color: "#d98945",
-      description: "La formula essenziale per sostenere l'iniziativa e comparire nella comunicazione sponsor.",
+      description:
+        "La formula essenziale per sostenere l'iniziativa e comparire nella comunicazione sponsor.",
       perks: [
         "Logo su cartellone insieme agli altri sponsor",
         "Visibilità sui social",
@@ -992,20 +1058,22 @@ export class LandingComponent implements OnInit, OnDestroy {
   private isFormValid(): boolean {
     const hasContactData = Boolean(
       this.participationForm.first_name.trim() &&
-        this.participationForm.last_name.trim() &&
-        this.participationForm.phone.trim() &&
-        this.participationForm.privacy_accepted &&
-        this.participationForm.whatsapp_accepted,
+      this.participationForm.last_name.trim() &&
+      this.participationForm.phone.trim() &&
+      this.participationForm.privacy_accepted &&
+      this.participationForm.whatsapp_accepted,
     );
 
     if (this.participationForm.reason === "sponsor") {
-      return Boolean(hasContactData && this.participationForm.company_name.trim());
+      return Boolean(
+        hasContactData && this.participationForm.company_name.trim(),
+      );
     }
 
     return Boolean(
       hasContactData &&
-        this.participationForm.tournament_id &&
-        this.participationForm.rules_accepted,
+      this.participationForm.tournament_id &&
+      this.participationForm.rules_accepted,
     );
   }
 
@@ -1050,7 +1118,10 @@ export class LandingComponent implements OnInit, OnDestroy {
     window.history.replaceState(null, "", `#${sectionId}`);
   }
 
-  private sameTournamentName(tournamentName: string, gameName: string): boolean {
+  private sameTournamentName(
+    tournamentName: string,
+    gameName: string,
+  ): boolean {
     const normalize = (value: string) =>
       value
         .toLowerCase()
