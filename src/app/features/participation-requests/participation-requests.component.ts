@@ -1,6 +1,7 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ParticipationRequestsService } from '../../core/services/participation-requests.service';
+import { RequestBadgesService } from '../../core/services/request-badges.service';
 import { ParticipationRequest, ParticipationRequestNoteWithProfile, ParticipationRequestWithTournament } from '../../core/types/models';
 import { EmptyStateComponent, StatusBadgeComponent } from '../../shared/components/ui.component';
 
@@ -98,7 +99,10 @@ export class ParticipationRequestsComponent implements OnInit {
   loading = signal(false);
   error = signal('');
 
-  constructor(private readonly service: ParticipationRequestsService) {}
+  constructor(
+    private readonly service: ParticipationRequestsService,
+    private readonly badges: RequestBadgesService
+  ) {}
 
   ngOnInit(): void {
     void this.load();
@@ -111,6 +115,7 @@ export class ParticipationRequestsComponent implements OnInit {
       const requests = await this.service.list();
       this.requests.set(requests);
       this.noteDrafts.set(Object.fromEntries(requests.map((request) => [request.id, ''])));
+      await this.badges.refresh();
     } catch (error) {
       this.error.set(this.message(error));
     } finally {
@@ -122,6 +127,7 @@ export class ParticipationRequestsComponent implements OnInit {
     try {
       await this.service.updateStatus(request.id, status);
       this.requests.update((requests) => requests.map((item) => (item.id === request.id ? { ...item, status } : item)));
+      await this.badges.refresh();
     } catch (error) {
       this.error.set(this.message(error));
     }
@@ -149,6 +155,7 @@ export class ParticipationRequestsComponent implements OnInit {
     try {
       await this.service.remove(request.id);
       this.requests.update((requests) => requests.filter((item) => item.id !== request.id));
+      await this.badges.refresh();
     } catch (error) {
       this.error.set(this.message(error));
     }

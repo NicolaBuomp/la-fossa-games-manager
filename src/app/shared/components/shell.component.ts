@@ -1,12 +1,15 @@
-import { Component, computed, signal } from '@angular/core';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { Component, OnInit, computed, signal } from '@angular/core';
+import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { filter } from 'rxjs';
 import { AuthService } from '../../core/services/auth.service';
+import { RequestBadgesService } from '../../core/services/request-badges.service';
 
 interface NavItem {
   path: string;
   label: string;
   short: string;
   icon: string;
+  badge?: 'tournamentRequests' | 'sponsorRequests';
   adminOnly?: boolean;
 }
 
@@ -23,8 +26,13 @@ interface NavItem {
         </div>
         <nav class="flex-1 space-y-1 px-4">
           @for (item of visibleNav(); track item.path) {
-            <a [routerLink]="item.path" routerLinkActive="bg-ink text-white" class="block rounded-lg px-4 py-3 text-sm font-bold uppercase tracking-wide text-neutral-700 transition hover:bg-black/5 hover:text-ink">
-              {{ item.label }}
+            <a [routerLink]="item.path" routerLinkActive="bg-ink text-white" class="flex items-center justify-between gap-3 rounded-lg px-4 py-3 text-sm font-bold uppercase tracking-wide text-neutral-700 transition hover:bg-black/5 hover:text-ink">
+              <span>{{ item.label }}</span>
+              @if (badgeCount(item) > 0) {
+                <span class="grid min-h-6 min-w-6 place-items-center rounded-full bg-fossa px-2 text-[11px] font-black leading-none text-ink ring-1 ring-black/10">
+                  {{ badgeCount(item) }}
+                </span>
+              }
             </a>
           }
         </nav>
@@ -96,7 +104,12 @@ interface NavItem {
                   class="flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-bold uppercase tracking-wide text-neutral-700 transition hover:bg-black/5 hover:text-ink"
                   (click)="closeMobileMenu()">
                   <span class="grid h-8 w-8 place-items-center rounded-full bg-black/5 text-sm">{{ item.icon }}</span>
-                  <span>{{ item.label }}</span>
+                  <span class="min-w-0 flex-1">{{ item.label }}</span>
+                  @if (badgeCount(item) > 0) {
+                    <span class="grid min-h-6 min-w-6 place-items-center rounded-full bg-fossa px-2 text-[11px] font-black leading-none text-ink ring-1 ring-black/10">
+                      {{ badgeCount(item) }}
+                    </span>
+                  }
                 </a>
               }
             </nav>
@@ -116,7 +129,7 @@ interface NavItem {
     </div>
   `
 })
-export class ShellComponent {
+export class ShellComponent implements OnInit {
   readonly mobileMenuOpen = signal(false);
 
   readonly nav: NavItem[] = [
@@ -124,21 +137,56 @@ export class ShellComponent {
     { path: '/app/expenses', label: 'Spese', short: '-', icon: '-', adminOnly: true },
     { path: '/app/incomes', label: 'Entrate', short: '+', icon: '+', adminOnly: true },
     { path: '/app/registrations', label: 'Iscritti', short: 'I', icon: '▦' },
-    { path: '/app/participation-requests', label: 'Richieste', short: 'R', icon: '□', adminOnly: true },
-    { path: '/app/sponsors', label: 'Sponsor', short: 'S', icon: '◆', adminOnly: true },
+    { path: '/app/participation-requests', label: 'Richieste', short: 'R', icon: '□', badge: 'tournamentRequests', adminOnly: true },
+    { path: '/app/sponsors', label: 'Sponsor', short: 'S', icon: '◆', badge: 'sponsorRequests', adminOnly: true },
     { path: '/app/profile', label: 'Profilo', short: 'P', icon: '◉' },
     { path: '/app/users', label: 'Utenti', short: 'U', icon: '⋯', adminOnly: true }
   ];
 
   readonly visibleNav = computed(() => this.nav.filter((item) => !item.adminOnly || this.auth.isAdmin()));
 
-  constructor(readonly auth: AuthService) {}
+  constructor(
+    readonly auth: AuthService,
+    private readonly badges: RequestBadgesService,
+    private readonly router: Router
+  ) {}
+
+  ngOnInit(): void {
+    void this.refreshBadges();
+    this.router.events.pipe(filter((event) => event instanceof NavigationEnd)).subscribe(() => {
+      void this.refreshBadges();
+    });
+  }
 
   openMobileMenu(): void {
     this.mobileMenuOpen.set(true);
+    void this.refreshBadges();
   }
 
   closeMobileMenu(): void {
     this.mobileMenuOpen.set(false);
+  }
+
+  badgeCount(item: NavItem): number {
+    if (item.badge === 'tournamentRequests') {
+      return this.badges.tournamentRequests();
+    }
+    if (item.badge === 'sponsorRequests') {
+      return this.badges.sponsorRequests();
+    }
+    return 0;
+  }
+
+  private async refreshBadges(): Promise<void> {
+    if (!this.auth.isAdmin()) {
+      this.badges.clear();
+      return;
+    }
+
+    try {
+      await this.badges.refresh();
+    } catch {
+      this.badges.clear();
+    }
   }
 }

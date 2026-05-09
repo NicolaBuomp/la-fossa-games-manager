@@ -1,15 +1,17 @@
 import { Component, OnInit, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { SummaryCardComponent } from '../../shared/components/ui.component';
 import { ExpensesService } from '../../core/services/expenses.service';
 import { IncomesService } from '../../core/services/incomes.service';
 import { SponsorsService } from '../../core/services/sponsors.service';
 import { RegistrationsService } from '../../core/services/registrations.service';
 import { AuditLogService } from '../../core/services/audit-log.service';
+import { RequestBadgesService } from '../../core/services/request-badges.service';
 import { AuditLog, Expense, Income, Registration, Sponsor } from '../../core/types/models';
 
 @Component({
   standalone: true,
-  imports: [SummaryCardComponent],
+  imports: [RouterLink, SummaryCardComponent],
   template: `
     <div class="space-y-5">
       <div class="flex flex-wrap items-end justify-between gap-4">
@@ -19,6 +21,46 @@ import { AuditLog, Expense, Income, Registration, Sponsor } from '../../core/typ
         </div>
         <button class="rounded-lg bg-white px-4 py-2 text-sm font-bold uppercase tracking-wide shadow-sm ring-1 ring-black/10" (click)="load()">Aggiorna</button>
       </div>
+
+      @if (hasPendingRequests()) {
+        <section class="rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-950 shadow-sm">
+          <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <p class="text-xs font-black uppercase tracking-[0.18em] text-amber-700">Richieste da gestire</p>
+              <h2 class="mt-1 text-xl font-black leading-tight">
+                Ci sono richieste arrivate dal sito non ancora gestite.
+              </h2>
+              <p class="mt-2 text-sm font-semibold leading-6 text-amber-900/75">
+                Controlla le nuove richieste torneo e i lead sponsor prima di aggiornare il resto del gestionale.
+              </p>
+            </div>
+            <div class="grid gap-2 sm:grid-cols-2 lg:min-w-[22rem]">
+              @if (pendingTournamentRequests() > 0) {
+                <a
+                  routerLink="/app/participation-requests"
+                  class="flex items-center justify-between gap-3 rounded-lg bg-white px-4 py-3 text-sm font-black uppercase tracking-wide text-ink ring-1 ring-amber-200 transition hover:bg-ink hover:text-white"
+                >
+                  <span>Richieste torneo</span>
+                  <span class="grid min-h-7 min-w-7 place-items-center rounded-full bg-fossa px-2 text-xs text-ink">
+                    {{ pendingTournamentRequests() }}
+                  </span>
+                </a>
+              }
+              @if (pendingSponsorRequests() > 0) {
+                <a
+                  routerLink="/app/sponsors"
+                  class="flex items-center justify-between gap-3 rounded-lg bg-white px-4 py-3 text-sm font-black uppercase tracking-wide text-ink ring-1 ring-amber-200 transition hover:bg-ink hover:text-white"
+                >
+                  <span>Richieste sponsor</span>
+                  <span class="grid min-h-7 min-w-7 place-items-center rounded-full bg-fossa px-2 text-xs text-ink">
+                    {{ pendingSponsorRequests() }}
+                  </span>
+                </a>
+              }
+            </div>
+          </div>
+        </section>
+      }
 
       <section class="rounded-lg bg-ink p-6 text-white">
         <p class="text-xs font-bold uppercase tracking-[0.2em] text-white/50">Saldo attuale</p>
@@ -91,7 +133,8 @@ export class DashboardComponent implements OnInit {
     private readonly incomesService: IncomesService,
     private readonly sponsorsService: SponsorsService,
     private readonly registrationsService: RegistrationsService,
-    private readonly auditLogService: AuditLogService
+    private readonly auditLogService: AuditLogService,
+    private readonly badges: RequestBadgesService
   ) {}
 
   ngOnInit(): void {
@@ -113,6 +156,7 @@ export class DashboardComponent implements OnInit {
       this.sponsors.set(sponsors);
       this.registrations.set(registrations);
       this.auditLogs.set(auditLogs);
+      await this.badges.refresh();
     } catch (error) {
       this.error.set(error instanceof Error ? error.message : 'Errore nel caricamento dati.');
     }
@@ -158,6 +202,18 @@ export class DashboardComponent implements OnInit {
 
   totalRecords(): number {
     return this.expenses().length + this.incomes().length + this.sponsors().length + this.registrations().length;
+  }
+
+  pendingTournamentRequests(): number {
+    return this.badges.tournamentRequests();
+  }
+
+  pendingSponsorRequests(): number {
+    return this.badges.sponsorRequests();
+  }
+
+  hasPendingRequests(): boolean {
+    return this.pendingTournamentRequests() + this.pendingSponsorRequests() > 0;
   }
 
   eur(value: number): string {

@@ -21,6 +21,15 @@ export class ParticipationRequestsService {
     }));
   }
 
+  async pendingCount(): Promise<number> {
+    const { count, error } = await this.supabase.client
+      .from('participation_requests')
+      .select('id', { count: 'exact', head: true })
+      .eq('status', 'nuova');
+    if (error) throw error;
+    return count ?? 0;
+  }
+
   async updateStatus(id: string, status: RequestStatus): Promise<void> {
     const { error } = await this.supabase.client.from('participation_requests').update({ status }).eq('id', id);
     if (error) throw error;
