@@ -1,6 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 
 @Component({
@@ -34,7 +34,7 @@ import { AuthService } from '../../core/services/auth.service';
     </main>
   `
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit {
   username = '';
   password = '';
   loading = false;
@@ -42,19 +42,23 @@ export class LoginComponent {
 
   constructor(
     private readonly auth: AuthService,
-    private readonly router: Router
+    private readonly router: Router,
+    private readonly route: ActivatedRoute
   ) {}
+
+  async ngOnInit(): Promise<void> {
+    await this.auth.ensureReady();
+    if (this.auth.isAuthenticated() && this.auth.isActive()) {
+      await this.router.navigateByUrl(this.redirectUrl());
+    }
+  }
 
   async submit(): Promise<void> {
     this.loading = true;
     this.error = '';
     try {
       await this.auth.signIn(this.username, this.password);
-      if (!this.auth.isActive()) {
-        this.error = 'Profilo non attivo o non configurato.';
-        return;
-      }
-      await this.router.navigateByUrl('/app/dashboard');
+      await this.router.navigateByUrl(this.redirectUrl());
     } catch (error) {
       this.error = this.loginErrorMessage(error);
     } finally {
@@ -73,5 +77,14 @@ export class LoginComponent {
     }
 
     return 'Accesso non riuscito. Controlla le credenziali e riprova.';
+  }
+
+  private redirectUrl(): string {
+    const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
+    if (returnUrl?.startsWith('/app')) {
+      return returnUrl;
+    }
+
+    return '/app';
   }
 }

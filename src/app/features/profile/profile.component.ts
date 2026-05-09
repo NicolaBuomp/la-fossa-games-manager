@@ -99,7 +99,7 @@ export class ProfileComponent implements OnInit {
     this.savingProfile.set(true);
     try {
       await this.profiles.updateOwnFullName(this.fullName());
-      await this.auth.loadProfile();
+      await this.auth.refreshProfile();
       this.fillName();
       this.success.set('Dati personali aggiornati.');
     } catch (error) {

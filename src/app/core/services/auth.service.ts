@@ -9,6 +9,8 @@ export class AuthService {
   private readonly sessionState = signal<Session | null>(null);
   private readonly profileState = signal<Profile | null>(null);
   private readonly loadingState = signal(true);
+  private initializePromise: Promise<void> | null = null;
+  private profileLoadToken = 0;
 
   readonly session = this.sessionState.asReadonly();
   readonly profile = this.profileState.asReadonly();
@@ -22,29 +24,41 @@ export class AuthService {
     private readonly supabase: SupabaseService,
     private readonly router: Router
   ) {
-    void this.initialize();
+    void this.ensureReady();
     this.supabase.client.auth.onAuthStateChange((_event, session) => {
       this.sessionState.set(session);
-      void this.loadProfile();
+      void this.loadProfileForCurrentSession();
     });
   }
 
-  async initialize(): Promise<void> {
-    const { data } = await this.supabase.client.auth.getSession();
-    this.sessionState.set(data.session);
-    await this.loadProfile();
-    this.loadingState.set(false);
+  ensureReady(): Promise<void> {
+    if (!this.initializePromise) {
+      this.initializePromise = this.initialize();
+    }
+
+    return this.initializePromise;
   }
 
-  async signIn(identifier: string, password: string): Promise<void> {
+  async signIn(identifier: string, password: string): Promise<Profile> {
+    await this.ensureReady();
     const normalizedIdentifier = identifier.trim();
     const email = normalizedIdentifier.includes('@')
       ? normalizedIdentifier
       : await this.emailForUsername(normalizedIdentifier);
 
-    const { error } = await this.supabase.client.auth.signInWithPassword({ email, password });
+    const { data, error } = await this.supabase.client.auth.signInWithPassword({ email, password });
     if (error) throw error;
-    await this.loadProfile();
+
+    this.sessionState.set(data.session);
+    const profile = await this.loadProfileForCurrentSession();
+    if (!profile?.active) {
+      await this.supabase.client.auth.signOut();
+      this.sessionState.set(null);
+      this.profileState.set(null);
+      throw new Error('Profilo non attivo o non configurato.');
+    }
+
+    return profile;
   }
 
   private async emailForUsername(username: string): Promise<string> {
@@ -68,11 +82,28 @@ export class AuthService {
     if (error) throw error;
   }
 
-  async loadProfile(): Promise<void> {
+  async refreshProfile(): Promise<Profile | null> {
+    await this.ensureReady();
+    return this.loadProfileForCurrentSession();
+  }
+
+  private async initialize(): Promise<void> {
+    this.loadingState.set(true);
+    try {
+      const { data } = await this.supabase.client.auth.getSession();
+      this.sessionState.set(data.session);
+      await this.loadProfileForCurrentSession();
+    } finally {
+      this.loadingState.set(false);
+    }
+  }
+
+  private async loadProfileForCurrentSession(): Promise<Profile | null> {
+    const token = ++this.profileLoadToken;
     const user = this.sessionState()?.user;
     if (!user) {
       this.profileState.set(null);
-      return;
+      return null;
     }
 
     const { data, error } = await this.supabase.client
@@ -83,10 +114,17 @@ export class AuthService {
 
     if (error) {
       console.error(error);
-      this.profileState.set(null);
-      return;
+      if (token === this.profileLoadToken) {
+        this.profileState.set(null);
+      }
+      return null;
     }
 
-    this.profileState.set(data as Profile | null);
+    const profile = data as Profile | null;
+    if (token === this.profileLoadToken) {
+      this.profileState.set(profile);
+    }
+
+    return profile;
   }
 }
