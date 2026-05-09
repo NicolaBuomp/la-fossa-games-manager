@@ -2,6 +2,7 @@ import { Component, OnDestroy, OnInit, signal } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { PublicParticipationService } from "../../core/services/public-participation.service";
 import { PublicTournament } from "../../core/types/models";
+import { ModalComponent } from "../../shared/components/ui.component";
 
 type ContactReason = "participation" | "sponsor";
 
@@ -27,7 +28,7 @@ type Countdown = {
 
 @Component({
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, ModalComponent],
   template: `
     <main class="min-h-screen overflow-hidden bg-[#070707] text-white">
       <section class="relative min-h-screen px-5 pb-8 pt-5 sm:px-8 lg:px-10">
@@ -198,7 +199,7 @@ type Countdown = {
               </h2>
             </div>
             <p class="max-w-xl text-base font-semibold leading-7 text-black/62">
-              Calcio a 5 e under 15, pallavolo, calcio balilla, carte, FIFA 26
+              Calcio a 5 e under 15, pallavolo, calcio balilla, briscola, FIFA 26
               e ping pong: ogni torneo ha il suo ritmo, tutti hanno la stessa
               voglia di vincere.
             </p>
@@ -208,8 +209,11 @@ type Countdown = {
             class="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7"
           >
             @for (game of games; track game.name) {
-              <article
-                class="group rounded-lg border border-black/10 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:border-fossa"
+              <button
+                type="button"
+                class="group flex h-full min-h-[22rem] touch-manipulation flex-col rounded-lg border border-black/10 bg-white p-5 text-left shadow-sm transition hover:-translate-y-1 hover:border-fossa focus:outline-none focus:ring-4 focus:ring-fossa/45"
+                [attr.aria-label]="'Apri dettagli ' + game.name"
+                (click)="openGameDetails(game)"
               >
                 <div
                   class="flex aspect-square items-center justify-center rounded-md bg-black p-5"
@@ -226,9 +230,46 @@ type Countdown = {
                 <p class="mt-3 text-sm font-semibold leading-6 text-black/58">
                   {{ game.description }}
                 </p>
-              </article>
+                <span class="mt-auto pt-5 text-xs font-black uppercase tracking-[0.16em] text-[#0f3d2e]">
+                  Dettagli
+                </span>
+              </button>
             }
           </div>
+
+          @if (selectedGame(); as game) {
+            <lfg-modal [open]="true" [title]="game.name" (close)="closeGameDetails()">
+              <div class="grid gap-5 text-ink sm:grid-cols-[9rem_1fr] sm:items-start">
+                <div class="flex aspect-square items-center justify-center rounded-md bg-black p-5">
+                  <img
+                    [src]="game.image"
+                    [alt]="game.name"
+                    class="h-full w-full object-contain"
+                  />
+                </div>
+                <div class="min-w-0">
+                  <p class="text-base font-semibold leading-7 text-black/68">
+                    {{ game.description }}
+                  </p>
+                  <div class="mt-5 rounded-md border border-black/10 bg-[#f7f2e8] p-4">
+                    <p class="text-[0.68rem] font-black uppercase tracking-[0.18em] text-black/48">
+                      Regolamento
+                    </p>
+                    <p class="mt-2 text-sm font-black leading-6">
+                      Il regolamento ufficiale di questo torneo arriverà a giorni.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    class="mt-5 w-full rounded-md bg-fossa px-5 py-3 text-sm font-black uppercase tracking-[0.12em] text-ink transition hover:bg-black hover:text-fossa sm:w-auto"
+                    (click)="requestGameInfo(game)"
+                  >
+                    Chiedi informazioni
+                  </button>
+                </div>
+              </div>
+            </lfg-modal>
+          }
         </div>
       </section>
 
@@ -702,6 +743,7 @@ export class LandingComponent implements OnInit, OnDestroy {
   protected readonly eventAddress =
     "Via Vignale, 59, 81050 Santa Maria La Fossa CE";
   protected readonly countdown = signal<Countdown>(this.calculateCountdown());
+  protected readonly selectedGame = signal<Game | null>(null);
   private countdownIntervalId: ReturnType<typeof setInterval> | null = null;
 
   constructor(private readonly participation: PublicParticipationService) {}
@@ -742,7 +784,7 @@ export class LandingComponent implements OnInit, OnDestroy {
       image: "/assets/brand/icona-calcio-balilla.png",
     },
     {
-      name: "Carte",
+      name: "Briscola",
       description: "Tavoli da gioco, lettura della mano e sangue freddo.",
       image: "/assets/brand/icona-carte.png",
     },
@@ -913,6 +955,26 @@ export class LandingComponent implements OnInit, OnDestroy {
     this.scrollToSection(event, "partecipa");
   }
 
+  openGameDetails(game: Game): void {
+    this.selectedGame.set(game);
+  }
+
+  closeGameDetails(): void {
+    this.selectedGame.set(null);
+  }
+
+  requestGameInfo(game: Game): void {
+    this.participationForm.reason = "participation";
+    const matchingTournament = this.tournaments().find((tournament) =>
+      this.sameTournamentName(tournament.name, game.name),
+    );
+    if (matchingTournament) {
+      this.participationForm.tournament_id = matchingTournament.id;
+    }
+    this.closeGameDetails();
+    this.scrollToElement("partecipa");
+  }
+
   private emptyParticipationForm() {
     return {
       reason: "participation" as ContactReason,
@@ -969,6 +1031,34 @@ export class LandingComponent implements OnInit, OnDestroy {
 
   private twoDigits(value: number): string {
     return value.toString().padStart(2, "0");
+  }
+
+  private scrollToElement(sectionId: string): void {
+    const section = document.getElementById(sectionId);
+    if (!section) {
+      return;
+    }
+
+    const prefersReducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+
+    section.scrollIntoView({
+      behavior: prefersReducedMotion ? "auto" : "smooth",
+      block: "start",
+    });
+    window.history.replaceState(null, "", `#${sectionId}`);
+  }
+
+  private sameTournamentName(tournamentName: string, gameName: string): boolean {
+    const normalize = (value: string) =>
+      value
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9]/g, "");
+
+    return normalize(tournamentName).includes(normalize(gameName));
   }
 
   private message(error: unknown): string {

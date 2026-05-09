@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, HostListener, Input, Output } from '@angular/core';
 
 @Component({
   selector: 'lfg-summary-card',
@@ -49,13 +49,19 @@ export class EmptyStateComponent {
   standalone: true,
   template: `
     @if (open) {
-      <div class="fixed inset-0 z-50 flex items-end justify-center bg-black/45 p-0 animate-fade-in sm:items-center sm:p-4" (click)="close.emit()">
-        <section class="max-h-[92vh] w-full overflow-y-auto rounded-t-2xl bg-white shadow-2xl animate-slide-up sm:max-w-2xl sm:rounded-2xl" (click)="$event.stopPropagation()">
-          <header class="sticky top-0 z-10 flex items-center justify-between border-b border-black/10 bg-white px-5 py-4">
-            <h2 class="font-display text-lg uppercase">{{ title }}</h2>
-            <button class="rounded-full bg-neutral-100 px-3 py-1 text-sm font-bold" (click)="close.emit()">Chiudi</button>
+      <div class="fixed inset-0 z-50 flex items-end justify-center bg-black/55 p-0 animate-fade-in sm:items-center sm:p-4" (click)="close.emit()">
+        <section
+          role="dialog"
+          aria-modal="true"
+          [attr.aria-label]="title"
+          class="max-h-[92dvh] w-full overflow-y-auto rounded-t-2xl bg-white shadow-2xl animate-slide-up sm:max-w-2xl sm:rounded-2xl"
+          (click)="$event.stopPropagation()"
+        >
+          <header class="sticky top-0 z-10 flex items-center justify-between gap-4 border-b border-black/10 bg-white px-5 py-4">
+            <h2 class="min-w-0 font-display text-lg uppercase leading-none">{{ title }}</h2>
+            <button class="shrink-0 rounded-full bg-neutral-100 px-3 py-2 text-sm font-bold" (click)="close.emit()">Chiudi</button>
           </header>
-          <div class="p-5">
+          <div class="p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))]">
             <ng-content />
           </div>
         </section>
@@ -67,6 +73,13 @@ export class ModalComponent {
   @Input() open = false;
   @Input() title = '';
   @Output() close = new EventEmitter<void>();
+
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    if (this.open) {
+      this.close.emit();
+    }
+  }
 }
 
 @Component({
