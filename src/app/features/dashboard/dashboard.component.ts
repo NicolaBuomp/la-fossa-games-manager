@@ -1,6 +1,6 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { SummaryCardComponent } from '../../shared/components/ui.component';
+import { KpiPanelComponent, SummaryCardComponent } from '../../shared/components/ui.component';
 import { ExpensesService } from '../../core/services/expenses.service';
 import { IncomesService } from '../../core/services/incomes.service';
 import { SponsorsService } from '../../core/services/sponsors.service';
@@ -12,7 +12,7 @@ import { AuditLog, Expense, Income, Registration, Sponsor } from '../../core/typ
 
 @Component({
   standalone: true,
-  imports: [RouterLink, SummaryCardComponent],
+  imports: [RouterLink, KpiPanelComponent, SummaryCardComponent],
   template: `
     <div class="space-y-5">
       <div class="flex flex-wrap items-end justify-between gap-4">
@@ -80,13 +80,15 @@ import { AuditLog, Expense, Income, Registration, Sponsor } from '../../core/typ
         </div>
       </section>
 
-      <section class="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-        <lfg-summary-card label="Sponsor pagati" [value]="eur(sponsorPaid())" [hint]="eur(sponsorPaidCash()) + ' cash nel saldo'" tone="income" />
-        <lfg-summary-card label="Sponsor confermati" [value]="eur(sponsorConfirmed())" hint="Confermati, non ancora pagati" tone="warning" />
-        <lfg-summary-card label="Iscrizioni pagate" [value]="eur(regPaidAmount())" [hint]="regPaidCount() + ' pagate'" tone="income" />
-        <lfg-summary-card label="Da incassare" [value]="eur(regPendingAmount())" [hint]="regPendingCount() + ' aperte'" tone="warning" />
-        <lfg-summary-card label="Record totali" [value]="String(totalRecords())" hint="Spese, entrate, sponsor, iscritti" />
-      </section>
+      <lfg-kpi-panel title="KPI evento">
+        <section class="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+          <lfg-summary-card label="Sponsor pagati" [value]="eur(sponsorPaid())" [hint]="eur(sponsorPaidInBalance()) + ' nel saldo'" tone="income" />
+          <lfg-summary-card label="Sponsor confermati" [value]="eur(sponsorConfirmed())" hint="Confermati, non ancora pagati" tone="warning" />
+          <lfg-summary-card label="Iscrizioni pagate" [value]="eur(regPaidAmount())" [hint]="regPaidCount() + ' pagate'" tone="income" />
+          <lfg-summary-card label="Da incassare" [value]="eur(regPendingAmount())" [hint]="regPendingCount() + ' aperte'" tone="warning" />
+          <lfg-summary-card label="Record totali" [value]="String(totalRecords())" hint="Spese, entrate, sponsor, iscritti" />
+        </section>
+      </lfg-kpi-panel>
 
       @if (error()) {
         <p class="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{{ error() }}</p>
@@ -179,7 +181,7 @@ export class DashboardComponent implements OnInit {
   }
 
   totalIncome(): number {
-    return this.recordedIncome() + this.sponsorPaidCash() + this.regPaidAmount();
+    return this.recordedIncome() + this.sponsorPaidInBalance() + this.regPaidAmount();
   }
 
   recordedIncome(): number {
@@ -202,9 +204,9 @@ export class DashboardComponent implements OnInit {
       .reduce((sum, item) => sum + Number(item.value || 0), 0);
   }
 
-  sponsorPaidCash(): number {
+  sponsorPaidInBalance(): number {
     return this.sponsors()
-      .filter((item) => item.status === 'pagato' && item.type === 'cash')
+      .filter((item) => item.status === 'pagato' && (item.type === 'cash' || item.type === 'bonifico'))
       .reduce((sum, item) => sum + Number(item.value || 0), 0);
   }
 

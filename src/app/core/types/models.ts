@@ -1,6 +1,6 @@
 export type UserRole = 'staff' | 'admin';
 export type SponsorStatus = 'contattato' | 'in_trattativa' | 'confermato' | 'pagato';
-export type SponsorType = 'cash' | 'in_natura';
+export type SponsorType = 'cash' | 'bonifico';
 export type TournamentSport = 'calcio' | 'pallavolo' | 'altro';
 export type ParticipantGender = 'uomo' | 'donna';
 

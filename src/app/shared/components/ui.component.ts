@@ -30,6 +30,39 @@ export class SummaryCardComponent {
 }
 
 @Component({
+  selector: 'lfg-kpi-panel',
+  standalone: true,
+  template: `
+    <section class="rounded-lg border border-black/10 bg-white/50">
+      <button
+        type="button"
+        class="flex w-full items-center justify-between gap-3 px-4 py-3 text-left"
+        [attr.aria-expanded]="!collapsed()"
+        (click)="collapsed.set(!collapsed())"
+      >
+        <span>
+          <span class="block text-xs font-bold uppercase tracking-[0.18em] text-neutral-500">{{ eyebrow }}</span>
+          <span class="mt-0.5 block text-sm font-black uppercase text-ink">{{ title }}</span>
+        </span>
+        <span class="rounded-full bg-white px-3 py-1 text-xs font-black uppercase ring-1 ring-black/10">
+          {{ collapsed() ? 'Apri' : 'Chiudi' }}
+        </span>
+      </button>
+      @if (!collapsed()) {
+        <div class="border-t border-black/5 p-3">
+          <ng-content />
+        </div>
+      }
+    </section>
+  `
+})
+export class KpiPanelComponent {
+  @Input() title = 'KPI';
+  @Input() eyebrow = 'Riepilogo';
+  collapsed = signal(false);
+}
+
+@Component({
   selector: 'lfg-empty-state',
   standalone: true,
   template: `

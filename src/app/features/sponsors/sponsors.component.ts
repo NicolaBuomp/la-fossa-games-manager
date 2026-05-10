@@ -8,11 +8,11 @@ import { SponsorsService } from '../../core/services/sponsors.service';
 import { LoadingService } from '../../core/services/loading.service';
 import { SPONSOR_STATUSES } from '../../core/types/constants';
 import { InsertSponsor, Sponsor, SponsorStatus, SponsorType } from '../../core/types/models';
-import { ConfirmModalComponent, EmptyStateComponent, ModalComponent, StatusBadgeComponent, SummaryCardComponent } from '../../shared/components/ui.component';
+import { ConfirmModalComponent, EmptyStateComponent, KpiPanelComponent, ModalComponent, StatusBadgeComponent, SummaryCardComponent } from '../../shared/components/ui.component';
 
 @Component({
   standalone: true,
-  imports: [FormsModule, EmptyStateComponent, ModalComponent, StatusBadgeComponent, SummaryCardComponent, ConfirmModalComponent],
+  imports: [FormsModule, EmptyStateComponent, KpiPanelComponent, ModalComponent, StatusBadgeComponent, SummaryCardComponent, ConfirmModalComponent],
   template: `
     <section class="space-y-4">
       <div class="flex flex-wrap items-end justify-between gap-3">
@@ -22,6 +22,7 @@ import { ConfirmModalComponent, EmptyStateComponent, ModalComponent, StatusBadge
         </div>
         <div class="flex gap-2">
           <button class="rounded-lg bg-white px-4 py-2 text-sm font-bold ring-1 ring-black/10" (click)="export()">CSV</button>
+          <button class="rounded-lg bg-white px-4 py-2 text-sm font-bold ring-1 ring-black/10" (click)="newLead()">Nuovo lead</button>
           <button class="rounded-lg bg-ink px-4 py-2 text-sm font-bold text-white" (click)="newItem()">Nuovo</button>
         </div>
       </div>
@@ -45,40 +46,63 @@ import { ConfirmModalComponent, EmptyStateComponent, ModalComponent, StatusBadge
           </button>
         }
       </div>
-      <lfg-summary-card label="Confermato/pagato" [value]="eur(confirmedTotal())" tone="income" [hint]="filteredItems().length + ' sponsor visibili'" />
+      <lfg-kpi-panel title="KPI sponsor">
+        <section class="grid gap-3 sm:grid-cols-3">
+          <lfg-summary-card label="Da contattare" [value]="String(contactTotal())" tone="warning" hint="Lead senza conferma" />
+          <lfg-summary-card label="In trattativa" [value]="String(negotiatingTotal())" tone="warning" hint="Sponsor da seguire" />
+          <lfg-summary-card label="Confermato/pagato" [value]="eur(confirmedTotal())" tone="income" [hint]="filteredItems().length + ' sponsor visibili'" />
+        </section>
+      </lfg-kpi-panel>
+      <div class="flex justify-end">
+        <label class="flex items-center gap-3 rounded-lg bg-white px-3 py-2 text-sm font-bold ring-1 ring-black/10">
+          <span>Vista compatta</span>
+          <input type="checkbox" class="peer sr-only" [ngModel]="compactView()" (ngModelChange)="compactView.set($event)">
+          <span class="h-5 w-9 rounded-full bg-neutral-200 p-0.5 transition peer-checked:bg-ink">
+            <span class="block h-4 w-4 rounded-full bg-white shadow-sm transition" [class.translate-x-4]="compactView()"></span>
+          </span>
+        </label>
+      </div>
       @if (error()) { <p class="rounded-lg bg-red-50 p-3 text-sm text-red-700">{{ error() }}</p> }
       @if (!items().length) {
-        <lfg-empty-state title="Nessuno sponsor" text="Aggiungi aziende, contatti, valore e stato della trattativa." />
+        <lfg-empty-state title="Nessuno sponsor" text="Aggiungi aziende, contatti e stato della trattativa anche senza importo." />
       } @else if (!filteredItems().length) {
         <lfg-empty-state title="Nessuno sponsor per questo stato" text="Cambia filtro per vedere altri sponsor." />
       } @else {
-        <div class="grid gap-3 xl:grid-cols-2">
+        <div [class]="compactView() ? 'grid gap-2 xl:grid-cols-3' : 'grid gap-3 xl:grid-cols-2'">
           @for (item of filteredItems(); track item.id) {
-            <article class="rounded-lg border border-black/10 bg-white p-4">
-              <div class="flex flex-wrap justify-between gap-3">
+            <article class="rounded-lg border border-black/10 bg-white" [class.p-2]="compactView()" [class.p-4]="!compactView()">
+              <div class="flex flex-wrap items-start justify-between" [class.gap-2]="compactView()" [class.gap-3]="!compactView()">
                 <div class="min-w-0">
-                  <h2 class="truncate text-base font-bold">{{ item.company_name }}</h2>
-                  <p class="mt-1 text-xs text-neutral-500">{{ item.contact_name || 'Referente non indicato' }} @if (item.contact_info) { · {{ item.contact_info }} }</p>
-                  <p class="mt-1 text-xs font-semibold text-neutral-500">{{ insertMeta(item) }}</p>
-                </div>
-                <p class="font-black">{{ eur(item.value) }}</p>
-              </div>
-              <div class="mt-3 flex flex-wrap gap-2">
-                <lfg-status-badge [label]="statusLabel(item.status)" [className]="statusClass(item.status)" />
-                <span class="rounded-full bg-neutral-100 px-2.5 py-1 text-[10px] font-bold uppercase">{{ item.type === 'cash' ? 'Cash' : 'In natura' }}</span>
-              </div>
-              @if (item.deliverables) { <p class="mt-3 text-sm text-neutral-700"><b>Deliverables:</b> {{ item.deliverables }}</p> }
-              @if (item.notes) { <p class="mt-2 text-sm text-neutral-600">{{ item.notes }}</p> }
-              <div class="mt-4 flex flex-wrap justify-between gap-2 border-t border-black/5 pt-3">
-                <div class="flex flex-wrap gap-2">
-                  @for (status of statuses; track status.id) {
-                    <button [disabled]="updatingSponsorId() === item.id" class="rounded-md bg-neutral-100 px-2.5 py-1.5 text-[10px] font-bold uppercase disabled:cursor-not-allowed disabled:opacity-60" (click)="setStatus(item, status.id)">{{ status.label }}</button>
+                  <h2 class="truncate font-bold" [class.text-sm]="compactView()" [class.text-base]="!compactView()">{{ item.company_name }}</h2>
+                  @if (!compactView()) {
+                    <p class="mt-1 text-xs text-neutral-500">{{ item.contact_name || 'Referente non indicato' }} @if (item.contact_info) { · {{ item.contact_info }} }</p>
+                    <p class="mt-1 text-xs font-semibold text-neutral-500">{{ insertMeta(item) }}</p>
                   }
                 </div>
+                <div class="text-right">
+                  @if (!compactView()) { <p class="text-[10px] font-bold uppercase text-neutral-400">{{ item.value > 0 ? 'Valore' : 'Importo assente' }}</p> }
+                  <p class="font-black" [class.text-sm]="compactView()">{{ sponsorValueLabel(item) }}</p>
+                </div>
+              </div>
+              <div class="flex flex-wrap gap-2" [class.mt-2]="compactView()" [class.mt-3]="!compactView()">
+                <lfg-status-badge [label]="statusLabel(item.status)" [className]="statusClass(item.status)" />
+                @if (!compactView()) { <span class="rounded-full bg-neutral-100 px-2.5 py-1 text-[10px] font-bold uppercase">{{ sponsorTypeLabel(item.type) }}</span> }
+              </div>
+              @if (!compactView() && item.notes) { <p class="mt-2 text-sm text-neutral-600">{{ item.notes }}</p> }
+              <div class="flex flex-wrap justify-between gap-2 border-t border-black/5" [class.mt-2]="compactView()" [class.pt-2]="compactView()" [class.mt-4]="!compactView()" [class.pt-3]="!compactView()">
+                @if (!compactView()) {
+                  <div class="flex flex-wrap gap-2">
+                    @for (status of statuses; track status.id) {
+                      @if (status.id !== item.status) {
+                        <button [disabled]="updatingSponsorId() === item.id" class="rounded-md bg-neutral-100 px-2.5 py-1.5 text-[10px] font-bold uppercase disabled:cursor-not-allowed disabled:opacity-60" (click)="setStatus(item, status.id)">{{ status.label }}</button>
+                      }
+                    }
+                  </div>
+                }
                 <div class="flex gap-2">
-                  <button class="rounded-md bg-neutral-100 px-3 py-1.5 text-xs font-bold uppercase" (click)="edit(item)">Modifica</button>
+                  <button class="rounded-md bg-neutral-100 px-3 py-1.5 text-xs font-bold uppercase" [class.px-2]="compactView()" [class.py-1]="compactView()" (click)="edit(item)">Modifica</button>
                   @if (auth.isAdmin()) {
-                    <button class="rounded-md bg-red-50 px-3 py-1.5 text-xs font-bold uppercase text-red-700" (click)="askRemove(item)">Elimina</button>
+                    <button class="rounded-md bg-red-50 px-3 py-1.5 text-xs font-bold uppercase text-red-700" [class.px-2]="compactView()" [class.py-1]="compactView()" (click)="askRemove(item)">Elimina</button>
                   }
                 </div>
               </div>
@@ -97,11 +121,17 @@ import { ConfirmModalComponent, EmptyStateComponent, ModalComponent, StatusBadge
             <label class="grid gap-1 text-sm font-bold">Contatto <input name="contact_info" [(ngModel)]="form.contact_info" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"></label>
           </div>
           <div class="grid gap-3 sm:grid-cols-3">
-            <label class="grid gap-1 text-sm font-bold">Valore <input type="number" min="0" step="0.01" name="value" [(ngModel)]="form.value" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"></label>
-            <label class="grid gap-1 text-sm font-bold">Tipo <select name="type" [(ngModel)]="form.type" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"><option value="cash">Cash</option><option value="in_natura">In natura</option></select></label>
+            <label class="grid gap-1 text-sm font-bold">Importo/valore <input type="number" min="0" step="0.01" name="value" [(ngModel)]="form.value" [disabled]="withoutValue" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"></label>
+            <label class="grid gap-1 text-sm font-bold">Metodo <select name="type" [(ngModel)]="form.type" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"><option value="cash">Cash</option><option value="bonifico">Bonifico</option></select></label>
             <label class="grid gap-1 text-sm font-bold">Stato <select name="status" [(ngModel)]="form.status" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70">@for (s of statuses; track s.id) { <option [value]="s.id">{{ s.label }}</option> }</select></label>
           </div>
-          <label class="grid gap-1 text-sm font-bold">Deliverables <input name="deliverables" [(ngModel)]="form.deliverables" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"></label>
+          <label class="flex items-start gap-3 rounded-lg border border-black/10 bg-neutral-50 p-3 text-sm font-bold">
+            <input type="checkbox" class="mt-1 h-4 w-4 accent-ink" [(ngModel)]="withoutValue" [ngModelOptions]="{ standalone: true }" (ngModelChange)="syncValueMode()">
+            <span>
+              Sponsor senza importo per ora
+              <span class="mt-1 block text-xs font-semibold leading-5 text-neutral-500">Usalo per contatti, lead e trattative da richiamare: resta tracciato ma non entra nei totali economici.</span>
+            </span>
+          </label>
           <label class="grid gap-1 text-sm font-bold">Note <textarea rows="3" name="notes" [(ngModel)]="form.notes" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"></textarea></label>
           <button class="rounded-lg bg-ink px-4 py-3 text-sm font-bold uppercase text-white disabled:opacity-60">
             {{ saving() ? 'Salvataggio…' : 'Salva' }}
@@ -127,10 +157,12 @@ export class SponsorsComponent implements OnInit {
   saving = signal(false);
   updatingSponsorId = signal<string | null>(null);
   statusFilter = signal<SponsorStatus | 'all'>('all');
+  compactView = signal(false);
   confirmPending = signal<(() => Promise<void>) | null>(null);
   confirmMessage = signal('');
   statuses = SPONSOR_STATUSES;
   form: InsertSponsor = this.emptyForm();
+  withoutValue = true;
 
   constructor(
     readonly auth: AuthService,
@@ -154,15 +186,36 @@ export class SponsorsComponent implements OnInit {
     finally { this.globalLoading.stop(); }
   }
 
-  newItem(): void { this.error.set(''); this.editing.set(null); this.form = this.emptyForm(); this.modalOpen.set(true); }
-  edit(item: Sponsor): void { this.error.set(''); this.editing.set(item); this.form = { company_name: item.company_name, contact_name: item.contact_name, contact_info: item.contact_info, value: item.value, type: item.type, status: item.status, deliverables: item.deliverables, notes: item.notes }; this.modalOpen.set(true); }
+  newItem(): void {
+    this.error.set('');
+    this.editing.set(null);
+    this.form = this.emptyForm();
+    this.withoutValue = false;
+    this.modalOpen.set(true);
+  }
+
+  newLead(): void {
+    this.newItem();
+    this.withoutValue = true;
+    this.form.value = 0;
+    this.form.status = 'in_trattativa';
+    this.form.notes = 'Lead sponsor da ricontattare.';
+  }
+
+  edit(item: Sponsor): void {
+    this.error.set('');
+    this.editing.set(item);
+    this.form = { company_name: item.company_name, contact_name: item.contact_name, contact_info: item.contact_info, value: item.value, type: item.type, status: item.status, deliverables: item.deliverables, notes: item.notes };
+    this.withoutValue = Number(item.value || 0) === 0;
+    this.modalOpen.set(true);
+  }
 
   async save(): Promise<void> {
     if (this.saving()) return;
     this.saving.set(true);
     this.error.set('');
     try {
-      const payload = { ...this.form, value: Number(this.form.value || 0) };
+      const payload = { ...this.form, value: this.withoutValue ? 0 : Number(this.form.value || 0) };
       const current = this.editing();
       if (current) await this.service.update(current.id, payload);
       else await this.service.create(payload);
@@ -195,6 +248,8 @@ export class SponsorsComponent implements OnInit {
   }
 
   export(): void { this.exporter.downloadCsv('sponsor-la-fossa-games.csv', this.filteredItems() as unknown as Record<string, unknown>[]); }
+  contactTotal(): number { return this.items().filter((item) => item.status === 'contattato').length; }
+  negotiatingTotal(): number { return this.items().filter((item) => item.status === 'in_trattativa').length; }
   confirmedTotal(): number { return this.items().filter((i) => i.status === 'confermato' || i.status === 'pagato').reduce((s, i) => s + Number(i.value || 0), 0); }
   filteredItems(): Sponsor[] {
     const status = this.statusFilter();
@@ -202,9 +257,15 @@ export class SponsorsComponent implements OnInit {
   }
   statusLabel(status: SponsorStatus): string { return this.statuses.find((item) => item.id === status)?.label ?? status; }
   statusClass(status: SponsorStatus): string { return this.statuses.find((item) => item.id === status)?.className ?? ''; }
+  sponsorTypeLabel(type: SponsorType): string { return type === 'bonifico' ? 'Bonifico' : 'Cash'; }
+  sponsorValueLabel(item: Sponsor): string { return Number(item.value || 0) > 0 ? this.eur(item.value) : 'Nessun importo'; }
   eur(value: number): string { return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(value); }
   formatDateTime(value: string): string { return new Intl.DateTimeFormat('it-IT', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(value)); }
   insertMeta(item: Sponsor): string { return `Inserito da ${this.userNames()[item.created_by ?? ''] ?? 'Utente non disponibile'} · ${this.formatDateTime(item.created_at)}`; }
   emptyForm(): InsertSponsor { return { company_name: '', contact_name: '', contact_info: '', type: 'cash' as SponsorType, value: 0, status: 'contattato', deliverables: '', notes: '' }; }
+  syncValueMode(): void {
+    if (this.withoutValue) this.form.value = 0;
+  }
   private message(error: unknown): string { return error instanceof Error ? error.message : 'Operazione non riuscita.'; }
+  protected readonly String = String;
 }

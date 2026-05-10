@@ -14,7 +14,7 @@ import {
   TournamentTeamWithParticipants,
   TournamentWithTeams
 } from '../../core/types/models';
-import { ConfirmModalComponent, EmptyStateComponent, ModalComponent, StatusBadgeComponent, SummaryCardComponent } from '../../shared/components/ui.component';
+import { ConfirmModalComponent, EmptyStateComponent, KpiPanelComponent, ModalComponent, StatusBadgeComponent, SummaryCardComponent } from '../../shared/components/ui.component';
 
 type ModalMode = 'tournament' | 'team' | 'participant' | 'direct' | null;
 type PaymentFilter = 'all' | 'paid' | 'pending';
@@ -27,7 +27,7 @@ const DIRECT_CODES = [...SOLO_CODES, ...DUO_CODES];
 
 @Component({
   standalone: true,
-  imports: [FormsModule, EmptyStateComponent, ModalComponent, StatusBadgeComponent, SummaryCardComponent, ConfirmModalComponent],
+  imports: [FormsModule, EmptyStateComponent, KpiPanelComponent, ModalComponent, StatusBadgeComponent, SummaryCardComponent, ConfirmModalComponent],
   template: `
     <section class="space-y-4">
       <div class="flex flex-wrap items-end justify-between gap-3">
@@ -38,11 +38,13 @@ const DIRECT_CODES = [...SOLO_CODES, ...DUO_CODES];
         <button class="rounded-lg bg-white px-4 py-2 text-sm font-bold ring-1 ring-black/10" (click)="export()">CSV</button>
       </div>
 
-      <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-        <lfg-summary-card label="Iscritti" [value]="String(teamCount())" [hint]="participantCount() + ' persone'" />
-        <lfg-summary-card label="Pagati" [value]="eur(paidAmount())" [hint]="paidCount() + ' iscrizioni'" tone="income" />
-        <lfg-summary-card label="Da incassare" [value]="eur(pendingAmount())" [hint]="pendingCount() + ' iscrizioni'" tone="warning" />
-      </div>
+      <lfg-kpi-panel title="KPI iscrizioni">
+        <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          <lfg-summary-card label="Iscritti" [value]="String(teamCount())" [hint]="participantCount() + ' persone'" />
+          <lfg-summary-card label="Pagati" [value]="eur(paidAmount())" [hint]="paidCount() + ' iscrizioni'" tone="income" />
+          <lfg-summary-card label="Da incassare" [value]="eur(pendingAmount())" [hint]="pendingCount() + ' iscrizioni'" tone="warning" />
+        </div>
+      </lfg-kpi-panel>
 
       <div class="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
         <button

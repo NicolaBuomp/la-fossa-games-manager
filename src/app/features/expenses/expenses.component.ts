@@ -7,11 +7,11 @@ import { ProfileService } from '../../core/services/profile.service';
 import { LoadingService } from '../../core/services/loading.service';
 import { EXPENSE_CATEGORIES, PAYMENT_METHODS } from '../../core/types/constants';
 import { Expense, InsertExpense, Profile } from '../../core/types/models';
-import { ConfirmModalComponent, EmptyStateComponent, ModalComponent, SummaryCardComponent } from '../../shared/components/ui.component';
+import { ConfirmModalComponent, EmptyStateComponent, KpiPanelComponent, ModalComponent, SummaryCardComponent } from '../../shared/components/ui.component';
 
 @Component({
   standalone: true,
-  imports: [FormsModule, EmptyStateComponent, ModalComponent, SummaryCardComponent, ConfirmModalComponent],
+  imports: [FormsModule, EmptyStateComponent, KpiPanelComponent, ModalComponent, SummaryCardComponent, ConfirmModalComponent],
   template: `
     <section class="space-y-4">
       <div class="flex flex-wrap items-end justify-between gap-3">
@@ -25,7 +25,9 @@ import { ConfirmModalComponent, EmptyStateComponent, ModalComponent, SummaryCard
         </div>
       </div>
 
-      <lfg-summary-card label="Totale spese" [value]="eur(total())" tone="expense" [hint]="items().length + ' movimenti'" />
+      <lfg-kpi-panel title="KPI spese">
+        <lfg-summary-card label="Totale spese" [value]="eur(total())" tone="expense" [hint]="items().length + ' movimenti'" />
+      </lfg-kpi-panel>
       @if (error()) { <p class="rounded-lg bg-red-50 p-3 text-sm text-red-700">{{ error() }}</p> }
 
       @if (!items().length) {
