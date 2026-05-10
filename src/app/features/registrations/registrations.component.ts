@@ -17,6 +17,7 @@ import {
 import { ConfirmModalComponent, EmptyStateComponent, ModalComponent, StatusBadgeComponent, SummaryCardComponent } from '../../shared/components/ui.component';
 
 type ModalMode = 'tournament' | 'team' | 'participant' | 'direct' | null;
+type PaymentFilter = 'all' | 'paid' | 'pending';
 type DirectPerson = { first_name: string; last_name: string; contact: string };
 type DirectForm = { tournament_id: string; paid: boolean; person1: DirectPerson; person2: DirectPerson };
 
@@ -41,6 +42,33 @@ const DIRECT_CODES = [...SOLO_CODES, ...DUO_CODES];
         <lfg-summary-card label="Iscritti" [value]="String(teamCount())" [hint]="participantCount() + ' persone'" />
         <lfg-summary-card label="Pagati" [value]="eur(paidAmount())" [hint]="paidCount() + ' iscrizioni'" tone="income" />
         <lfg-summary-card label="Da incassare" [value]="eur(pendingAmount())" [hint]="pendingCount() + ' iscrizioni'" tone="warning" />
+      </div>
+
+      <div class="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+        <button
+          class="shrink-0 rounded-full px-4 py-2 text-sm font-bold ring-1 ring-black/10"
+          [class.bg-ink]="paymentFilter() === 'all'"
+          [class.text-white]="paymentFilter() === 'all'"
+          [class.bg-white]="paymentFilter() !== 'all'"
+          (click)="paymentFilter.set('all')">
+          Tutte
+        </button>
+        <button
+          class="shrink-0 rounded-full px-4 py-2 text-sm font-bold ring-1 ring-black/10"
+          [class.bg-ink]="paymentFilter() === 'paid'"
+          [class.text-white]="paymentFilter() === 'paid'"
+          [class.bg-white]="paymentFilter() !== 'paid'"
+          (click)="paymentFilter.set('paid')">
+          Pagate
+        </button>
+        <button
+          class="shrink-0 rounded-full px-4 py-2 text-sm font-bold ring-1 ring-black/10"
+          [class.bg-ink]="paymentFilter() === 'pending'"
+          [class.text-white]="paymentFilter() === 'pending'"
+          [class.bg-white]="paymentFilter() !== 'pending'"
+          (click)="paymentFilter.set('pending')">
+          Da pagare
+        </button>
       </div>
 
       @if (error()) {
@@ -69,7 +97,7 @@ const DIRECT_CODES = [...SOLO_CODES, ...DUO_CODES];
               <div>
                 <h2 class="font-display text-2xl uppercase">{{ tournament.name }}</h2>
                 <p class="mt-1 text-sm text-neutral-500">
-                  {{ tournament.tournament_teams.length }} {{ isDirect(tournament) ? 'iscritti' : 'squadre' }}
+                  {{ filteredTournamentTeams(tournament).length }} {{ isDirect(tournament) ? 'iscritti visibili' : 'squadre visibili' }}
                   @if (tournament.fee) { · quota {{ eur(tournament.fee) }} }
                 </p>
               </div>
@@ -94,9 +122,11 @@ const DIRECT_CODES = [...SOLO_CODES, ...DUO_CODES];
               <lfg-empty-state
                 [title]="isDuo(tournament) ? 'Nessuna coppia iscritta' : 'Nessun partecipante iscritto'"
                 [text]="isDuo(tournament) ? 'Aggiungi la prima coppia.' : 'Aggiungi il primo partecipante.'" />
+            } @else if (!filteredTournamentTeams(tournament).length) {
+              <lfg-empty-state title="Nessuna iscrizione per questo stato" text="Cambia filtro per vedere altre iscrizioni." />
             } @else {
               <div class="grid gap-3 xl:grid-cols-2">
-                @for (team of tournament.tournament_teams; track team.id) {
+                @for (team of filteredTournamentTeams(tournament); track team.id) {
                   <article class="rounded-lg border border-black/10 bg-white p-4 shadow-sm">
                     <div class="flex flex-wrap items-start justify-between gap-3">
                       <div class="min-w-0">
@@ -143,9 +173,11 @@ const DIRECT_CODES = [...SOLO_CODES, ...DUO_CODES];
             <!-- Tornei a squadre: calcio e pallavolo -->
             @if (!tournament.tournament_teams.length) {
               <lfg-empty-state title="Nessuna squadra" text="Aggiungi una squadra iscritta a questo torneo." />
+            } @else if (!filteredTournamentTeams(tournament).length) {
+              <lfg-empty-state title="Nessuna squadra per questo stato" text="Cambia filtro per vedere altre iscrizioni." />
             } @else {
               <div class="grid gap-3 xl:grid-cols-2">
-                @for (team of tournament.tournament_teams; track team.id) {
+                @for (team of filteredTournamentTeams(tournament); track team.id) {
                   <article class="rounded-lg border border-black/10 bg-white p-4 shadow-sm">
                     <div class="flex flex-wrap items-start justify-between gap-3">
                       <div class="min-w-0">
@@ -328,6 +360,7 @@ export class RegistrationsComponent implements OnInit {
   editingParticipant = signal<TeamParticipant | null>(null);
   editingDirectTeam = signal<TournamentTeamWithParticipants | null>(null);
   saving = signal(false);
+  paymentFilter = signal<PaymentFilter>('all');
   confirmPending = signal<(() => Promise<void>) | null>(null);
   confirmMessage = signal('');
   tournamentForm: InsertTournament = this.emptyTournamentForm();
@@ -634,6 +667,9 @@ export class RegistrationsComponent implements OnInit {
   pendingCount(): number { return this.allTeams().filter((t) => !t.paid).length; }
   paidAmount(): number { return this.allTeams().filter((t) => t.paid).reduce((s, t) => s + this.teamFee(t), 0); }
   pendingAmount(): number { return this.allTeams().filter((t) => !t.paid).reduce((s, t) => s + this.teamFee(t), 0); }
+  filteredTournamentTeams(tournament: TournamentWithTeams): TournamentTeamWithParticipants[] {
+    return this.filterTeams(tournament.tournament_teams);
+  }
 
   eur(value: number): string { return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(value); }
   formatDateTime(value: string): string { return new Intl.DateTimeFormat('it-IT', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(value)); }
@@ -673,7 +709,7 @@ export class RegistrationsComponent implements OnInit {
 
   export(): void {
     const rows = this.tournaments().flatMap((tournament) =>
-      tournament.tournament_teams.flatMap((team) =>
+      this.filterTeams(tournament.tournament_teams).flatMap((team) =>
         team.team_participants.length
           ? team.team_participants.map((p) => this.exportRow(tournament, team, p))
           : [this.exportRow(tournament, team, null)]
@@ -694,6 +730,13 @@ export class RegistrationsComponent implements OnInit {
 
   private allTeams(): TournamentTeamWithParticipants[] {
     return this.tournaments().flatMap((t) => t.tournament_teams);
+  }
+
+  private filterTeams(teams: TournamentTeamWithParticipants[]): TournamentTeamWithParticipants[] {
+    const payment = this.paymentFilter();
+    if (payment === 'paid') return teams.filter((team) => team.paid);
+    if (payment === 'pending') return teams.filter((team) => !team.paid);
+    return teams;
   }
 
   private findTournament(tournamentId: string): TournamentWithTeams | undefined {

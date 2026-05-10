@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
-import { CreateUserInput, CreateUserResult, Profile, UserRole } from '../types/models';
+import { CreateUserInput, CreateUserResult, Profile, ResetPasswordResult, UserRole } from '../types/models';
 
 @Injectable({ providedIn: 'root' })
 export class ProfileService {
@@ -21,6 +21,15 @@ export class ProfileService {
     });
     if (error) throw error;
     if (!data) throw new Error('Creazione utente non riuscita.');
+    return data;
+  }
+
+  async resetPassword(id: string): Promise<ResetPasswordResult> {
+    const { data, error } = await this.supabase.client.functions.invoke<ResetPasswordResult>('admin-reset-password', {
+      body: { id }
+    });
+    if (error) throw error;
+    if (!data) throw new Error('Reset password non riuscito.');
     return data;
   }
 

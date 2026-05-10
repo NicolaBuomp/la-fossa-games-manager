@@ -25,13 +25,35 @@ import { ConfirmModalComponent, EmptyStateComponent, ModalComponent, StatusBadge
           <button class="rounded-lg bg-ink px-4 py-2 text-sm font-bold text-white" (click)="newItem()">Nuovo</button>
         </div>
       </div>
-      <lfg-summary-card label="Confermato/pagato" [value]="eur(confirmedTotal())" tone="income" [hint]="items().length + ' sponsor'" />
+      <div class="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+        <button
+          class="shrink-0 rounded-full px-4 py-2 text-sm font-bold ring-1 ring-black/10"
+          [class.bg-ink]="statusFilter() === 'all'"
+          [class.text-white]="statusFilter() === 'all'"
+          [class.bg-white]="statusFilter() !== 'all'"
+          (click)="statusFilter.set('all')">
+          Tutti
+        </button>
+        @for (status of statuses; track status.id) {
+          <button
+            class="shrink-0 rounded-full px-4 py-2 text-sm font-bold ring-1 ring-black/10"
+            [class.bg-ink]="statusFilter() === status.id"
+            [class.text-white]="statusFilter() === status.id"
+            [class.bg-white]="statusFilter() !== status.id"
+            (click)="statusFilter.set(status.id)">
+            {{ status.label }}
+          </button>
+        }
+      </div>
+      <lfg-summary-card label="Confermato/pagato" [value]="eur(confirmedTotal())" tone="income" [hint]="filteredItems().length + ' sponsor visibili'" />
       @if (error()) { <p class="rounded-lg bg-red-50 p-3 text-sm text-red-700">{{ error() }}</p> }
       @if (!items().length) {
         <lfg-empty-state title="Nessuno sponsor" text="Aggiungi aziende, contatti, valore e stato della trattativa." />
+      } @else if (!filteredItems().length) {
+        <lfg-empty-state title="Nessuno sponsor per questo stato" text="Cambia filtro per vedere altri sponsor." />
       } @else {
         <div class="grid gap-3 xl:grid-cols-2">
-          @for (item of items(); track item.id) {
+          @for (item of filteredItems(); track item.id) {
             <article class="rounded-lg border border-black/10 bg-white p-4">
               <div class="flex flex-wrap justify-between gap-3">
                 <div class="min-w-0">
@@ -104,6 +126,7 @@ export class SponsorsComponent implements OnInit {
   editing = signal<Sponsor | null>(null);
   saving = signal(false);
   updatingSponsorId = signal<string | null>(null);
+  statusFilter = signal<SponsorStatus | 'all'>('all');
   confirmPending = signal<(() => Promise<void>) | null>(null);
   confirmMessage = signal('');
   statuses = SPONSOR_STATUSES;
@@ -171,8 +194,12 @@ export class SponsorsComponent implements OnInit {
     if (fn) await fn();
   }
 
-  export(): void { this.exporter.downloadCsv('sponsor-la-fossa-games.csv', this.items() as unknown as Record<string, unknown>[]); }
+  export(): void { this.exporter.downloadCsv('sponsor-la-fossa-games.csv', this.filteredItems() as unknown as Record<string, unknown>[]); }
   confirmedTotal(): number { return this.items().filter((i) => i.status === 'confermato' || i.status === 'pagato').reduce((s, i) => s + Number(i.value || 0), 0); }
+  filteredItems(): Sponsor[] {
+    const status = this.statusFilter();
+    return status === 'all' ? this.items() : this.items().filter((item) => item.status === status);
+  }
   statusLabel(status: SponsorStatus): string { return this.statuses.find((item) => item.id === status)?.label ?? status; }
   statusClass(status: SponsorStatus): string { return this.statuses.find((item) => item.id === status)?.className ?? ''; }
   eur(value: number): string { return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(value); }

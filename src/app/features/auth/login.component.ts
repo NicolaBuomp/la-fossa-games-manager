@@ -56,6 +56,7 @@ export class LoginComponent implements OnInit {
   }
 
   async submit(): Promise<void> {
+    if (this.loading) return;
     this.loading = true;
     this.error = '';
     try {

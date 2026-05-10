@@ -28,6 +28,12 @@ export interface CreateUserResult {
   temporaryPassword: string;
 }
 
+export interface ResetPasswordResult {
+  id: string;
+  username: string;
+  temporaryPassword: string;
+}
+
 export interface Expense {
   id: string;
   date: string;

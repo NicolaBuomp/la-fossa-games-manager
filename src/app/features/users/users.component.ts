@@ -1,7 +1,7 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ProfileService } from '../../core/services/profile.service';
-import { CreateUserResult, Profile, UserRole } from '../../core/types/models';
+import { CreateUserResult, Profile, ResetPasswordResult, UserRole } from '../../core/types/models';
 import { EmptyStateComponent, StatusBadgeComponent } from '../../shared/components/ui.component';
 
 @Component({
@@ -41,6 +41,29 @@ import { EmptyStateComponent, StatusBadgeComponent } from '../../shared/componen
             >{{ copied() ? 'Copiata ✓' : 'Copia' }}</button>
           </div>
           <p class="mt-2 text-xs text-emerald-700">Comunica la password all'utente in modo sicuro, poi chiudi questa sezione.</p>
+        </div>
+      }
+
+      @if (resetUser()) {
+        <div class="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+          <p class="font-bold">Password resettata per: {{ resetUser()?.username }}</p>
+          <div class="mt-2 flex flex-wrap items-center gap-3">
+            <span class="text-amber-800">Password temporanea:</span>
+            <span class="font-mono font-bold tracking-widest">
+              {{ showResetPassword() ? resetUser()?.temporaryPassword : '••••••••' }}
+            </span>
+            <button
+              type="button"
+              class="rounded-md bg-amber-100 px-3 py-1 text-xs font-bold uppercase text-amber-800 transition hover:bg-amber-200"
+              (click)="showResetPassword.set(!showResetPassword())"
+            >{{ showResetPassword() ? 'Nascondi' : 'Mostra' }}</button>
+            <button
+              type="button"
+              class="rounded-md bg-amber-100 px-3 py-1 text-xs font-bold uppercase text-amber-800 transition hover:bg-amber-200"
+              (click)="copyResetPassword()"
+            >{{ resetCopied() ? 'Copiata ✓' : 'Copia' }}</button>
+          </div>
+          <p class="mt-2 text-xs text-amber-700">Comunica questa password all'utente: al prossimo accesso potrà cambiarla dal profilo.</p>
         </div>
       }
 
@@ -96,9 +119,14 @@ import { EmptyStateComponent, StatusBadgeComponent } from '../../shared/componen
                   <option value="staff">Staff</option>
                   <option value="admin">Admin</option>
                 </select>
-                <button class="min-h-11 rounded-lg bg-neutral-100 px-4 text-sm font-bold uppercase tracking-wide disabled:cursor-not-allowed disabled:opacity-60" [disabled]="updatingUserId() === item.id" (click)="toggleActive(item)">
-                  {{ item.active ? 'Disattiva' : 'Attiva' }}
-                </button>
+                <div class="flex flex-wrap gap-2">
+                  <button class="min-h-11 rounded-lg bg-neutral-100 px-4 text-sm font-bold uppercase tracking-wide disabled:cursor-not-allowed disabled:opacity-60" [disabled]="updatingUserId() === item.id" (click)="resetPassword(item)">
+                    Reset password
+                  </button>
+                  <button class="min-h-11 rounded-lg bg-neutral-100 px-4 text-sm font-bold uppercase tracking-wide disabled:cursor-not-allowed disabled:opacity-60" [disabled]="updatingUserId() === item.id" (click)="toggleActive(item)">
+                    {{ item.active ? 'Disattiva' : 'Attiva' }}
+                  </button>
+                </div>
               </div>
             </article>
           }
@@ -113,8 +141,11 @@ export class UsersComponent implements OnInit {
   creating = signal(false);
   updatingUserId = signal<string | null>(null);
   createdUser = signal<CreateUserResult | null>(null);
+  resetUser = signal<ResetPasswordResult | null>(null);
   showPassword = signal(false);
+  showResetPassword = signal(false);
   copied = signal(false);
+  resetCopied = signal(false);
   form = {
     firstName: '',
     lastName: '',
@@ -154,6 +185,7 @@ export class UsersComponent implements OnInit {
     this.creating.set(true);
     this.error.set('');
     this.createdUser.set(null);
+    this.resetUser.set(null);
     this.showPassword.set(false);
     this.copied.set(false);
     try {
@@ -175,6 +207,36 @@ export class UsersComponent implements OnInit {
       this.copied.set(true);
       setTimeout(() => this.copied.set(false), 2000);
     });
+  }
+
+  copyResetPassword(): void {
+    const pwd = this.resetUser()?.temporaryPassword;
+    if (!pwd) return;
+    void navigator.clipboard.writeText(pwd).then(() => {
+      this.resetCopied.set(true);
+      setTimeout(() => this.resetCopied.set(false), 2000);
+    });
+  }
+
+  async resetPassword(item: Profile): Promise<void> {
+    if (this.updatingUserId()) return;
+    const label = item.username || item.full_name || item.email || 'questo utente';
+    if (!window.confirm(`Resettare la password per ${label}?`)) return;
+
+    this.updatingUserId.set(item.id);
+    this.error.set('');
+    this.createdUser.set(null);
+    this.resetUser.set(null);
+    this.showResetPassword.set(false);
+    this.resetCopied.set(false);
+    try {
+      const result = await this.profiles.resetPassword(item.id);
+      this.resetUser.set(result);
+    } catch (error) {
+      this.error.set(this.message(error));
+    } finally {
+      this.updatingUserId.set(null);
+    }
   }
 
   async toggleActive(item: Profile): Promise<void> {
