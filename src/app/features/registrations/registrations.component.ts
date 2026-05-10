@@ -659,7 +659,7 @@ export class RegistrationsComponent implements OnInit {
 
   participantCount(): number {
     return this.tournaments().reduce(
-      (sum, t) => sum + t.tournament_teams.reduce((s, team) => s + team.team_participants.length, 0), 0
+      (sum, t) => sum + t.tournament_teams.reduce((s, team) => s + this.teamPeopleCount(t, team), 0), 0
     );
   }
 
@@ -681,6 +681,11 @@ export class RegistrationsComponent implements OnInit {
   }
 
   teamHint(tournament: TournamentWithTeams, team: TournamentTeamWithParticipants): string {
+    if (tournament.sport === 'calcio') {
+      const contacts = this.footballContactCount(team);
+      return contacts ? `${contacts} referenti` : 'Referenti non inseriti';
+    }
+
     const limit = this.participantLimit(tournament);
     return limit ? `${team.team_participants.length}/${limit} persone` : `${team.team_participants.length} partecipanti`;
   }
@@ -726,6 +731,14 @@ export class RegistrationsComponent implements OnInit {
       'ping-pong': 1,
       'calcio-balilla': 2
     } as Record<string, number>)[tournament.code ?? ''] ?? null;
+  }
+
+  private teamPeopleCount(tournament: TournamentWithTeams, team: TournamentTeamWithParticipants): number {
+    return tournament.sport === 'calcio' ? this.footballContactCount(team) : team.team_participants.length;
+  }
+
+  private footballContactCount(team: TournamentTeamWithParticipants): number {
+    return [team.captain_name, team.vice_captain_name].filter((value) => Boolean(this.namePart(value))).length;
   }
 
   private allTeams(): TournamentTeamWithParticipants[] {
