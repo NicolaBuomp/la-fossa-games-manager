@@ -37,8 +37,7 @@ const DIRECT_CODES = [...SOLO_CODES, ...DUO_CODES];
         <button class="rounded-lg bg-white px-4 py-2 text-sm font-bold ring-1 ring-black/10" (click)="export()">CSV</button>
       </div>
 
-      <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <lfg-summary-card label="Tornei" [value]="String(tournaments().length)" hint="Eventi creati" />
+      <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
         <lfg-summary-card label="Iscritti" [value]="String(teamCount())" [hint]="participantCount() + ' persone'" />
         <lfg-summary-card label="Pagati" [value]="eur(paidAmount())" [hint]="paidCount() + ' iscrizioni'" tone="income" />
         <lfg-summary-card label="Da incassare" [value]="eur(pendingAmount())" [hint]="pendingCount() + ' iscrizioni'" tone="warning" />
@@ -105,13 +104,13 @@ const DIRECT_CODES = [...SOLO_CODES, ...DUO_CODES];
                           <div class="grid gap-3 sm:grid-cols-2">
                             @for (p of team.team_participants; track p.id) {
                               <div>
-                                <p class="text-sm font-black">{{ p.first_name }} {{ p.last_name }}</p>
+                                <p class="text-sm font-black">{{ personName(p) }}</p>
                                 @if (p.contact) { <p class="text-xs text-neutral-500">{{ p.contact }}</p> }
                               </div>
                             }
                           </div>
                         } @else {
-                          <p class="text-base font-black">{{ team.team_participants[0]?.first_name }} {{ team.team_participants[0]?.last_name }}</p>
+                          <p class="text-base font-black">{{ personName(team.team_participants[0]) }}</p>
                           @if (team.team_participants[0]?.contact) {
                             <p class="text-xs text-neutral-500">{{ team.team_participants[0].contact }}</p>
                           }
@@ -170,12 +169,12 @@ const DIRECT_CODES = [...SOLO_CODES, ...DUO_CODES];
                       <div class="mt-4 grid gap-2 rounded-lg border border-black/5 p-3 sm:grid-cols-2">
                         <div>
                           <p class="text-[10px] font-bold uppercase tracking-wide text-neutral-500">Capitano</p>
-                          <p class="text-sm font-bold">{{ team.captain_name || 'Non inserito' }}</p>
+                          <p class="text-sm font-bold">{{ namePart(team.captain_name) || 'Non inserito' }}</p>
                           @if (team.captain_contact) { <p class="text-xs text-neutral-500">{{ team.captain_contact }}</p> }
                         </div>
                         <div>
                           <p class="text-[10px] font-bold uppercase tracking-wide text-neutral-500">Vicecapitano</p>
-                          <p class="text-sm font-bold">{{ team.vice_captain_name || 'Non inserito' }}</p>
+                          <p class="text-sm font-bold">{{ namePart(team.vice_captain_name) || 'Non inserito' }}</p>
                           @if (team.vice_captain_contact) { <p class="text-xs text-neutral-500">{{ team.vice_captain_contact }}</p> }
                         </div>
                       </div>
@@ -187,7 +186,7 @@ const DIRECT_CODES = [...SOLO_CODES, ...DUO_CODES];
                           @for (participant of team.team_participants; track participant.id) {
                             <div class="flex flex-wrap items-center justify-between gap-2 px-3 py-2">
                               <div>
-                                <p class="text-sm font-bold">{{ participant.first_name }} {{ participant.last_name }}</p>
+                                <p class="text-sm font-bold">{{ personName(participant) }}</p>
                                 @if (participant.contact) {
                                   <p class="text-xs text-neutral-500">{{ participant.contact }}</p>
                                 }
@@ -415,28 +414,28 @@ export class RegistrationsComponent implements OnInit {
     this.saving.set(true);
     try {
       const duo = this.isDuoSelected();
-      const p1 = this.directForm.person1;
-      const p2 = this.directForm.person2;
+      const p1 = this.normalizedDirectPerson(this.directForm.person1);
+      const p2 = this.normalizedDirectPerson(this.directForm.person2);
       const current = this.editingDirectTeam();
+      const teamName = duo
+        ? `${p1.first_name} / ${p2.first_name}`
+        : `${p1.first_name} ${p1.last_name}`;
 
       if (current) {
-        await this.service.updateTeam(current.id, { paid: this.directForm.paid });
+        await this.service.updateTeam(current.id, { name: teamName, paid: this.directForm.paid });
         if (current.team_participants[0]) {
           await this.service.updateParticipant(current.team_participants[0].id, {
-            team_id: current.id, first_name: p1.first_name.trim(), last_name: p1.last_name.trim(),
+            team_id: current.id, first_name: p1.first_name, last_name: p1.last_name,
             contact: p1.contact.trim() || null, gender: 'uomo', registered: false
           });
         }
         if (duo && current.team_participants[1]) {
           await this.service.updateParticipant(current.team_participants[1].id, {
-            team_id: current.id, first_name: p2.first_name.trim(), last_name: p2.last_name.trim(),
+            team_id: current.id, first_name: p2.first_name, last_name: p2.last_name,
             contact: p2.contact.trim() || null, gender: 'uomo', registered: false
           });
         }
       } else {
-        const teamName = duo
-          ? `${p1.first_name.trim()} / ${p2.first_name.trim()}`
-          : `${p1.first_name.trim()} ${p1.last_name.trim()}`;
         const team = await this.service.createTeam({
           tournament_id: this.directForm.tournament_id,
           name: teamName,
@@ -446,12 +445,12 @@ export class RegistrationsComponent implements OnInit {
           paid: this.directForm.paid, notes: null
         });
         await this.service.createParticipant({
-          team_id: team.id, first_name: p1.first_name.trim(), last_name: p1.last_name.trim(),
+          team_id: team.id, first_name: p1.first_name, last_name: p1.last_name,
           contact: p1.contact.trim() || null, gender: 'uomo', registered: false
         });
         if (duo) {
           await this.service.createParticipant({
-            team_id: team.id, first_name: p2.first_name.trim(), last_name: p2.last_name.trim(),
+            team_id: team.id, first_name: p2.first_name, last_name: p2.last_name,
             contact: p2.contact.trim() || null, gender: 'uomo', registered: false
           });
         }
@@ -524,9 +523,9 @@ export class RegistrationsComponent implements OnInit {
       const isFootball = this.selectedTeamSport() === 'calcio';
       const payload = {
         ...this.teamForm,
-        captain_name: isFootball ? this.teamForm.captain_name?.trim() || null : null,
+        captain_name: isFootball ? this.namePart(this.teamForm.captain_name) || null : null,
         captain_contact: isFootball ? this.teamForm.captain_contact?.trim() || null : null,
-        vice_captain_name: isFootball ? this.teamForm.vice_captain_name?.trim() || null : null,
+        vice_captain_name: isFootball ? this.namePart(this.teamForm.vice_captain_name) || null : null,
         vice_captain_contact: isFootball ? this.teamForm.vice_captain_contact?.trim() || null : null,
         fee: this.tournamentFee(this.teamForm.tournament_id),
         notes: this.teamForm.notes || null
@@ -589,8 +588,8 @@ export class RegistrationsComponent implements OnInit {
       }
       const payload = {
         ...this.participantForm,
-        first_name: this.participantForm.first_name.trim(),
-        last_name: this.participantForm.last_name.trim(),
+        first_name: this.namePart(this.participantForm.first_name),
+        last_name: this.namePart(this.participantForm.last_name),
         contact: this.participantForm.contact?.trim() || null,
         gender: 'uomo' as const,
         registered: tournament?.sport === 'pallavolo' ? Boolean(this.participantForm.registered) : false
@@ -604,7 +603,7 @@ export class RegistrationsComponent implements OnInit {
   }
 
   askRemoveParticipant(participant: TeamParticipant): void {
-    this.confirmMessage.set(`Eliminare "${participant.first_name} ${participant.last_name}"?`);
+    this.confirmMessage.set(`Eliminare "${this.personName(participant)}"?`);
     this.confirmPending.set(async () => {
       try { await this.service.removeParticipant(participant.id); await this.load(); }
       catch (error) { this.error.set(this.message(error)); }
@@ -639,6 +638,11 @@ export class RegistrationsComponent implements OnInit {
   eur(value: number): string { return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(value); }
   formatDateTime(value: string): string { return new Intl.DateTimeFormat('it-IT', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(value)); }
   insertMeta(team: TournamentTeamWithParticipants): string { return `Inserita da ${this.userNames()[team.created_by ?? ''] ?? 'Utente non disponibile'} · ${this.formatDateTime(team.created_at)}`; }
+
+  personName(participant: Pick<TeamParticipant, 'first_name' | 'last_name'> | null | undefined): string {
+    if (!participant) return '';
+    return [this.namePart(participant.first_name), this.namePart(participant.last_name)].filter(Boolean).join(' ');
+  }
 
   teamHint(tournament: TournamentWithTeams, team: TournamentTeamWithParticipants): string {
     const limit = this.participantLimit(tournament);
@@ -727,15 +731,30 @@ export class RegistrationsComponent implements OnInit {
       iscrizione: team.name,
       quota: tournament.fee,
       pagata: team.paid ? 'si' : 'no',
-      capitano: team.captain_name ?? '',
+      capitano: this.namePart(team.captain_name),
       contatto_capitano: team.captain_contact ?? '',
-      vicecapitano: team.vice_captain_name ?? '',
+      vicecapitano: this.namePart(team.vice_captain_name),
       contatto_vicecapitano: team.vice_captain_contact ?? '',
-      nome: participant?.first_name ?? '',
-      cognome: participant?.last_name ?? '',
+      nome: this.namePart(participant?.first_name ?? ''),
+      cognome: this.namePart(participant?.last_name ?? ''),
       contatto: participant?.contact ?? '',
       tesserato: participant && tournament.sport === 'pallavolo' ? (participant.registered ? 'si' : 'no') : ''
     };
+  }
+
+  private normalizedDirectPerson(person: DirectPerson): DirectPerson {
+    return {
+      first_name: this.namePart(person.first_name),
+      last_name: this.namePart(person.last_name),
+      contact: person.contact
+    };
+  }
+
+  namePart(value: string | null | undefined): string {
+    return (value ?? '')
+      .trim()
+      .toLocaleLowerCase('it-IT')
+      .replace(/(^|[\s'-])(\p{L})/gu, (_match, prefix: string, letter: string) => `${prefix}${letter.toLocaleUpperCase('it-IT')}`);
   }
 
   private message(error: unknown): string {
