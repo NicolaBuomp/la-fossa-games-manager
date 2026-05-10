@@ -709,7 +709,14 @@ type Countdown = {
               </p>
             }
 
-            <div class="mt-5 grid gap-4">
+            <fieldset
+              [disabled]="
+                submitting() ||
+                (participationForm.reason === 'participation' &&
+                  loadingTournaments())
+              "
+              class="mt-5 grid gap-4 disabled:opacity-70"
+            >
               <label
                 class="grid gap-2 text-sm font-black uppercase tracking-[0.12em] text-white/72"
               >
@@ -864,7 +871,7 @@ type Countdown = {
               >
                 {{ submitting() ? "Invio in corso" : submitLabel() }}
               </button>
-            </div>
+            </fieldset>
           </form>
         </div>
       </section>

@@ -57,27 +57,29 @@ import { ConfirmModalComponent, EmptyStateComponent, ModalComponent, SummaryCard
 
     <lfg-modal [open]="modalOpen()" [title]="editing() ? 'Modifica spesa' : 'Nuova spesa'" (close)="modalOpen.set(false)">
       <form class="grid gap-4" (ngSubmit)="save()">
-        <label class="grid gap-1 text-sm font-bold">Descrizione <input required name="description" [(ngModel)]="form.description" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal"></label>
-        <div class="grid gap-3 sm:grid-cols-2">
-          <label class="grid gap-1 text-sm font-bold">Importo <input required type="number" min="0" step="0.01" name="amount" [(ngModel)]="form.amount" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal"></label>
-          <label class="grid gap-1 text-sm font-bold">Data <input required type="date" name="date" [(ngModel)]="form.date" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal"></label>
-        </div>
-        <div class="grid gap-3 sm:grid-cols-2">
-          <label class="grid gap-1 text-sm font-bold">Categoria <select name="category" [(ngModel)]="form.category" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal">@for (c of categories; track c) { <option [value]="c">{{ c }}</option> }</select></label>
-          <label class="grid gap-1 text-sm font-bold">Metodo <select name="payment_method" [(ngModel)]="form.payment_method" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal">@for (m of methods; track m) { <option [value]="m">{{ m }}</option> }</select></label>
-        </div>
-        <label class="grid gap-1 text-sm font-bold">Pagato da
-          <select name="paid_by" [(ngModel)]="form.paid_by" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal">
-            <option value="">Non indicato</option>
-            @for (profile of profilesList(); track profile.id) {
-              <option [value]="profileDisplayName(profile)">{{ profileDisplayName(profile) }}</option>
-            }
-          </select>
-        </label>
-        <label class="grid gap-1 text-sm font-bold">Note <textarea name="notes" [(ngModel)]="form.notes" rows="3" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal"></textarea></label>
-        <button [disabled]="saving()" class="rounded-lg bg-ink px-4 py-3 text-sm font-bold uppercase text-white disabled:opacity-60">
-          {{ saving() ? 'Salvataggio…' : 'Salva' }}
-        </button>
+        <fieldset [disabled]="saving()" class="grid gap-4 disabled:opacity-70">
+          <label class="grid gap-1 text-sm font-bold">Descrizione <input required name="description" [(ngModel)]="form.description" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"></label>
+          <div class="grid gap-3 sm:grid-cols-2">
+            <label class="grid gap-1 text-sm font-bold">Importo <input required type="number" min="0" step="0.01" name="amount" [(ngModel)]="form.amount" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"></label>
+            <label class="grid gap-1 text-sm font-bold">Data <input required type="date" name="date" [(ngModel)]="form.date" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"></label>
+          </div>
+          <div class="grid gap-3 sm:grid-cols-2">
+            <label class="grid gap-1 text-sm font-bold">Categoria <select name="category" [(ngModel)]="form.category" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70">@for (c of categories; track c) { <option [value]="c">{{ c }}</option> }</select></label>
+            <label class="grid gap-1 text-sm font-bold">Metodo <select name="payment_method" [(ngModel)]="form.payment_method" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70">@for (m of methods; track m) { <option [value]="m">{{ m }}</option> }</select></label>
+          </div>
+          <label class="grid gap-1 text-sm font-bold">Pagato da
+            <select name="paid_by" [(ngModel)]="form.paid_by" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70">
+              <option value="">Non indicato</option>
+              @for (profile of profilesList(); track profile.id) {
+                <option [value]="profileDisplayName(profile)">{{ profileDisplayName(profile) }}</option>
+              }
+            </select>
+          </label>
+          <label class="grid gap-1 text-sm font-bold">Note <textarea name="notes" [(ngModel)]="form.notes" rows="3" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"></textarea></label>
+          <button class="rounded-lg bg-ink px-4 py-3 text-sm font-bold uppercase text-white disabled:opacity-60">
+            {{ saving() ? 'Salvataggio…' : 'Salva' }}
+          </button>
+        </fieldset>
       </form>
     </lfg-modal>
 

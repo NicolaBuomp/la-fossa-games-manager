@@ -226,79 +226,87 @@ const DIRECT_CODES = [...SOLO_CODES, ...DUO_CODES];
     <!-- Modal: modifica torneo -->
     <lfg-modal [open]="modalMode() === 'tournament'" title="Modifica torneo" (close)="closeModal()">
       <form class="grid gap-4" (ngSubmit)="saveTournament()">
-        <div class="grid gap-3 sm:grid-cols-2">
-          <label class="grid gap-1 text-sm font-bold">Nome torneo <input required name="tournamentName" [(ngModel)]="tournamentForm.name" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal"></label>
-          <label class="grid gap-1 text-sm font-bold">Quota <input type="number" min="0" step="0.01" name="tournamentFee" [(ngModel)]="tournamentForm.fee" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal"></label>
-        </div>
-        <button [disabled]="saving()" class="rounded-lg bg-ink px-4 py-3 text-sm font-bold uppercase text-white disabled:opacity-60">{{ saving() ? 'Salvataggio…' : 'Salva torneo' }}</button>
+        <fieldset [disabled]="saving()" class="grid gap-4 disabled:opacity-70">
+          <div class="grid gap-3 sm:grid-cols-2">
+            <label class="grid gap-1 text-sm font-bold">Nome torneo <input required name="tournamentName" [(ngModel)]="tournamentForm.name" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"></label>
+            <label class="grid gap-1 text-sm font-bold">Quota <input type="number" min="0" step="0.01" name="tournamentFee" [(ngModel)]="tournamentForm.fee" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"></label>
+          </div>
+          <button class="rounded-lg bg-ink px-4 py-3 text-sm font-bold uppercase text-white disabled:opacity-60">{{ saving() ? 'Salvataggio…' : 'Salva torneo' }}</button>
+        </fieldset>
       </form>
     </lfg-modal>
 
     <!-- Modal: nuova/modifica squadra (calcio/pallavolo) -->
     <lfg-modal [open]="modalMode() === 'team'" [title]="editingTeam() ? 'Modifica squadra' : 'Nuova squadra'" (close)="closeModal()">
       <form class="grid gap-4" (ngSubmit)="saveTeam()">
-        <label class="grid gap-1 text-sm font-bold">Squadra <input required name="teamName" [(ngModel)]="teamForm.name" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal"></label>
-        @if (selectedTeamSport() === 'calcio') {
-          <div class="grid gap-3 sm:grid-cols-2">
-            <label class="grid gap-1 text-sm font-bold">Capitano <input required name="captainName" [(ngModel)]="teamForm.captain_name" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal"></label>
-            <label class="grid gap-1 text-sm font-bold">Contatto capitano <input name="captainContact" [(ngModel)]="teamForm.captain_contact" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal"></label>
-          </div>
-          <div class="grid gap-3 sm:grid-cols-2">
-            <label class="grid gap-1 text-sm font-bold">Vicecapitano <input required name="viceCaptainName" [(ngModel)]="teamForm.vice_captain_name" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal"></label>
-            <label class="grid gap-1 text-sm font-bold">Contatto vicecapitano <input name="viceCaptainContact" [(ngModel)]="teamForm.vice_captain_contact" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal"></label>
-          </div>
-        }
-        <label class="flex items-center gap-3 rounded-lg bg-neutral-50 p-3 text-sm font-bold"><input type="checkbox" name="teamPaid" [(ngModel)]="teamForm.paid" class="h-5 w-5 accent-emerald-600"> Squadra pagata</label>
-        <label class="grid gap-1 text-sm font-bold">Note <textarea rows="3" name="teamNotes" [(ngModel)]="teamForm.notes" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal"></textarea></label>
-        <button [disabled]="saving()" class="rounded-lg bg-ink px-4 py-3 text-sm font-bold uppercase text-white disabled:opacity-60">{{ saving() ? 'Salvataggio…' : 'Salva squadra' }}</button>
+        <fieldset [disabled]="saving()" class="grid gap-4 disabled:opacity-70">
+          <label class="grid gap-1 text-sm font-bold">Squadra <input required name="teamName" [(ngModel)]="teamForm.name" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"></label>
+          @if (selectedTeamSport() === 'calcio') {
+            <div class="grid gap-3 sm:grid-cols-2">
+              <label class="grid gap-1 text-sm font-bold">Capitano <input required name="captainName" [(ngModel)]="teamForm.captain_name" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"></label>
+              <label class="grid gap-1 text-sm font-bold">Contatto capitano <input name="captainContact" [(ngModel)]="teamForm.captain_contact" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"></label>
+            </div>
+            <div class="grid gap-3 sm:grid-cols-2">
+              <label class="grid gap-1 text-sm font-bold">Vicecapitano <input required name="viceCaptainName" [(ngModel)]="teamForm.vice_captain_name" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"></label>
+              <label class="grid gap-1 text-sm font-bold">Contatto vicecapitano <input name="viceCaptainContact" [(ngModel)]="teamForm.vice_captain_contact" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"></label>
+            </div>
+          }
+          <label class="flex items-center gap-3 rounded-lg bg-neutral-50 p-3 text-sm font-bold"><input type="checkbox" name="teamPaid" [(ngModel)]="teamForm.paid" class="h-5 w-5 accent-emerald-600 disabled:cursor-not-allowed disabled:opacity-70"> Squadra pagata</label>
+          <label class="grid gap-1 text-sm font-bold">Note <textarea rows="3" name="teamNotes" [(ngModel)]="teamForm.notes" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"></textarea></label>
+          <button class="rounded-lg bg-ink px-4 py-3 text-sm font-bold uppercase text-white disabled:opacity-60">{{ saving() ? 'Salvataggio…' : 'Salva squadra' }}</button>
+        </fieldset>
       </form>
     </lfg-modal>
 
     <!-- Modal: nuovo/modifica partecipante (pallavolo) -->
     <lfg-modal [open]="modalMode() === 'participant'" [title]="editingParticipant() ? 'Modifica partecipante' : 'Nuovo partecipante'" (close)="closeModal()">
       <form class="grid gap-4" (ngSubmit)="saveParticipant()">
-        <div class="grid gap-3 sm:grid-cols-2">
-          <label class="grid gap-1 text-sm font-bold">Nome <input required name="firstName" [(ngModel)]="participantForm.first_name" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal"></label>
-          <label class="grid gap-1 text-sm font-bold">Cognome <input required name="lastName" [(ngModel)]="participantForm.last_name" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal"></label>
-        </div>
-        <label class="grid gap-1 text-sm font-bold">Contatto <input name="participantContact" [(ngModel)]="participantForm.contact" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal"></label>
-        @if (selectedParticipantSport() === 'pallavolo') {
-          <label class="flex items-center gap-3 rounded-lg bg-neutral-50 p-3 text-sm font-bold">
-            <input type="checkbox" name="participantRegistered" [(ngModel)]="participantForm.registered" class="h-5 w-5 accent-emerald-600"> Tesserato
-          </label>
-        }
-        <button [disabled]="saving()" class="rounded-lg bg-ink px-4 py-3 text-sm font-bold uppercase text-white disabled:opacity-60">{{ saving() ? 'Salvataggio…' : 'Salva partecipante' }}</button>
+        <fieldset [disabled]="saving()" class="grid gap-4 disabled:opacity-70">
+          <div class="grid gap-3 sm:grid-cols-2">
+            <label class="grid gap-1 text-sm font-bold">Nome <input required name="firstName" [(ngModel)]="participantForm.first_name" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"></label>
+            <label class="grid gap-1 text-sm font-bold">Cognome <input required name="lastName" [(ngModel)]="participantForm.last_name" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"></label>
+          </div>
+          <label class="grid gap-1 text-sm font-bold">Contatto <input name="participantContact" [(ngModel)]="participantForm.contact" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"></label>
+          @if (selectedParticipantSport() === 'pallavolo') {
+            <label class="flex items-center gap-3 rounded-lg bg-neutral-50 p-3 text-sm font-bold">
+              <input type="checkbox" name="participantRegistered" [(ngModel)]="participantForm.registered" class="h-5 w-5 accent-emerald-600 disabled:cursor-not-allowed disabled:opacity-70"> Tesserato
+            </label>
+          }
+          <button class="rounded-lg bg-ink px-4 py-3 text-sm font-bold uppercase text-white disabled:opacity-60">{{ saving() ? 'Salvataggio…' : 'Salva partecipante' }}</button>
+        </fieldset>
       </form>
     </lfg-modal>
 
     <!-- Modal: iscrizione diretta (solo/duo) -->
     <lfg-modal [open]="modalMode() === 'direct'" [title]="directModalTitle()" (close)="closeModal()">
       <form class="grid gap-4" (ngSubmit)="saveDirectEntry()">
-        @if (activeTournament()?.fee) {
-          <label class="flex items-center gap-3 rounded-lg bg-neutral-50 p-3 text-sm font-bold">
-            <input type="checkbox" name="directPaid" [(ngModel)]="directForm.paid" class="h-5 w-5 accent-emerald-600">
-            {{ isDuoSelected() ? 'Coppia pagata' : 'Iscrizione pagata' }}
-          </label>
-        }
-        <fieldset class="grid gap-3 rounded-lg border border-black/10 p-4">
-          <legend class="px-1 text-xs font-black uppercase tracking-[0.16em] text-neutral-500">{{ isDuoSelected() ? 'Persona 1' : 'Partecipante' }}</legend>
-          <div class="grid gap-3 sm:grid-cols-2">
-            <label class="grid gap-1 text-sm font-bold">Nome <input required name="p1First" [(ngModel)]="directForm.person1.first_name" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal"></label>
-            <label class="grid gap-1 text-sm font-bold">Cognome <input required name="p1Last" [(ngModel)]="directForm.person1.last_name" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal"></label>
-          </div>
-          <label class="grid gap-1 text-sm font-bold">Contatto <input name="p1Contact" [(ngModel)]="directForm.person1.contact" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal"></label>
-        </fieldset>
-        @if (isDuoSelected()) {
+        <fieldset [disabled]="saving()" class="grid gap-4 disabled:opacity-70">
+          @if (activeTournament()?.fee) {
+            <label class="flex items-center gap-3 rounded-lg bg-neutral-50 p-3 text-sm font-bold">
+              <input type="checkbox" name="directPaid" [(ngModel)]="directForm.paid" class="h-5 w-5 accent-emerald-600 disabled:cursor-not-allowed disabled:opacity-70">
+              {{ isDuoSelected() ? 'Coppia pagata' : 'Iscrizione pagata' }}
+            </label>
+          }
           <fieldset class="grid gap-3 rounded-lg border border-black/10 p-4">
-            <legend class="px-1 text-xs font-black uppercase tracking-[0.16em] text-neutral-500">Persona 2</legend>
+            <legend class="px-1 text-xs font-black uppercase tracking-[0.16em] text-neutral-500">{{ isDuoSelected() ? 'Persona 1' : 'Partecipante' }}</legend>
             <div class="grid gap-3 sm:grid-cols-2">
-              <label class="grid gap-1 text-sm font-bold">Nome <input required name="p2First" [(ngModel)]="directForm.person2.first_name" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal"></label>
-              <label class="grid gap-1 text-sm font-bold">Cognome <input required name="p2Last" [(ngModel)]="directForm.person2.last_name" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal"></label>
+              <label class="grid gap-1 text-sm font-bold">Nome <input required name="p1First" [(ngModel)]="directForm.person1.first_name" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"></label>
+              <label class="grid gap-1 text-sm font-bold">Cognome <input required name="p1Last" [(ngModel)]="directForm.person1.last_name" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"></label>
             </div>
-            <label class="grid gap-1 text-sm font-bold">Contatto <input name="p2Contact" [(ngModel)]="directForm.person2.contact" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal"></label>
+            <label class="grid gap-1 text-sm font-bold">Contatto <input name="p1Contact" [(ngModel)]="directForm.person1.contact" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"></label>
           </fieldset>
-        }
-        <button [disabled]="saving()" class="rounded-lg bg-ink px-4 py-3 text-sm font-bold uppercase text-white disabled:opacity-60">{{ saving() ? 'Salvataggio…' : 'Salva' }}</button>
+          @if (isDuoSelected()) {
+            <fieldset class="grid gap-3 rounded-lg border border-black/10 p-4">
+              <legend class="px-1 text-xs font-black uppercase tracking-[0.16em] text-neutral-500">Persona 2</legend>
+              <div class="grid gap-3 sm:grid-cols-2">
+                <label class="grid gap-1 text-sm font-bold">Nome <input required name="p2First" [(ngModel)]="directForm.person2.first_name" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"></label>
+                <label class="grid gap-1 text-sm font-bold">Cognome <input required name="p2Last" [(ngModel)]="directForm.person2.last_name" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"></label>
+              </div>
+              <label class="grid gap-1 text-sm font-bold">Contatto <input name="p2Contact" [(ngModel)]="directForm.person2.contact" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"></label>
+            </fieldset>
+          }
+          <button class="rounded-lg bg-ink px-4 py-3 text-sm font-bold uppercase text-white disabled:opacity-60">{{ saving() ? 'Salvataggio…' : 'Salva' }}</button>
+        </fieldset>
       </form>
     </lfg-modal>
 

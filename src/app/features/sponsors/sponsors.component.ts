@@ -50,7 +50,7 @@ import { ConfirmModalComponent, EmptyStateComponent, ModalComponent, StatusBadge
               <div class="mt-4 flex flex-wrap justify-between gap-2 border-t border-black/5 pt-3">
                 <div class="flex flex-wrap gap-2">
                   @for (status of statuses; track status.id) {
-                    <button class="rounded-md bg-neutral-100 px-2.5 py-1.5 text-[10px] font-bold uppercase" (click)="setStatus(item, status.id)">{{ status.label }}</button>
+                    <button [disabled]="updatingSponsorId() === item.id" class="rounded-md bg-neutral-100 px-2.5 py-1.5 text-[10px] font-bold uppercase disabled:cursor-not-allowed disabled:opacity-60" (click)="setStatus(item, status.id)">{{ status.label }}</button>
                   }
                 </div>
                 <div class="flex gap-2">
@@ -68,21 +68,23 @@ import { ConfirmModalComponent, EmptyStateComponent, ModalComponent, StatusBadge
 
     <lfg-modal [open]="modalOpen()" [title]="editing() ? 'Modifica sponsor' : 'Nuovo sponsor'" (close)="modalOpen.set(false)">
       <form class="grid gap-4" (ngSubmit)="save()">
-        <label class="grid gap-1 text-sm font-bold">Nome azienda <input required name="company_name" [(ngModel)]="form.company_name" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal"></label>
-        <div class="grid gap-3 sm:grid-cols-2">
-          <label class="grid gap-1 text-sm font-bold">Referente <input name="contact_name" [(ngModel)]="form.contact_name" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal"></label>
-          <label class="grid gap-1 text-sm font-bold">Contatto <input name="contact_info" [(ngModel)]="form.contact_info" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal"></label>
-        </div>
-        <div class="grid gap-3 sm:grid-cols-3">
-          <label class="grid gap-1 text-sm font-bold">Valore <input type="number" min="0" step="0.01" name="value" [(ngModel)]="form.value" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal"></label>
-          <label class="grid gap-1 text-sm font-bold">Tipo <select name="type" [(ngModel)]="form.type" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal"><option value="cash">Cash</option><option value="in_natura">In natura</option></select></label>
-          <label class="grid gap-1 text-sm font-bold">Stato <select name="status" [(ngModel)]="form.status" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal">@for (s of statuses; track s.id) { <option [value]="s.id">{{ s.label }}</option> }</select></label>
-        </div>
-        <label class="grid gap-1 text-sm font-bold">Deliverables <input name="deliverables" [(ngModel)]="form.deliverables" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal"></label>
-        <label class="grid gap-1 text-sm font-bold">Note <textarea rows="3" name="notes" [(ngModel)]="form.notes" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal"></textarea></label>
-        <button [disabled]="saving()" class="rounded-lg bg-ink px-4 py-3 text-sm font-bold uppercase text-white disabled:opacity-60">
-          {{ saving() ? 'Salvataggio…' : 'Salva' }}
-        </button>
+        <fieldset [disabled]="saving()" class="grid gap-4 disabled:opacity-70">
+          <label class="grid gap-1 text-sm font-bold">Nome azienda <input required name="company_name" [(ngModel)]="form.company_name" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"></label>
+          <div class="grid gap-3 sm:grid-cols-2">
+            <label class="grid gap-1 text-sm font-bold">Referente <input name="contact_name" [(ngModel)]="form.contact_name" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"></label>
+            <label class="grid gap-1 text-sm font-bold">Contatto <input name="contact_info" [(ngModel)]="form.contact_info" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"></label>
+          </div>
+          <div class="grid gap-3 sm:grid-cols-3">
+            <label class="grid gap-1 text-sm font-bold">Valore <input type="number" min="0" step="0.01" name="value" [(ngModel)]="form.value" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"></label>
+            <label class="grid gap-1 text-sm font-bold">Tipo <select name="type" [(ngModel)]="form.type" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"><option value="cash">Cash</option><option value="in_natura">In natura</option></select></label>
+            <label class="grid gap-1 text-sm font-bold">Stato <select name="status" [(ngModel)]="form.status" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70">@for (s of statuses; track s.id) { <option [value]="s.id">{{ s.label }}</option> }</select></label>
+          </div>
+          <label class="grid gap-1 text-sm font-bold">Deliverables <input name="deliverables" [(ngModel)]="form.deliverables" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"></label>
+          <label class="grid gap-1 text-sm font-bold">Note <textarea rows="3" name="notes" [(ngModel)]="form.notes" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"></textarea></label>
+          <button class="rounded-lg bg-ink px-4 py-3 text-sm font-bold uppercase text-white disabled:opacity-60">
+            {{ saving() ? 'Salvataggio…' : 'Salva' }}
+          </button>
+        </fieldset>
       </form>
     </lfg-modal>
 
@@ -101,6 +103,7 @@ export class SponsorsComponent implements OnInit {
   modalOpen = signal(false);
   editing = signal<Sponsor | null>(null);
   saving = signal(false);
+  updatingSponsorId = signal<string | null>(null);
   confirmPending = signal<(() => Promise<void>) | null>(null);
   confirmMessage = signal('');
   statuses = SPONSOR_STATUSES;
@@ -147,8 +150,11 @@ export class SponsorsComponent implements OnInit {
   }
 
   async setStatus(item: Sponsor, status: SponsorStatus): Promise<void> {
+    if (this.updatingSponsorId()) return;
+    this.updatingSponsorId.set(item.id);
     try { await this.service.update(item.id, { status }); await this.load(); }
     catch (e) { this.error.set(this.message(e)); }
+    finally { this.updatingSponsorId.set(null); }
   }
 
   askRemove(item: Sponsor): void {

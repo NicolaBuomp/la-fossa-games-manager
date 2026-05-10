@@ -18,7 +18,7 @@ type RequestStatus = ParticipationRequest['status'];
           <p class="text-xs font-bold uppercase tracking-[0.18em] text-neutral-500">Area admin</p>
           <h1 class="font-display text-3xl uppercase">Richieste partecipazione</h1>
         </div>
-        <button class="rounded-lg bg-white px-4 py-2 text-sm font-bold ring-1 ring-black/10" (click)="load()">Aggiorna</button>
+        <button [disabled]="loading()" class="rounded-lg bg-white px-4 py-2 text-sm font-bold ring-1 ring-black/10 disabled:cursor-not-allowed disabled:opacity-60" (click)="load()">Aggiorna</button>
       </div>
 
       @if (error()) {
@@ -49,23 +49,23 @@ type RequestStatus = ParticipationRequest['status'];
 
               <div class="mt-4 flex flex-wrap gap-2 border-t border-black/5 pt-4">
                 @if (request.status === 'nuova') {
-                  <button class="rounded-lg bg-ink px-4 py-2 text-xs font-bold uppercase text-white" (click)="setStatus(request, 'in_gestione')">Accetta</button>
+                  <button [disabled]="updatingRequestId() === request.id" class="rounded-lg bg-ink px-4 py-2 text-xs font-bold uppercase text-white disabled:cursor-not-allowed disabled:opacity-60" (click)="setStatus(request, 'in_gestione')">Accetta</button>
                 }
                 @if (request.status !== 'contattata') {
-                  <button class="rounded-lg bg-emerald-50 px-4 py-2 text-xs font-bold uppercase text-emerald-700" (click)="setStatus(request, 'contattata')">Segna contattata</button>
+                  <button [disabled]="updatingRequestId() === request.id" class="rounded-lg bg-emerald-50 px-4 py-2 text-xs font-bold uppercase text-emerald-700 disabled:cursor-not-allowed disabled:opacity-60" (click)="setStatus(request, 'contattata')">Segna contattata</button>
                 }
                 @if (request.status !== 'archiviata') {
-                  <button class="rounded-lg bg-neutral-100 px-4 py-2 text-xs font-bold uppercase text-neutral-700" (click)="setStatus(request, 'archiviata')">Archivia</button>
+                  <button [disabled]="updatingRequestId() === request.id" class="rounded-lg bg-neutral-100 px-4 py-2 text-xs font-bold uppercase text-neutral-700 disabled:cursor-not-allowed disabled:opacity-60" (click)="setStatus(request, 'archiviata')">Archivia</button>
                 }
                 @if (request.status !== 'nuova') {
-                  <button class="rounded-lg bg-amber-50 px-4 py-2 text-xs font-bold uppercase text-amber-700" (click)="setStatus(request, 'nuova')">Riapri</button>
+                  <button [disabled]="updatingRequestId() === request.id" class="rounded-lg bg-amber-50 px-4 py-2 text-xs font-bold uppercase text-amber-700 disabled:cursor-not-allowed disabled:opacity-60" (click)="setStatus(request, 'nuova')">Riapri</button>
                 }
               </div>
 
               <div class="mt-4 grid gap-3 lg:grid-cols-[1fr_auto_auto] lg:items-end">
                 <label class="grid gap-1 text-sm font-bold">
                   Nuova nota admin
-                  <input class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal" [ngModel]="noteDrafts()[request.id] || ''" (ngModelChange)="setNoteDraft(request.id, $event)" />
+                  <input [disabled]="savingNoteId() === request.id" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70" [ngModel]="noteDrafts()[request.id] || ''" (ngModelChange)="setNoteDraft(request.id, $event)" />
                 </label>
                 <button
                   [disabled]="savingNoteId() === request.id"
@@ -111,6 +111,7 @@ export class ParticipationRequestsComponent implements OnInit {
   loading = signal(false);
   error = signal('');
   savingNoteId = signal<string | null>(null);
+  updatingRequestId = signal<string | null>(null);
   confirmPending = signal<(() => Promise<void>) | null>(null);
   confirmMessage = signal('');
 
@@ -144,12 +145,16 @@ export class ParticipationRequestsComponent implements OnInit {
   }
 
   async setStatus(request: ParticipationRequestWithTournament, status: RequestStatus): Promise<void> {
+    if (this.updatingRequestId()) return;
+    this.updatingRequestId.set(request.id);
     try {
       await this.service.updateStatus(request.id, status);
       this.requests.update((requests) => requests.map((item) => (item.id === request.id ? { ...item, status } : item)));
       await this.badges.refresh();
     } catch (error) {
       this.error.set(this.message(error));
+    } finally {
+      this.updatingRequestId.set(null);
     }
   }
 

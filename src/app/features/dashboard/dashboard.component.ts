@@ -80,8 +80,9 @@ import { AuditLog, Expense, Income, Registration, Sponsor } from '../../core/typ
         </div>
       </section>
 
-      <section class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <lfg-summary-card label="Sponsor confermati/pagati" [value]="eur(sponsorConfirmed())" hint="Valore cash e in natura" tone="income" />
+      <section class="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+        <lfg-summary-card label="Sponsor pagati" [value]="eur(sponsorPaid())" [hint]="eur(sponsorPaidCash()) + ' cash nel saldo'" tone="income" />
+        <lfg-summary-card label="Sponsor confermati" [value]="eur(sponsorConfirmed())" hint="Confermati, non ancora pagati" tone="warning" />
         <lfg-summary-card label="Iscrizioni pagate" [value]="eur(regPaidAmount())" [hint]="regPaidCount() + ' pagate'" tone="income" />
         <lfg-summary-card label="Da incassare" [value]="eur(regPendingAmount())" [hint]="regPendingCount() + ' aperte'" tone="warning" />
         <lfg-summary-card label="Record totali" [value]="String(totalRecords())" hint="Spese, entrate, sponsor, iscritti" />
@@ -178,7 +179,7 @@ export class DashboardComponent implements OnInit {
   }
 
   totalIncome(): number {
-    return this.recordedIncome() + this.sponsorConfirmed() + this.regPaidAmount();
+    return this.recordedIncome() + this.sponsorPaidCash() + this.regPaidAmount();
   }
 
   recordedIncome(): number {
@@ -191,7 +192,19 @@ export class DashboardComponent implements OnInit {
 
   sponsorConfirmed(): number {
     return this.sponsors()
-      .filter((item) => item.status === 'confermato' || item.status === 'pagato')
+      .filter((item) => item.status === 'confermato')
+      .reduce((sum, item) => sum + Number(item.value || 0), 0);
+  }
+
+  sponsorPaid(): number {
+    return this.sponsors()
+      .filter((item) => item.status === 'pagato')
+      .reduce((sum, item) => sum + Number(item.value || 0), 0);
+  }
+
+  sponsorPaidCash(): number {
+    return this.sponsors()
+      .filter((item) => item.status === 'pagato' && item.type === 'cash')
       .reduce((sum, item) => sum + Number(item.value || 0), 0);
   }
 

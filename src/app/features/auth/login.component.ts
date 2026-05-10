@@ -17,18 +17,20 @@ import { AuthService } from '../../core/services/auth.service';
           <div class="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{{ error }}</div>
         }
 
-        <form class="mt-6 space-y-4" (ngSubmit)="submit()">
-          <label class="block">
-            <span class="text-xs font-bold uppercase tracking-wide text-neutral-500">Username</span>
-            <input name="username" type="text" autocomplete="username" required [(ngModel)]="username" class="mt-1 w-full rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 outline-none focus:border-ink">
-          </label>
-          <label class="block">
-            <span class="text-xs font-bold uppercase tracking-wide text-neutral-500">Password</span>
-            <input name="password" type="password" required [(ngModel)]="password" class="mt-1 w-full rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 outline-none focus:border-ink">
-          </label>
-          <button [disabled]="loading" class="w-full rounded-lg bg-ink px-4 py-3 text-sm font-bold uppercase tracking-wide text-white disabled:opacity-60">
-            {{ loading ? 'Accesso...' : 'Entra' }}
-          </button>
+        <form class="mt-6" (ngSubmit)="submit()">
+          <fieldset [disabled]="loading" class="space-y-4 disabled:opacity-70">
+            <label class="block">
+              <span class="text-xs font-bold uppercase tracking-wide text-neutral-500">Username</span>
+              <input name="username" type="text" autocomplete="username" required [(ngModel)]="username" class="mt-1 w-full rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 outline-none focus:border-ink disabled:cursor-not-allowed disabled:opacity-70">
+            </label>
+            <label class="block">
+              <span class="text-xs font-bold uppercase tracking-wide text-neutral-500">Password</span>
+              <input name="password" type="password" required [(ngModel)]="password" class="mt-1 w-full rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 outline-none focus:border-ink disabled:cursor-not-allowed disabled:opacity-70">
+            </label>
+            <button class="w-full rounded-lg bg-ink px-4 py-3 text-sm font-bold uppercase tracking-wide text-white disabled:opacity-60">
+              {{ loading ? 'Accesso...' : 'Entra' }}
+            </button>
+          </fieldset>
         </form>
       </section>
     </main>

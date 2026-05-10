@@ -45,32 +45,34 @@ import { EmptyStateComponent, StatusBadgeComponent } from '../../shared/componen
       }
 
       <form class="rounded-lg border border-black/10 bg-white p-4" (ngSubmit)="createUser()">
-        <div class="grid gap-3 sm:grid-cols-2">
-          <label class="grid gap-1 text-sm font-bold">
-            Nome
-            <input name="firstName" required [(ngModel)]="form.firstName" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal outline-none focus:border-ink">
-          </label>
-          <label class="grid gap-1 text-sm font-bold">
-            Cognome
-            <input name="lastName" required [(ngModel)]="form.lastName" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal outline-none focus:border-ink">
-          </label>
-          <label class="grid gap-1 text-sm font-bold">
-            Username
-            <input name="username" required pattern="[a-zA-Z0-9._-]{3,32}" [(ngModel)]="form.username" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal outline-none focus:border-ink">
-          </label>
-          <label class="grid gap-1 text-sm font-bold">
-            Tipo utente
-            <select name="role" required [(ngModel)]="form.role" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal outline-none focus:border-ink">
-              <option value="staff">Staff</option>
-              <option value="admin">Admin</option>
-            </select>
-          </label>
-        </div>
-        <div class="mt-4 flex justify-end">
-          <button [disabled]="creating()" class="min-h-11 rounded-lg bg-ink px-4 text-sm font-bold uppercase tracking-wide text-white disabled:opacity-60">
-            {{ creating() ? 'Creazione...' : 'Crea utente' }}
-          </button>
-        </div>
+        <fieldset [disabled]="creating()" class="disabled:opacity-70">
+          <div class="grid gap-3 sm:grid-cols-2">
+            <label class="grid gap-1 text-sm font-bold">
+              Nome
+              <input name="firstName" required [(ngModel)]="form.firstName" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal outline-none focus:border-ink disabled:cursor-not-allowed disabled:opacity-70">
+            </label>
+            <label class="grid gap-1 text-sm font-bold">
+              Cognome
+              <input name="lastName" required [(ngModel)]="form.lastName" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal outline-none focus:border-ink disabled:cursor-not-allowed disabled:opacity-70">
+            </label>
+            <label class="grid gap-1 text-sm font-bold">
+              Username
+              <input name="username" required pattern="[a-zA-Z0-9._-]{3,32}" [(ngModel)]="form.username" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal outline-none focus:border-ink disabled:cursor-not-allowed disabled:opacity-70">
+            </label>
+            <label class="grid gap-1 text-sm font-bold">
+              Tipo utente
+              <select name="role" required [(ngModel)]="form.role" class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal outline-none focus:border-ink disabled:cursor-not-allowed disabled:opacity-70">
+                <option value="staff">Staff</option>
+                <option value="admin">Admin</option>
+              </select>
+            </label>
+          </div>
+          <div class="mt-4 flex justify-end">
+            <button class="min-h-11 rounded-lg bg-ink px-4 text-sm font-bold uppercase tracking-wide text-white disabled:opacity-60">
+              {{ creating() ? 'Creazione...' : 'Crea utente' }}
+            </button>
+          </div>
+        </fieldset>
       </form>
 
       @if (!items().length) {
@@ -90,11 +92,11 @@ import { EmptyStateComponent, StatusBadgeComponent } from '../../shared/componen
                 </div>
               </div>
               <div class="mt-4 grid gap-2 border-t border-black/5 pt-3 sm:grid-cols-[1fr_auto]">
-                <select class="min-h-11 rounded-lg border border-black/10 bg-neutral-50 px-3 text-sm font-semibold" [ngModel]="item.role" (ngModelChange)="setRole(item, $event)">
+                <select class="min-h-11 rounded-lg border border-black/10 bg-neutral-50 px-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-70" [disabled]="updatingUserId() === item.id" [ngModel]="item.role" (ngModelChange)="setRole(item, $event)">
                   <option value="staff">Staff</option>
                   <option value="admin">Admin</option>
                 </select>
-                <button class="min-h-11 rounded-lg bg-neutral-100 px-4 text-sm font-bold uppercase tracking-wide" (click)="toggleActive(item)">
+                <button class="min-h-11 rounded-lg bg-neutral-100 px-4 text-sm font-bold uppercase tracking-wide disabled:cursor-not-allowed disabled:opacity-60" [disabled]="updatingUserId() === item.id" (click)="toggleActive(item)">
                   {{ item.active ? 'Disattiva' : 'Attiva' }}
                 </button>
               </div>
@@ -109,6 +111,7 @@ export class UsersComponent implements OnInit {
   items = signal<Profile[]>([]);
   error = signal('');
   creating = signal(false);
+  updatingUserId = signal<string | null>(null);
   createdUser = signal<CreateUserResult | null>(null);
   showPassword = signal(false);
   copied = signal(false);
@@ -134,15 +137,20 @@ export class UsersComponent implements OnInit {
   }
 
   async setRole(item: Profile, role: UserRole): Promise<void> {
+    if (this.updatingUserId()) return;
+    this.updatingUserId.set(item.id);
     try {
       await this.profiles.updateRole(item.id, role);
       await this.load();
     } catch (error) {
       this.error.set(this.message(error));
+    } finally {
+      this.updatingUserId.set(null);
     }
   }
 
   async createUser(): Promise<void> {
+    if (this.creating()) return;
     this.creating.set(true);
     this.error.set('');
     this.createdUser.set(null);
@@ -170,11 +178,15 @@ export class UsersComponent implements OnInit {
   }
 
   async toggleActive(item: Profile): Promise<void> {
+    if (this.updatingUserId()) return;
+    this.updatingUserId.set(item.id);
     try {
       await this.profiles.setActive(item.id, !item.active);
       await this.load();
     } catch (error) {
       this.error.set(this.message(error));
+    } finally {
+      this.updatingUserId.set(null);
     }
   }
 
