@@ -1,7 +1,6 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../core/services/auth.service';
-import { ProfileService } from '../../core/services/profile.service';
 
 @Component({
   standalone: true,
@@ -12,7 +11,7 @@ import { ProfileService } from '../../core/services/profile.service';
         <p class="text-xs font-bold uppercase tracking-[0.18em] text-neutral-500">Account</p>
         <h1 class="font-display text-3xl uppercase sm:text-5xl">Profilo utente</h1>
         <p class="mt-2 max-w-2xl text-sm leading-6 text-neutral-600">
-          Modifica i dati personali e aggiorna la password di accesso.
+          Aggiorna la password di accesso.
         </p>
       </div>
 
@@ -24,40 +23,19 @@ import { ProfileService } from '../../core/services/profile.service';
         <p class="rounded-lg border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-700">{{ error() }}</p>
       }
 
-      <div class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(320px,420px)]">
-        <form class="rounded-lg border border-black/10 bg-white p-5 shadow-sm" (ngSubmit)="saveProfile()">
-          <fieldset [disabled]="savingProfile()" class="disabled:opacity-70">
+      <div class="max-w-xl">
+        <form class="rounded-lg border border-black/10 bg-white p-5 shadow-sm" (ngSubmit)="savePassword()">
+          <fieldset [disabled]="savingPassword()" class="disabled:opacity-70">
             <div class="flex flex-wrap items-start justify-between gap-3 border-b border-black/5 pb-4">
               <div>
-                <h2 class="font-display text-xl uppercase">Dati personali</h2>
-                <p class="mt-1 text-sm text-neutral-500">{{ auth.user()?.email }}</p>
+                <h2 class="font-display text-xl uppercase">Password</h2>
+                <p class="mt-1 text-sm text-neutral-500">{{ auth.profile()?.username || auth.user()?.email }}</p>
               </div>
               <span class="rounded-full border border-neutral-200 bg-neutral-50 px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-neutral-600">
                 {{ auth.profile()?.role }}
               </span>
             </div>
-
-            <div class="mt-5 grid gap-4 sm:grid-cols-2">
-              <label class="block">
-                <span class="text-xs font-bold uppercase tracking-wide text-neutral-500">Nome</span>
-                <input name="firstName" required [(ngModel)]="firstName" class="mt-1 w-full rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 outline-none focus:border-ink disabled:cursor-not-allowed disabled:opacity-70">
-              </label>
-              <label class="block">
-                <span class="text-xs font-bold uppercase tracking-wide text-neutral-500">Cognome</span>
-                <input name="lastName" required [(ngModel)]="lastName" class="mt-1 w-full rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 outline-none focus:border-ink disabled:cursor-not-allowed disabled:opacity-70">
-              </label>
-            </div>
-
-            <button class="mt-5 min-h-11 rounded-lg bg-ink px-5 text-sm font-bold uppercase tracking-wide text-white disabled:opacity-60">
-              {{ savingProfile() ? 'Salvataggio...' : 'Salva dati' }}
-            </button>
-          </fieldset>
-        </form>
-
-        <form class="rounded-lg border border-black/10 bg-white p-5 shadow-sm" (ngSubmit)="savePassword()">
-          <fieldset [disabled]="savingPassword()" class="disabled:opacity-70">
-            <h2 class="font-display text-xl uppercase">Password</h2>
-            <p class="mt-1 text-sm leading-6 text-neutral-500">Imposta una nuova password per il tuo account.</p>
+            <p class="mt-5 text-sm leading-6 text-neutral-500">Imposta una nuova password per il tuo account.</p>
 
             <div class="mt-5 space-y-4">
               <label class="block">
@@ -79,39 +57,14 @@ import { ProfileService } from '../../core/services/profile.service';
     </section>
   `
 })
-export class ProfileComponent implements OnInit {
-  firstName = '';
-  lastName = '';
+export class ProfileComponent {
   password = '';
   passwordConfirm = '';
-  savingProfile = signal(false);
   savingPassword = signal(false);
   success = signal('');
   error = signal('');
 
-  constructor(
-    readonly auth: AuthService,
-    private readonly profiles: ProfileService
-  ) {}
-
-  ngOnInit(): void {
-    this.fillName();
-  }
-
-  async saveProfile(): Promise<void> {
-    this.resetMessages();
-    this.savingProfile.set(true);
-    try {
-      await this.profiles.updateOwnFullName(this.fullName());
-      await this.auth.refreshProfile();
-      this.fillName();
-      this.success.set('Dati personali aggiornati.');
-    } catch (error) {
-      this.error.set(this.message(error, 'Aggiornamento dati non riuscito.'));
-    } finally {
-      this.savingProfile.set(false);
-    }
-  }
+  constructor(readonly auth: AuthService) {}
 
   async savePassword(): Promise<void> {
     this.resetMessages();
@@ -131,16 +84,6 @@ export class ProfileComponent implements OnInit {
     } finally {
       this.savingPassword.set(false);
     }
-  }
-
-  private fillName(): void {
-    const parts = (this.auth.profile()?.full_name ?? '').trim().split(/\s+/).filter(Boolean);
-    this.firstName = parts.shift() ?? '';
-    this.lastName = parts.join(' ');
-  }
-
-  private fullName(): string {
-    return [this.firstName, this.lastName].map((part) => part.trim()).filter(Boolean).join(' ');
   }
 
   private resetMessages(): void {
