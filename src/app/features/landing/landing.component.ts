@@ -410,7 +410,9 @@ type Countdown = {
             >
               <div class="text-ink">
                 <div class="flex justify-center">
-                  <div class="flex h-20 w-20 items-center justify-center rounded-2xl bg-[#111] p-4">
+                  <div
+                    class="flex h-20 w-20 items-center justify-center rounded-2xl bg-[#111] p-4"
+                  >
                     <img
                       [src]="game.image"
                       [alt]="game.name"
@@ -1160,11 +1162,12 @@ export class LandingComponent implements OnInit, OnDestroy {
 
     this.submitting.set(true);
     try {
+      const normalizedPhone = this.normalizePhone(this.participationForm.phone);
       if (this.participationForm.reason === "sponsor") {
         await this.participation.createSponsorLead({
           company_name: this.participationForm.company_name.trim(),
           contact_name: `${this.participationForm.first_name.trim()} ${this.participationForm.last_name.trim()}`,
-          contact_info: this.participationForm.phone.trim(),
+          contact_info: normalizedPhone,
           type: "cash",
           value: 0,
           status: "contattato",
@@ -1177,7 +1180,7 @@ export class LandingComponent implements OnInit, OnDestroy {
           tournament_id: this.participationForm.tournament_id,
           first_name: this.participationForm.first_name.trim(),
           last_name: this.participationForm.last_name.trim(),
-          phone: this.participationForm.phone.trim(),
+          phone: normalizedPhone,
           privacy_accepted: this.participationForm.privacy_accepted,
           whatsapp_accepted: this.participationForm.whatsapp_accepted,
           rules_accepted: this.participationForm.rules_accepted,
@@ -1353,6 +1356,10 @@ export class LandingComponent implements OnInit, OnDestroy {
         .replace(/[^a-z0-9]/g, "");
 
     return normalize(tournamentName).includes(normalize(gameName));
+  }
+
+  private normalizePhone(phone: string): string {
+    return phone.trim().replace(/\s+/g, "");
   }
 
   private message(error: unknown): string {
