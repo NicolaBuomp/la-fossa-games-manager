@@ -28,7 +28,7 @@ import { ConfirmModalComponent, EmptyStateComponent, KpiPanelComponent, ModalCom
       </div>
       <div class="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
         <button
-          class="shrink-0 rounded-full px-4 py-2 text-sm font-bold ring-1 ring-black/10"
+          class="shrink-0 rounded-full px-4 py-2 text-sm font-bold ring-1 ring-black/10 transition"
           [class.bg-ink]="statusFilter() === 'all'"
           [class.text-white]="statusFilter() === 'all'"
           [class.bg-white]="statusFilter() !== 'all'"
@@ -37,7 +37,7 @@ import { ConfirmModalComponent, EmptyStateComponent, KpiPanelComponent, ModalCom
         </button>
         @for (status of statuses; track status.id) {
           <button
-            class="shrink-0 rounded-full px-4 py-2 text-sm font-bold ring-1 ring-black/10"
+            class="shrink-0 rounded-full px-4 py-2 text-sm font-bold ring-1 ring-black/10 transition"
             [class.bg-ink]="statusFilter() === status.id"
             [class.text-white]="statusFilter() === status.id"
             [class.bg-white]="statusFilter() !== status.id"
@@ -46,11 +46,11 @@ import { ConfirmModalComponent, EmptyStateComponent, KpiPanelComponent, ModalCom
           </button>
         }
       </div>
-      <lfg-kpi-panel title="KPI sponsor">
+      <lfg-kpi-panel title="KPI sponsor" storageKey="sponsors">
         <section class="grid gap-3 sm:grid-cols-3">
           <lfg-summary-card label="Da contattare" [value]="String(contactTotal())" tone="warning" hint="Lead senza conferma" />
           <lfg-summary-card label="In trattativa" [value]="String(negotiatingTotal())" tone="warning" hint="Sponsor da seguire" />
-          <lfg-summary-card label="Confermato/pagato" [value]="eur(confirmedTotal())" tone="income" [hint]="filteredItems().length + ' sponsor visibili'" />
+          <lfg-summary-card label="Confermato/pagato" [value]="eur(confirmedTotal())" tone="income" [hint]="confirmedPaidCount() + ' sponsor'" />
         </section>
       </lfg-kpi-panel>
       <div class="flex justify-end">
@@ -64,7 +64,7 @@ import { ConfirmModalComponent, EmptyStateComponent, KpiPanelComponent, ModalCom
       </div>
       @if (error()) { <p class="rounded-lg bg-red-50 p-3 text-sm text-red-700">{{ error() }}</p> }
       @if (!items().length) {
-        <lfg-empty-state title="Nessuno sponsor" text="Aggiungi aziende, contatti e stato della trattativa anche senza importo." />
+        <lfg-empty-state title="Nessuno sponsor" text="Aggiungi aziende, contatti e stato della trattativa anche senza importo." actionLabel="Nuovo sponsor" (action)="newItem()" />
       } @else if (!filteredItems().length) {
         <lfg-empty-state title="Nessuno sponsor per questo stato" text="Cambia filtro per vedere altri sponsor." />
       } @else {
@@ -251,6 +251,7 @@ export class SponsorsComponent implements OnInit {
   contactTotal(): number { return this.items().filter((item) => item.status === 'contattato').length; }
   negotiatingTotal(): number { return this.items().filter((item) => item.status === 'in_trattativa').length; }
   confirmedTotal(): number { return this.items().filter((i) => i.status === 'confermato' || i.status === 'pagato').reduce((s, i) => s + Number(i.value || 0), 0); }
+  confirmedPaidCount(): number { return this.items().filter((i) => i.status === 'confermato' || i.status === 'pagato').length; }
   filteredItems(): Sponsor[] {
     const status = this.statusFilter();
     return status === 'all' ? this.items() : this.items().filter((item) => item.status === status);

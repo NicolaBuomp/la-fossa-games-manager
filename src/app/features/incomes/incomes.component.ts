@@ -25,13 +25,16 @@ import { ConfirmModalComponent, EmptyStateComponent, KpiPanelComponent, ModalCom
         </div>
       </div>
 
-      <lfg-kpi-panel title="KPI entrate">
-        <lfg-summary-card label="Totale entrate" [value]="eur(total())" tone="income" [hint]="items().length + ' movimenti'" />
+      <lfg-kpi-panel title="KPI entrate" storageKey="incomes">
+        <section class="grid gap-3 sm:grid-cols-2">
+          <lfg-summary-card label="Totale entrate" [value]="eur(total())" tone="income" [hint]="items().length + ' movimenti'" />
+          <lfg-summary-card label="Media per entrata" [value]="eur(average())" tone="income" hint="Importo medio per movimento" />
+        </section>
       </lfg-kpi-panel>
       @if (error()) { <p class="rounded-lg bg-red-50 p-3 text-sm text-red-700">{{ error() }}</p> }
 
       @if (!items().length) {
-        <lfg-empty-state title="Ancora nessuna entrata" text="Registra incassi, quote, sponsor e altre fonti." />
+        <lfg-empty-state title="Ancora nessuna entrata" text="Registra incassi, quote, sponsor e altre fonti." actionLabel="Nuova entrata" (action)="newItem()" />
       } @else {
         <div class="grid gap-3">
           @for (item of items(); track item.id) {
@@ -162,6 +165,7 @@ export class IncomesComponent implements OnInit {
 
   export(): void { this.exporter.downloadCsv('entrate-la-fossa-games.csv', this.items() as unknown as Record<string, unknown>[]); }
   total(): number { return this.items().reduce((sum, item) => sum + Number(item.amount || 0), 0); }
+  average(): number { return this.items().length ? this.total() / this.items().length : 0; }
   eur(value: number): string { return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(value); }
   formatDate(value: string): string { return new Intl.DateTimeFormat('it-IT').format(new Date(value)); }
   formatDateTime(value: string): string { return new Intl.DateTimeFormat('it-IT', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(value)); }

@@ -20,7 +20,7 @@ import { AuditLog, Expense, Income, Registration, Sponsor } from '../../core/typ
           <p class="text-xs font-bold uppercase tracking-[0.18em] text-neutral-500">Dashboard interna</p>
           <h1 class="font-display text-3xl uppercase sm:text-5xl">Riepilogo evento</h1>
         </div>
-        <button [disabled]="loading()" class="rounded-lg bg-white px-4 py-2 text-sm font-bold uppercase tracking-wide shadow-sm ring-1 ring-black/10 disabled:opacity-60" (click)="load()">
+        <button [disabled]="loading()" class="rounded-lg bg-white px-4 py-2 text-sm font-bold uppercase tracking-wide shadow-sm ring-1 ring-black/10 transition hover:bg-neutral-50 disabled:opacity-60" (click)="load()">
           {{ loading() ? 'Aggiornamento…' : 'Aggiorna' }}
         </button>
       </div>
@@ -68,7 +68,7 @@ import { AuditLog, Expense, Income, Registration, Sponsor } from '../../core/typ
       <section class="rounded-lg bg-ink p-6 text-white">
         <p class="text-xs font-bold uppercase tracking-[0.2em] text-white/50">Saldo attuale</p>
         <p class="mt-3 text-4xl font-black" [class.text-emerald-300]="balance() >= 0" [class.text-red-300]="balance() < 0">{{ eur(balance()) }}</p>
-        <div class="mt-6 grid gap-3 border-t border-white/10 pt-5 sm:grid-cols-2">
+        <div class="mt-6 grid gap-3 border-t border-white/10 pt-5 sm:grid-cols-3">
           <div>
             <p class="text-xs font-bold uppercase tracking-wide text-white/50">Entrate</p>
             <p class="mt-1 text-xl font-bold">{{ eur(totalIncome()) }}</p>
@@ -77,16 +77,26 @@ import { AuditLog, Expense, Income, Registration, Sponsor } from '../../core/typ
             <p class="text-xs font-bold uppercase tracking-wide text-white/50">Spese</p>
             <p class="mt-1 text-xl font-bold">{{ eur(totalExpenses()) }}</p>
           </div>
+          <div>
+            <p class="text-xs font-bold uppercase tracking-wide text-white/50">Saldo potenziale</p>
+            <p class="mt-1 text-xl font-bold text-fossa">{{ eur(probableBalance()) }}</p>
+            <p class="mt-0.5 text-[10px] text-white/40">incl. sponsor e quote non ancora pagati</p>
+          </div>
         </div>
       </section>
 
-      <lfg-kpi-panel title="KPI evento">
+      <lfg-kpi-panel title="KPI evento" storageKey="dashboard">
         <section class="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-          <lfg-summary-card label="Sponsor pagati" [value]="eur(sponsorPaid())" [hint]="eur(sponsorPaidInBalance()) + ' nel saldo'" tone="income" />
+          <lfg-summary-card label="Sponsor pagati" [value]="eur(sponsorPaid())" [hint]="sponsorPaidCount() + ' sponsor'" tone="income" />
           <lfg-summary-card label="Sponsor confermati" [value]="eur(sponsorConfirmed())" hint="Confermati, non ancora pagati" tone="warning" />
           <lfg-summary-card label="Iscrizioni pagate" [value]="eur(regPaidAmount())" [hint]="regPaidCount() + ' pagate'" tone="income" />
           <lfg-summary-card label="Da incassare" [value]="eur(regPendingAmount())" [hint]="regPendingCount() + ' aperte'" tone="warning" />
-          <lfg-summary-card label="Record totali" [value]="String(totalRecords())" hint="Spese, entrate, sponsor, iscritti" />
+          <lfg-summary-card
+            label="Tasso pagamento"
+            [value]="regPaymentRate() + '%'"
+            [hint]="regPaidCount() + '/' + regTotalCount() + ' iscrizioni'"
+            [tone]="regPaymentRate() === 100 ? 'income' : regTotalCount() === 0 ? 'default' : 'warning'"
+          />
         </section>
       </lfg-kpi-panel>
 
@@ -98,7 +108,7 @@ import { AuditLog, Expense, Income, Registration, Sponsor } from '../../core/typ
         <div class="flex flex-wrap items-center justify-between gap-3">
           <div>
             <p class="text-xs font-bold uppercase tracking-[0.18em] text-neutral-500">Registro modifiche</p>
-            <h2 class="font-display text-2xl uppercase">Ultime attivita</h2>
+            <h2 class="font-display text-2xl uppercase">Ultime attività</h2>
           </div>
         </div>
 
@@ -117,7 +127,7 @@ import { AuditLog, Expense, Income, Registration, Sponsor } from '../../core/typ
                     {{ actorLabel(log) }} · {{ formatDateTime(log.changed_at) }}
                   </p>
                 </div>
-                <span class="w-fit rounded-full bg-neutral-100 px-2.5 py-1 text-[10px] font-bold uppercase text-neutral-600">{{ log.action }}</span>
+                <span [class]="auditBadgeClass(log.action)">{{ actionLabel(log.action) }}</span>
               </div>
             }
           </div>
@@ -181,7 +191,7 @@ export class DashboardComponent implements OnInit {
   }
 
   totalIncome(): number {
-    return this.recordedIncome() + this.sponsorPaidInBalance() + this.regPaidAmount();
+    return this.recordedIncome() + this.sponsorPaid() + this.regPaidAmount();
   }
 
   recordedIncome(): number {
@@ -198,16 +208,24 @@ export class DashboardComponent implements OnInit {
       .reduce((sum, item) => sum + Number(item.value || 0), 0);
   }
 
+  sponsorNegotiating(): number {
+    return this.sponsors()
+      .filter((item) => item.status === 'in_trattativa')
+      .reduce((sum, item) => sum + Number(item.value || 0), 0);
+  }
+
+  probableBalance(): number {
+    return this.balance() + this.sponsorConfirmed() + this.sponsorNegotiating() + this.regPendingAmount();
+  }
+
   sponsorPaid(): number {
     return this.sponsors()
       .filter((item) => item.status === 'pagato')
       .reduce((sum, item) => sum + Number(item.value || 0), 0);
   }
 
-  sponsorPaidInBalance(): number {
-    return this.sponsors()
-      .filter((item) => item.status === 'pagato' && (item.type === 'cash' || item.type === 'bonifico'))
-      .reduce((sum, item) => sum + Number(item.value || 0), 0);
+  sponsorPaidCount(): number {
+    return this.sponsors().filter((item) => item.status === 'pagato').length;
   }
 
   regPaidCount(): number {
@@ -226,8 +244,13 @@ export class DashboardComponent implements OnInit {
     return this.registrations().filter((item) => !item.paid).reduce((sum, item) => sum + Number(item.fee || 0), 0);
   }
 
-  totalRecords(): number {
-    return this.expenses().length + this.incomes().length + this.sponsors().length + this.registrations().length;
+  regTotalCount(): number {
+    return this.regPaidCount() + this.regPendingCount();
+  }
+
+  regPaymentRate(): number {
+    const total = this.regTotalCount();
+    return total === 0 ? 0 : Math.round((this.regPaidCount() / total) * 100);
   }
 
   pendingTournamentRequests(): number {
@@ -259,6 +282,13 @@ export class DashboardComponent implements OnInit {
     return 'Eliminato';
   }
 
+  auditBadgeClass(action: AuditLog['action']): string {
+    const base = 'w-fit rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase';
+    if (action === 'insert') return `${base} border-emerald-200 bg-emerald-100 text-emerald-700`;
+    if (action === 'update') return `${base} border-sky-200 bg-sky-100 text-sky-700`;
+    return `${base} border-red-200 bg-red-100 text-red-700`;
+  }
+
   tableLabel(tableName: string): string {
     return (
       {
@@ -288,5 +318,4 @@ export class DashboardComponent implements OnInit {
     return typeof value === 'string' && value.trim() ? value : String(log.record_id).slice(0, 8);
   }
 
-  protected readonly String = String;
 }

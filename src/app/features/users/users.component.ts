@@ -2,11 +2,11 @@ import { Component, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ProfileService } from '../../core/services/profile.service';
 import { CreateUserResult, Profile, ResetPasswordResult, UserRole } from '../../core/types/models';
-import { EmptyStateComponent, StatusBadgeComponent } from '../../shared/components/ui.component';
+import { ConfirmModalComponent, EmptyStateComponent, StatusBadgeComponent } from '../../shared/components/ui.component';
 
 @Component({
   standalone: true,
-  imports: [FormsModule, EmptyStateComponent, StatusBadgeComponent],
+  imports: [FormsModule, ConfirmModalComponent, EmptyStateComponent, StatusBadgeComponent],
   template: `
     <section class="space-y-4">
       <div>
@@ -133,6 +133,14 @@ import { EmptyStateComponent, StatusBadgeComponent } from '../../shared/componen
         </div>
       }
     </section>
+
+    <lfg-confirm
+      [open]="!!confirmPending()"
+      [message]="confirmMessage()"
+      [confirmLabel]="'Reset password'"
+      (confirm)="doConfirm()"
+      (cancel)="confirmPending.set(null)"
+    />
   `
 })
 export class UsersComponent implements OnInit {
@@ -146,6 +154,8 @@ export class UsersComponent implements OnInit {
   showResetPassword = signal(false);
   copied = signal(false);
   resetCopied = signal(false);
+  confirmPending = signal<(() => Promise<void>) | null>(null);
+  confirmMessage = signal('');
   form = {
     firstName: '',
     lastName: '',
@@ -218,25 +228,32 @@ export class UsersComponent implements OnInit {
     });
   }
 
-  async resetPassword(item: Profile): Promise<void> {
+  resetPassword(item: Profile): void {
     if (this.updatingUserId()) return;
     const label = item.username || item.full_name || item.email || 'questo utente';
-    if (!window.confirm(`Resettare la password per ${label}?`)) return;
+    this.confirmMessage.set(`Resettare la password per ${label}? Verrà generata una password temporanea.`);
+    this.confirmPending.set(async () => {
+      this.updatingUserId.set(item.id);
+      this.error.set('');
+      this.createdUser.set(null);
+      this.resetUser.set(null);
+      this.showResetPassword.set(false);
+      this.resetCopied.set(false);
+      try {
+        const result = await this.profiles.resetPassword(item.id);
+        this.resetUser.set(result);
+      } catch (error) {
+        this.error.set(this.message(error));
+      } finally {
+        this.updatingUserId.set(null);
+      }
+    });
+  }
 
-    this.updatingUserId.set(item.id);
-    this.error.set('');
-    this.createdUser.set(null);
-    this.resetUser.set(null);
-    this.showResetPassword.set(false);
-    this.resetCopied.set(false);
-    try {
-      const result = await this.profiles.resetPassword(item.id);
-      this.resetUser.set(result);
-    } catch (error) {
-      this.error.set(this.message(error));
-    } finally {
-      this.updatingUserId.set(null);
-    }
+  async doConfirm(): Promise<void> {
+    const fn = this.confirmPending();
+    this.confirmPending.set(null);
+    if (fn) await fn();
   }
 
   async toggleActive(item: Profile): Promise<void> {

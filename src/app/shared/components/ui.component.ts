@@ -1,4 +1,4 @@
-import { Component, EventEmitter, HostListener, Input, Output, signal } from '@angular/core';
+import { Component, EventEmitter, HostListener, Input, OnInit, Output, signal } from '@angular/core';
 
 @Component({
   selector: 'lfg-summary-card',
@@ -38,13 +38,13 @@ export class SummaryCardComponent {
         type="button"
         class="flex w-full items-center justify-between gap-3 px-4 py-3 text-left"
         [attr.aria-expanded]="!collapsed()"
-        (click)="collapsed.set(!collapsed())"
+        (click)="toggle()"
       >
         <span>
           <span class="block text-xs font-bold uppercase tracking-[0.18em] text-neutral-500">{{ eyebrow }}</span>
           <span class="mt-0.5 block text-sm font-black uppercase text-ink">{{ title }}</span>
         </span>
-        <span class="rounded-full bg-white px-3 py-1 text-xs font-black uppercase ring-1 ring-black/10">
+        <span class="rounded-full bg-white px-3 py-1 text-xs font-black uppercase ring-1 ring-black/10 transition">
           {{ collapsed() ? 'Apri' : 'Chiudi' }}
         </span>
       </button>
@@ -56,10 +56,26 @@ export class SummaryCardComponent {
     </section>
   `
 })
-export class KpiPanelComponent {
+export class KpiPanelComponent implements OnInit {
   @Input() title = 'KPI';
   @Input() eyebrow = 'Riepilogo';
+  @Input() storageKey = '';
   collapsed = signal(false);
+
+  ngOnInit(): void {
+    if (this.storageKey) {
+      const stored = localStorage.getItem(`lfg-kpi-${this.storageKey}`);
+      if (stored !== null) this.collapsed.set(stored === '1');
+    }
+  }
+
+  toggle(): void {
+    const next = !this.collapsed();
+    this.collapsed.set(next);
+    if (this.storageKey) {
+      localStorage.setItem(`lfg-kpi-${this.storageKey}`, next ? '1' : '0');
+    }
+  }
 }
 
 @Component({
@@ -69,12 +85,21 @@ export class KpiPanelComponent {
     <div class="rounded-lg border border-dashed border-black/15 bg-white/60 px-6 py-12 text-center">
       <p class="text-sm font-semibold text-neutral-600">{{ title }}</p>
       <p class="mt-1 text-xs text-neutral-500">{{ text }}</p>
+      @if (actionLabel) {
+        <button
+          type="button"
+          class="mt-4 rounded-lg bg-ink px-4 py-2 text-sm font-bold uppercase text-white transition hover:opacity-80"
+          (click)="action.emit()"
+        >{{ actionLabel }}</button>
+      }
     </div>
   `
 })
 export class EmptyStateComponent {
   @Input() title = 'Nessun dato';
   @Input() text = 'Aggiungi il primo record per iniziare.';
+  @Input() actionLabel = '';
+  @Output() action = new EventEmitter<void>();
 }
 
 @Component({

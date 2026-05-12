@@ -11,7 +11,9 @@ import {
 import {
   ConfirmModalComponent,
   EmptyStateComponent,
+  KpiPanelComponent,
   StatusBadgeComponent,
+  SummaryCardComponent,
 } from "../../shared/components/ui.component";
 
 type RequestStatus = ParticipationRequest["status"];
@@ -21,7 +23,9 @@ type RequestStatus = ParticipationRequest["status"];
   imports: [
     FormsModule,
     EmptyStateComponent,
+    KpiPanelComponent,
     StatusBadgeComponent,
+    SummaryCardComponent,
     ConfirmModalComponent,
   ],
   template: `
@@ -45,6 +49,15 @@ type RequestStatus = ParticipationRequest["status"];
           Aggiorna
         </button>
       </div>
+
+      <lfg-kpi-panel title="KPI richieste" storageKey="participation-requests">
+        <section class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <lfg-summary-card label="Nuove" [value]="String(newCount())" tone="warning" hint="In attesa di presa in carico" />
+          <lfg-summary-card label="In gestione" [value]="String(managingCount())" hint="Già accettate, da contattare" />
+          <lfg-summary-card label="Contattate" [value]="String(contactedCount())" tone="income" hint="Richieste seguite" />
+          <lfg-summary-card label="Archiviate" [value]="String(archivedCount())" hint="Chiuse o non procedibili" />
+        </section>
+      </lfg-kpi-panel>
 
       @if (error()) {
         <p class="rounded-lg bg-red-50 p-3 text-sm text-red-700">
@@ -85,7 +98,7 @@ type RequestStatus = ParticipationRequest["status"];
 
               <div class="mt-4 grid gap-3 sm:grid-cols-2">
                 <a
-                  class="rounded-lg bg-neutral-50 px-3 py-3 text-sm font-bold ring-1 ring-black/5"
+                  class="rounded-lg bg-neutral-50 px-3 py-3 text-sm font-bold ring-1 ring-black/5 transition hover:bg-neutral-100"
                   [href]="whatsappUrl(request.phone)"
                   target="_blank"
                   rel="noopener"
@@ -326,8 +339,11 @@ export class ParticipationRequestsComponent implements OnInit {
   }
 
   whatsappUrl(phone: string): string {
-    const normalizedPhone = this.normalizePhone(phone).replace(/\D/g, "");
-    return `https://wa.me/${normalizedPhone}`;
+    const cleaned = phone.trim().replace(/\s+/g, "");
+    const digits = cleaned.startsWith("+")
+      ? cleaned.slice(1).replace(/\D/g, "")
+      : `39${cleaned.replace(/\D/g, "")}`;
+    return `https://wa.me/${digits}`;
   }
 
   normalizePhone(phone: string): string {
@@ -352,6 +368,11 @@ export class ParticipationRequestsComponent implements OnInit {
     }[status];
   }
 
+  newCount(): number { return this.requests().filter((r) => r.status === "nuova").length; }
+  managingCount(): number { return this.requests().filter((r) => r.status === "in_gestione").length; }
+  contactedCount(): number { return this.requests().filter((r) => r.status === "contattata").length; }
+  archivedCount(): number { return this.requests().filter((r) => r.status === "archiviata").length; }
+
   formatDateTime(value: string): string {
     return new Intl.DateTimeFormat("it-IT", {
       dateStyle: "short",
@@ -366,4 +387,6 @@ export class ParticipationRequestsComponent implements OnInit {
   private message(error: unknown): string {
     return error instanceof Error ? error.message : "Operazione non riuscita.";
   }
+
+  protected readonly String = String;
 }
