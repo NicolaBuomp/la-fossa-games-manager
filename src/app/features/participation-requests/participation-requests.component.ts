@@ -1,8 +1,8 @@
-import { Component, OnInit, signal } from "@angular/core";
+import { Component, OnInit, inject, signal } from "@angular/core";
 import { FormsModule } from "@angular/forms";
-import { LoadingService } from "../../core/services/loading.service";
 import { ParticipationRequestsService } from "../../core/services/participation-requests.service";
 import { RequestBadgesService } from "../../core/services/request-badges.service";
+import { SnackbarService } from "../../core/services/snackbar.service";
 import {
   ParticipationRequest,
   ParticipationRequestNoteWithProfile,
@@ -32,9 +32,7 @@ type RequestStatus = ParticipationRequest["status"];
     <section class="space-y-4">
       <div class="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p
-            class="text-xs font-bold uppercase tracking-[0.18em] text-neutral-500"
-          >
+          <p class="text-xs font-bold uppercase tracking-[0.18em] text-muted">
             Area admin
           </p>
           <h1 class="font-display text-3xl uppercase">
@@ -43,7 +41,7 @@ type RequestStatus = ParticipationRequest["status"];
         </div>
         <button
           [disabled]="loading()"
-          class="rounded-lg bg-white px-4 py-2 text-sm font-bold ring-1 ring-black/10 disabled:cursor-not-allowed disabled:opacity-60"
+          class="rounded-lg bg-surface px-4 py-2 text-sm font-bold ring-1 ring-black/10 disabled:cursor-not-allowed disabled:opacity-60"
           (click)="load()"
         >
           Aggiorna
@@ -52,15 +50,33 @@ type RequestStatus = ParticipationRequest["status"];
 
       <lfg-kpi-panel title="KPI richieste" storageKey="participation-requests">
         <section class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <lfg-summary-card label="Nuove" [value]="String(newCount())" tone="warning" hint="In attesa di presa in carico" />
-          <lfg-summary-card label="In gestione" [value]="String(managingCount())" hint="Già accettate, da contattare" />
-          <lfg-summary-card label="Contattate" [value]="String(contactedCount())" tone="income" hint="Richieste seguite" />
-          <lfg-summary-card label="Archiviate" [value]="String(archivedCount())" hint="Chiuse o non procedibili" />
+          <lfg-summary-card
+            label="Nuove"
+            [value]="String(newCount())"
+            tone="warning"
+            hint="In attesa di presa in carico"
+          />
+          <lfg-summary-card
+            label="In gestione"
+            [value]="String(managingCount())"
+            hint="Già accettate, da contattare"
+          />
+          <lfg-summary-card
+            label="Contattate"
+            [value]="String(contactedCount())"
+            tone="income"
+            hint="Richieste seguite"
+          />
+          <lfg-summary-card
+            label="Archiviate"
+            [value]="String(archivedCount())"
+            hint="Chiuse o non procedibili"
+          />
         </section>
       </lfg-kpi-panel>
 
       @if (error()) {
-        <p class="rounded-lg bg-red-50 p-3 text-sm text-red-700">
+        <p class="state-danger rounded-lg border p-3 text-sm">
           {{ error() }}
         </p>
       }
@@ -74,19 +90,19 @@ type RequestStatus = ParticipationRequest["status"];
         <div class="grid gap-3">
           @for (request of requests(); track request.id) {
             <article
-              class="rounded-lg border border-black/10 bg-white p-4 shadow-sm"
+              class="rounded-lg border border-soft bg-surface p-4 shadow-sm"
             >
               <div class="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <p
-                    class="text-xs font-bold uppercase tracking-[0.16em] text-neutral-500"
+                    class="text-xs font-bold uppercase tracking-[0.16em] text-muted"
                   >
                     {{ request.tournaments?.name || "Torneo non disponibile" }}
                   </p>
                   <h2 class="mt-1 text-xl font-black">
                     {{ request.first_name }} {{ request.last_name }}
                   </h2>
-                  <p class="mt-1 text-sm text-neutral-500">
+                  <p class="mt-1 text-sm text-muted">
                     Arrivata il {{ formatDateTime(request.created_at) }}
                   </p>
                 </div>
@@ -98,22 +114,20 @@ type RequestStatus = ParticipationRequest["status"];
 
               <div class="mt-4 grid gap-3 sm:grid-cols-2">
                 <a
-                  class="rounded-lg bg-neutral-50 px-3 py-3 text-sm font-bold ring-1 ring-black/5 transition hover:bg-neutral-100"
+                  class="rounded-lg bg-surface-muted px-3 py-3 text-sm font-bold ring-1 ring-black/10 transition hover:opacity-90"
                   [href]="whatsappUrl(request.phone)"
                   target="_blank"
                   rel="noopener"
                 >
                   <span
-                    class="block text-[10px] uppercase tracking-wide text-neutral-500"
+                    class="block text-[10px] uppercase tracking-wide text-muted"
                     >WhatsApp</span
                   >
                   {{ normalizePhone(request.phone) }}
                 </a>
               </div>
 
-              <div
-                class="mt-4 flex flex-wrap gap-2 border-t border-black/5 pt-4"
-              >
+              <div class="mt-4 flex flex-wrap gap-2 border-t border-soft pt-4">
                 @if (request.status === "nuova") {
                   <button
                     [disabled]="updatingRequestId() === request.id"
@@ -126,7 +140,7 @@ type RequestStatus = ParticipationRequest["status"];
                 @if (request.status !== "contattata") {
                   <button
                     [disabled]="updatingRequestId() === request.id"
-                    class="rounded-lg bg-emerald-50 px-4 py-2 text-xs font-bold uppercase text-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+                    class="state-success rounded-lg border px-4 py-2 text-xs font-bold uppercase disabled:cursor-not-allowed disabled:opacity-60"
                     (click)="setStatus(request, 'contattata')"
                   >
                     Segna contattata
@@ -135,7 +149,7 @@ type RequestStatus = ParticipationRequest["status"];
                 @if (request.status !== "archiviata") {
                   <button
                     [disabled]="updatingRequestId() === request.id"
-                    class="rounded-lg bg-neutral-100 px-4 py-2 text-xs font-bold uppercase text-neutral-700 disabled:cursor-not-allowed disabled:opacity-60"
+                    class="state-neutral rounded-lg border px-4 py-2 text-xs font-bold uppercase disabled:cursor-not-allowed disabled:opacity-60"
                     (click)="setStatus(request, 'archiviata')"
                   >
                     Archivia
@@ -144,7 +158,7 @@ type RequestStatus = ParticipationRequest["status"];
                 @if (request.status !== "nuova") {
                   <button
                     [disabled]="updatingRequestId() === request.id"
-                    class="rounded-lg bg-amber-50 px-4 py-2 text-xs font-bold uppercase text-amber-700 disabled:cursor-not-allowed disabled:opacity-60"
+                    class="state-warning rounded-lg border px-4 py-2 text-xs font-bold uppercase disabled:cursor-not-allowed disabled:opacity-60"
                     (click)="setStatus(request, 'nuova')"
                   >
                     Riapri
@@ -159,7 +173,7 @@ type RequestStatus = ParticipationRequest["status"];
                   Nuova nota admin
                   <input
                     [disabled]="savingNoteId() === request.id"
-                    class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"
+                    class="rounded-lg border border-soft bg-surface-muted px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"
                     [ngModel]="noteDrafts()[request.id] || ''"
                     (ngModelChange)="setNoteDraft(request.id, $event)"
                   />
@@ -176,7 +190,7 @@ type RequestStatus = ParticipationRequest["status"];
                   }}
                 </button>
                 <button
-                  class="rounded-lg bg-red-50 px-4 py-3 text-sm font-bold uppercase text-red-700"
+                  class="state-danger rounded-lg border px-4 py-3 text-sm font-bold uppercase"
                   (click)="askRemove(request)"
                 >
                   Elimina
@@ -184,9 +198,9 @@ type RequestStatus = ParticipationRequest["status"];
               </div>
 
               @if (request.participation_request_notes.length) {
-                <div class="mt-4 border-t border-black/5 pt-4">
+                <div class="mt-4 border-t border-soft pt-4">
                   <p
-                    class="text-xs font-bold uppercase tracking-[0.16em] text-neutral-500"
+                    class="text-xs font-bold uppercase tracking-[0.16em] text-muted"
                   >
                     Timeline note
                   </p>
@@ -196,7 +210,7 @@ type RequestStatus = ParticipationRequest["status"];
                       track note.id
                     ) {
                       <div
-                        class="rounded-lg bg-neutral-50 px-3 py-3 ring-1 ring-black/5"
+                        class="rounded-lg border border-soft bg-surface-muted px-3 py-3"
                       >
                         <div
                           class="flex flex-wrap items-center justify-between gap-2"
@@ -204,13 +218,12 @@ type RequestStatus = ParticipationRequest["status"];
                           <p class="text-sm font-black">
                             {{ noteAuthor(note) }}
                           </p>
-                          <time
-                            class="text-xs font-semibold text-neutral-500"
-                            >{{ formatDateTime(note.created_at) }}</time
-                          >
+                          <time class="text-xs font-semibold text-muted">{{
+                            formatDateTime(note.created_at)
+                          }}</time>
                         </div>
                         <p
-                          class="mt-2 whitespace-pre-line text-sm leading-6 text-neutral-700"
+                          class="mt-2 whitespace-pre-line text-sm leading-6 text-muted"
                         >
                           {{ note.note }}
                         </p>
@@ -242,11 +255,11 @@ export class ParticipationRequestsComponent implements OnInit {
   updatingRequestId = signal<string | null>(null);
   confirmPending = signal<(() => Promise<void>) | null>(null);
   confirmMessage = signal("");
+  private readonly snackbar = inject(SnackbarService);
 
   constructor(
     private readonly service: ParticipationRequestsService,
     private readonly badges: RequestBadgesService,
-    private readonly globalLoading: LoadingService,
   ) {}
 
   ngOnInit(): void {
@@ -255,7 +268,6 @@ export class ParticipationRequestsComponent implements OnInit {
 
   async load(): Promise<void> {
     this.loading.set(true);
-    this.globalLoading.start();
     this.error.set("");
     try {
       const requests = await this.service.list();
@@ -267,10 +279,9 @@ export class ParticipationRequestsComponent implements OnInit {
       );
       await this.badges.refresh();
     } catch (error) {
-      this.error.set(this.message(error));
+      this.setError(this.message(error));
     } finally {
       this.loading.set(false);
-      this.globalLoading.stop();
     }
   }
 
@@ -289,7 +300,7 @@ export class ParticipationRequestsComponent implements OnInit {
       );
       await this.badges.refresh();
     } catch (error) {
-      this.error.set(this.message(error));
+      this.setError(this.message(error));
     } finally {
       this.updatingRequestId.set(null);
     }
@@ -309,7 +320,7 @@ export class ParticipationRequestsComponent implements OnInit {
       this.setNoteDraft(request.id, "");
       await this.load();
     } catch (error) {
-      this.error.set(this.message(error));
+      this.setError(this.message(error));
     } finally {
       this.savingNoteId.set(null);
     }
@@ -327,7 +338,7 @@ export class ParticipationRequestsComponent implements OnInit {
         );
         await this.badges.refresh();
       } catch (error) {
-        this.error.set(this.message(error));
+        this.setError(this.message(error));
       }
     });
   }
@@ -361,17 +372,25 @@ export class ParticipationRequestsComponent implements OnInit {
 
   statusClass(status: RequestStatus): string {
     return {
-      nuova: "border-amber-200 bg-amber-100 text-amber-800",
-      in_gestione: "border-sky-200 bg-sky-100 text-sky-800",
-      contattata: "border-emerald-200 bg-emerald-100 text-emerald-800",
-      archiviata: "border-neutral-200 bg-neutral-100 text-neutral-700",
+      nuova: "state-warning",
+      in_gestione: "state-info",
+      contattata: "state-success",
+      archiviata: "state-neutral",
     }[status];
   }
 
-  newCount(): number { return this.requests().filter((r) => r.status === "nuova").length; }
-  managingCount(): number { return this.requests().filter((r) => r.status === "in_gestione").length; }
-  contactedCount(): number { return this.requests().filter((r) => r.status === "contattata").length; }
-  archivedCount(): number { return this.requests().filter((r) => r.status === "archiviata").length; }
+  newCount(): number {
+    return this.requests().filter((r) => r.status === "nuova").length;
+  }
+  managingCount(): number {
+    return this.requests().filter((r) => r.status === "in_gestione").length;
+  }
+  contactedCount(): number {
+    return this.requests().filter((r) => r.status === "contattata").length;
+  }
+  archivedCount(): number {
+    return this.requests().filter((r) => r.status === "archiviata").length;
+  }
 
   formatDateTime(value: string): string {
     return new Intl.DateTimeFormat("it-IT", {
@@ -386,6 +405,11 @@ export class ParticipationRequestsComponent implements OnInit {
 
   private message(error: unknown): string {
     return error instanceof Error ? error.message : "Operazione non riuscita.";
+  }
+
+  private setError(message: string): void {
+    this.error.set(message);
+    this.snackbar.error(message);
   }
 
   protected readonly String = String;

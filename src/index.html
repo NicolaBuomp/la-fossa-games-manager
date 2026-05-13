@@ -1,16 +1,39 @@
 <!doctype html>
 <html lang="it">
   <head>
-    <meta charset="utf-8">
+    <meta charset="utf-8" />
     <title>La Fossa Games</title>
-    <base href="/">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="theme-color" content="#0A0A0A">
-    <link rel="icon" type="image/png" href="/assets/brand/logo-social.png">
-    <link rel="apple-touch-icon" href="/assets/brand/logo-social.png">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <base href="/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0A0A0A" />
+    <script>
+      (function () {
+        var mode = localStorage.getItem("lfg-theme-mode") || "system";
+        var prefersDark = window.matchMedia(
+          "(prefers-color-scheme: dark)",
+        ).matches;
+        var resolved =
+          mode === "dark" || mode === "light"
+            ? mode
+            : prefersDark
+              ? "dark"
+              : "light";
+        var root = document.documentElement;
+        root.setAttribute("data-theme", resolved);
+        root.style.colorScheme = resolved;
+        if (resolved === "dark") {
+          root.classList.add("dark");
+        }
+      })();
+    </script>
+    <link rel="icon" type="image/png" href="/assets/brand/logo-social.png" />
+    <link rel="apple-touch-icon" href="/assets/brand/logo-social.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
   </head>
   <body>
     <lfg-root></lfg-root>

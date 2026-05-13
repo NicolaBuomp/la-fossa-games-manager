@@ -10,6 +10,7 @@ import { filter } from "rxjs";
 import { AuthService } from "../../core/services/auth.service";
 import { LoadingService } from "../../core/services/loading.service";
 import { RequestBadgesService } from "../../core/services/request-badges.service";
+import { ThemeMode, ThemeService } from "../../core/services/theme.service";
 
 interface NavItem {
   path: string;
@@ -30,31 +31,31 @@ interface NavItem {
         class="fixed inset-x-0 top-0 z-[100] h-0.5 animate-pulse bg-fossa"
       ></div>
     }
-    <div class="min-h-screen bg-paper text-ink lg:flex">
+    <div class="min-h-screen bg-app text-primary lg:flex">
       <aside
-        class="hidden lg:flex lg:w-72 lg:flex-col lg:border-r lg:border-black/10 lg:bg-white"
+        class="hidden lg:sticky lg:top-0 lg:flex lg:h-screen lg:w-72 lg:self-start lg:flex-col lg:border-r lg:border-soft lg:bg-surface"
       >
         <div class="px-6 py-7">
           <p class="font-display text-2xl uppercase leading-none">
             La Fossa<br /><span class="text-fossa">Games</span>
           </p>
           <p
-            class="mt-3 text-xs font-semibold uppercase tracking-[0.18em] text-neutral-500"
+            class="mt-3 text-xs font-semibold uppercase tracking-[0.18em] text-muted"
           >
             Event manager
           </p>
         </div>
-        <nav class="flex-1 space-y-1 px-4">
+        <nav class="flex-1 space-y-1 overflow-y-auto px-4">
           @for (item of visibleNav(); track item.path) {
             <a
               [routerLink]="item.path"
               routerLinkActive="bg-ink text-white"
-              class="flex items-center justify-between gap-3 rounded-lg px-4 py-3 text-sm font-bold uppercase tracking-wide text-neutral-700 transition hover:bg-black/5 hover:text-ink"
+              class="flex items-center justify-between gap-3 rounded-lg px-4 py-3 text-sm font-bold uppercase tracking-wide text-muted transition hover:bg-surface-muted hover:text-primary"
             >
               <span>{{ item.label }}</span>
               @if (badgeCount(item) > 0) {
                 <span
-                  class="grid min-h-6 min-w-6 place-items-center rounded-full bg-fossa px-2 text-[11px] font-black leading-none text-ink ring-1 ring-black/10"
+                  class="grid min-h-6 min-w-6 place-items-center rounded-full border border-soft bg-fossa px-2 text-[11px] font-black leading-none text-ink"
                 >
                   {{ badgeCount(item) }}
                 </span>
@@ -62,31 +63,53 @@ interface NavItem {
             </a>
           }
         </nav>
-        <div class="border-t border-black/10 p-4">
+        <div class="border-t border-soft p-4">
+          <div class="mb-3 rounded-lg border border-soft bg-surface p-2">
+            <p
+              class="text-[10px] font-bold uppercase tracking-[0.16em] text-muted"
+            >
+              Tema
+            </p>
+            <div class="mt-2 grid grid-cols-3 gap-1">
+              @for (mode of themeModes; track mode.id) {
+                <button
+                  type="button"
+                  class="rounded-md px-2 py-1.5 text-[10px] font-bold uppercase tracking-wide transition"
+                  [class.bg-ink]="theme.mode() === mode.id"
+                  [class.text-white]="theme.mode() === mode.id"
+                  [class.bg-surface-muted]="theme.mode() !== mode.id"
+                  [class.text-primary]="theme.mode() !== mode.id"
+                  (click)="setTheme(mode.id)"
+                >
+                  {{ mode.label }}
+                </button>
+              }
+            </div>
+          </div>
           <p class="truncate text-sm font-semibold">
             {{ auth.profile()?.full_name || auth.user()?.email }}
           </p>
-          <p class="mb-3 text-xs uppercase tracking-wider text-neutral-500">
+          <p class="mb-3 text-xs uppercase tracking-wider text-muted">
             {{ auth.profile()?.role }}
           </p>
           <button
-            class="w-full rounded-lg bg-neutral-100 px-4 py-2 text-sm font-bold uppercase tracking-wide"
+            class="w-full rounded-lg bg-surface-muted px-4 py-2 text-sm font-bold uppercase tracking-wide"
             (click)="auth.signOut()"
           >
-            Logout
+            Esci
           </button>
         </div>
       </aside>
 
       <section class="min-w-0 flex-1">
         <header
-          class="sticky top-0 z-20 border-b border-black/10 bg-paper/95 px-5 py-4 backdrop-blur lg:hidden"
+          class="sticky top-0 z-20 border-b border-soft bg-app px-5 py-4 backdrop-blur lg:hidden"
         >
           <div class="flex items-center justify-between gap-4">
             <div class="flex min-w-0 items-center gap-3">
               <button
                 type="button"
-                class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white text-ink ring-1 ring-black/10"
+                class="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-soft bg-surface text-primary"
                 aria-label="Apri menu"
                 [attr.aria-expanded]="mobileMenuOpen()"
                 (click)="openMobileMenu()"
@@ -109,7 +132,7 @@ interface NavItem {
                   La Fossa<span class="text-expense">.</span>
                 </p>
                 <p
-                  class="truncate text-[10px] font-bold uppercase tracking-[0.18em] text-neutral-500"
+                  class="truncate text-[10px] font-bold uppercase tracking-[0.18em] text-muted"
                 >
                   Gestionale evento
                 </p>
@@ -119,7 +142,7 @@ interface NavItem {
               <a
                 routerLink="/app/profile"
                 aria-label="Apri profilo"
-                class="grid h-10 w-10 place-items-center rounded-full bg-white text-ink ring-1 ring-black/10"
+                class="grid h-10 w-10 place-items-center rounded-full border border-soft bg-surface text-primary"
               >
                 <svg
                   viewBox="0 0 24 24"
@@ -149,7 +172,7 @@ interface NavItem {
             (click)="closeMobileMenu()"
           ></div>
           <aside
-            class="fixed inset-y-0 left-0 z-50 flex w-72 max-w-[82vw] flex-col border-r border-black/10 bg-white shadow-2xl lg:hidden"
+            class="fixed inset-y-0 left-0 z-50 flex w-72 max-w-[82vw] flex-col border-r border-soft bg-surface shadow-2xl lg:hidden"
           >
             <div class="flex items-start justify-between gap-4 px-5 py-5">
               <div>
@@ -157,14 +180,14 @@ interface NavItem {
                   La Fossa<br /><span class="text-fossa">Games</span>
                 </p>
                 <p
-                  class="mt-3 text-xs font-semibold uppercase tracking-[0.18em] text-neutral-500"
+                  class="mt-3 text-xs font-semibold uppercase tracking-[0.18em] text-muted"
                 >
                   Event manager
                 </p>
               </div>
               <button
                 type="button"
-                class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-neutral-100 text-ink"
+                class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-surface-muted text-primary"
                 aria-label="Chiudi menu"
                 (click)="closeMobileMenu()"
               >
@@ -187,17 +210,17 @@ interface NavItem {
                 <a
                   [routerLink]="item.path"
                   routerLinkActive="bg-ink text-white"
-                  class="flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-bold uppercase tracking-wide text-neutral-700 transition hover:bg-black/5 hover:text-ink"
+                  class="flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-bold uppercase tracking-wide text-muted transition hover:bg-surface-muted hover:text-primary"
                   (click)="closeMobileMenu()"
                 >
                   <span
-                    class="grid h-8 w-8 place-items-center rounded-full bg-black/5 text-sm"
+                    class="grid h-8 w-8 place-items-center rounded-full bg-surface-muted text-sm"
                     >{{ item.icon }}</span
                   >
                   <span class="min-w-0 flex-1">{{ item.label }}</span>
                   @if (badgeCount(item) > 0) {
                     <span
-                      class="grid min-h-6 min-w-6 place-items-center rounded-full bg-fossa px-2 text-[11px] font-black leading-none text-ink ring-1 ring-black/10"
+                      class="grid min-h-6 min-w-6 place-items-center rounded-full border border-soft bg-fossa px-2 text-[11px] font-black leading-none text-ink"
                     >
                       {{ badgeCount(item) }}
                     </span>
@@ -206,18 +229,40 @@ interface NavItem {
               }
             </nav>
 
-            <div class="border-t border-black/10 p-4">
+            <div class="border-t border-soft p-4">
+              <div class="mb-3 rounded-lg border border-soft bg-surface p-2">
+                <p
+                  class="text-[10px] font-bold uppercase tracking-[0.16em] text-muted"
+                >
+                  Tema
+                </p>
+                <div class="mt-2 grid grid-cols-3 gap-1">
+                  @for (mode of themeModes; track mode.id) {
+                    <button
+                      type="button"
+                      class="rounded-md px-2 py-1.5 text-[10px] font-bold uppercase tracking-wide transition"
+                      [class.bg-ink]="theme.mode() === mode.id"
+                      [class.text-white]="theme.mode() === mode.id"
+                      [class.bg-surface-muted]="theme.mode() !== mode.id"
+                      [class.text-primary]="theme.mode() !== mode.id"
+                      (click)="setTheme(mode.id)"
+                    >
+                      {{ mode.label }}
+                    </button>
+                  }
+                </div>
+              </div>
               <p class="truncate text-sm font-semibold">
                 {{ auth.profile()?.full_name || auth.user()?.email }}
               </p>
-              <p class="mb-3 text-xs uppercase tracking-wider text-neutral-500">
+              <p class="mb-3 text-xs uppercase tracking-wider text-muted">
                 {{ auth.profile()?.role }}
               </p>
               <button
-                class="w-full rounded-lg bg-neutral-100 px-4 py-2 text-sm font-bold uppercase tracking-wide"
+                class="w-full rounded-lg bg-surface-muted px-4 py-2 text-sm font-bold uppercase tracking-wide"
                 (click)="auth.signOut()"
               >
-                Logout
+                Esci
               </button>
             </div>
           </aside>
@@ -234,6 +279,11 @@ interface NavItem {
 })
 export class ShellComponent implements OnInit {
   readonly mobileMenuOpen = signal(false);
+  readonly themeModes: { id: ThemeMode; label: string }[] = [
+    { id: "system", label: "Auto" },
+    { id: "light", label: "Chiaro" },
+    { id: "dark", label: "Scuro" },
+  ];
 
   readonly nav: NavItem[] = [
     {
@@ -289,6 +339,7 @@ export class ShellComponent implements OnInit {
 
   constructor(
     readonly auth: AuthService,
+    readonly theme: ThemeService,
     readonly globalLoading: LoadingService,
     private readonly badges: RequestBadgesService,
     private readonly router: Router,
@@ -320,6 +371,10 @@ export class ShellComponent implements OnInit {
       return this.badges.sponsorRequests();
     }
     return 0;
+  }
+
+  setTheme(mode: ThemeMode): void {
+    this.theme.setMode(mode);
   }
 
   private async refreshBadges(): Promise<void> {

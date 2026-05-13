@@ -1,6 +1,7 @@
-import { Component, OnDestroy, OnInit, signal } from "@angular/core";
+import { Component, OnDestroy, OnInit, inject, signal } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { PublicParticipationService } from "../../core/services/public-participation.service";
+import { SnackbarService } from "../../core/services/snackbar.service";
 import { PublicTournament } from "../../core/types/models";
 import { ModalComponent } from "../../shared/components/ui.component";
 
@@ -344,7 +345,7 @@ type Countdown = {
 
       <section
         id="sport"
-        class="scroll-mt-6 bg-[#f7f2e8] px-5 py-16 text-ink sm:px-8 lg:px-10"
+        class="scroll-mt-6 bg-surface px-5 py-16 text-primary sm:px-8 lg:px-10"
       >
         <div class="mx-auto max-w-7xl">
           <div
@@ -352,7 +353,7 @@ type Countdown = {
           >
             <div>
               <p
-                class="text-xs font-black uppercase tracking-[0.28em] text-[#0f3d2e]"
+                class="text-xs font-black uppercase tracking-[0.28em] text-muted"
               >
                 I tornei
               </p>
@@ -370,7 +371,7 @@ type Countdown = {
             @for (game of games; track game.name) {
               <button
                 type="button"
-                class="group flex w-full touch-manipulation flex-col rounded-lg border border-black/10 bg-white p-3 text-left shadow-sm transition hover:-translate-y-1 hover:border-fossa focus:outline-none focus:ring-4 focus:ring-fossa/45 sm:p-5"
+                class="group flex w-full touch-manipulation flex-col rounded-lg border border-soft bg-surface p-3 text-left shadow-sm transition hover:-translate-y-1 hover:border-fossa focus:outline-none focus:ring-4 focus:ring-fossa/45 sm:p-5"
                 [attr.aria-label]="'Apri dettagli ' + game.name"
                 (click)="openGameDetails(game)"
               >
@@ -389,12 +390,12 @@ type Countdown = {
                   {{ game.name }}
                 </h3>
                 <p
-                  class="mt-2.5 text-sm font-semibold leading-6 text-black/58 sm:mt-3"
+                  class="mt-2.5 text-sm font-semibold leading-6 text-muted sm:mt-3"
                 >
                   {{ game.description }}
                 </p>
                 <span
-                  class="mt-auto pt-4 text-xs font-black uppercase tracking-[0.16em] text-[#0f3d2e] sm:pt-5"
+                  class="mt-auto pt-4 text-xs font-black uppercase tracking-[0.16em] text-muted sm:pt-5"
                 >
                   Dettagli
                 </span>
@@ -422,15 +423,15 @@ type Countdown = {
                 </div>
                 <div class="mt-5">
                   <p
-                    class="text-sm font-semibold leading-6 text-black/68 sm:text-base sm:leading-7"
+                    class="text-sm font-semibold leading-6 text-muted sm:text-base sm:leading-7"
                   >
                     {{ game.description }}
                   </p>
                   <div
-                    class="mt-4 rounded-md border border-black/10 bg-[#f7f2e8] p-3.5 sm:mt-5 sm:p-4"
+                    class="mt-4 rounded-md border border-soft bg-surface-muted p-3.5 sm:mt-5 sm:p-4"
                   >
                     <p
-                      class="text-[0.68rem] font-black uppercase tracking-[0.18em] text-black/48"
+                      class="text-[0.68rem] font-black uppercase tracking-[0.18em] text-muted"
                     >
                       Regolamento
                     </p>
@@ -697,7 +698,7 @@ type Countdown = {
 
             @if (success()) {
               <p
-                class="mt-5 rounded-md border border-emerald-400/30 bg-emerald-500/10 p-3 text-sm font-semibold text-emerald-100"
+                class="state-success mt-5 rounded-md border p-3 text-sm font-semibold"
               >
                 {{ successMessage() }}
               </p>
@@ -705,7 +706,7 @@ type Countdown = {
 
             @if (error()) {
               <p
-                class="mt-5 rounded-md border border-red-400/30 bg-red-500/10 p-3 text-sm font-semibold text-red-100"
+                class="state-danger mt-5 rounded-md border p-3 text-sm font-semibold"
               >
                 {{ error() }}
               </p>
@@ -1042,6 +1043,7 @@ export class LandingComponent implements OnInit, OnDestroy {
     "Via Vignale, 59, 81050 Santa Maria La Fossa CE";
   protected readonly countdown = signal<Countdown>(this.calculateCountdown());
   protected readonly selectedGame = signal<Game | null>(null);
+  private readonly snackbar = inject(SnackbarService);
   private countdownIntervalId: ReturnType<typeof setInterval> | null = null;
 
   constructor(private readonly participation: PublicParticipationService) {}
@@ -1144,7 +1146,9 @@ export class LandingComponent implements OnInit, OnDestroy {
       this.tournaments.set(tournaments);
       this.participationForm.tournament_id = tournaments[0]?.id ?? "";
     } catch (error) {
-      this.error.set(this.message(error));
+      const message = this.message(error);
+      this.error.set(message);
+      this.snackbar.error(message);
     } finally {
       this.loadingTournaments.set(false);
     }
@@ -1154,9 +1158,10 @@ export class LandingComponent implements OnInit, OnDestroy {
     this.error.set("");
     this.success.set(false);
     if (!this.isFormValid()) {
-      this.error.set(
-        "Completa tutti i campi obbligatori e accetta le condizioni richieste.",
-      );
+      const message =
+        "Completa tutti i campi obbligatori e accetta le condizioni richieste.";
+      this.error.set(message);
+      this.snackbar.warning(message);
       return;
     }
 
@@ -1192,8 +1197,11 @@ export class LandingComponent implements OnInit, OnDestroy {
       this.participationForm.tournament_id = selectedTournamentId;
       this.participationForm.reason = selectedReason;
       this.success.set(true);
+      this.snackbar.success(this.successMessage());
     } catch (error) {
-      this.error.set(this.message(error));
+      const message = this.message(error);
+      this.error.set(message);
+      this.snackbar.error(message);
     } finally {
       this.submitting.set(false);
     }

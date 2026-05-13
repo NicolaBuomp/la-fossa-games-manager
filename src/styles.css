@@ -4,8 +4,58 @@
 
 :root {
   color-scheme: light;
-  background: #FAF7F2;
+  background: #faf7f2;
+  --bg-app: #faf7f2;
+  --bg-surface: #ffffff;
+  --bg-surface-muted: #f5f5f5;
+  --text-primary: #0a0a0a;
+  --text-muted: #6b7280;
+  --border-soft: rgba(10, 10, 10, 0.12);
+  --focus-border: #ffd400;
+  --focus-ring: rgba(255, 212, 0, 0.35);
+  --control-disabled-opacity: 0.65;
+  --state-neutral-bg: #f5f5f5;
+  --state-neutral-border: #d4d4d4;
+  --state-neutral-text: #404040;
+  --state-info-bg: #dbeafe;
+  --state-info-border: #93c5fd;
+  --state-info-text: #1e3a8a;
+  --state-success-bg: #dcfce7;
+  --state-success-border: #86efac;
+  --state-success-text: #14532d;
+  --state-warning-bg: #fef3c7;
+  --state-warning-border: #fcd34d;
+  --state-warning-text: #78350f;
+  --state-danger-bg: #fee2e2;
+  --state-danger-border: #fca5a5;
+  --state-danger-text: #7f1d1d;
   scroll-behavior: smooth;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg-app: #121212;
+  --bg-surface: #1c1c1c;
+  --bg-surface-muted: #262626;
+  --text-primary: #f5f5f5;
+  --text-muted: #a3a3a3;
+  --border-soft: rgba(255, 255, 255, 0.18);
+  --focus-ring: rgba(255, 212, 0, 0.45);
+  --state-neutral-bg: #2a2a2a;
+  --state-neutral-border: #404040;
+  --state-neutral-text: #e5e5e5;
+  --state-info-bg: #1e3a8a;
+  --state-info-border: #60a5fa;
+  --state-info-text: #dbeafe;
+  --state-success-bg: #14532d;
+  --state-success-border: #4ade80;
+  --state-success-text: #dcfce7;
+  --state-warning-bg: #78350f;
+  --state-warning-border: #f59e0b;
+  --state-warning-text: #fef3c7;
+  --state-danger-bg: #7f1d1d;
+  --state-danger-border: #f87171;
+  --state-danger-text: #fee2e2;
 }
 
 * {
@@ -15,9 +65,63 @@
 body {
   margin: 0;
   min-height: 100vh;
-  background: #FAF7F2;
-  color: #0A0A0A;
+  background: var(--bg-app);
+  color: var(--text-primary);
   font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+}
+
+.bg-app {
+  background: var(--bg-app);
+}
+
+.bg-surface {
+  background: var(--bg-surface);
+}
+
+.bg-surface-muted {
+  background: var(--bg-surface-muted);
+}
+
+.text-primary {
+  color: var(--text-primary);
+}
+
+.text-muted {
+  color: var(--text-muted);
+}
+
+.border-soft {
+  border-color: var(--border-soft);
+}
+
+.state-neutral {
+  border-color: var(--state-neutral-border) !important;
+  background: var(--state-neutral-bg) !important;
+  color: var(--state-neutral-text) !important;
+}
+
+.state-info {
+  border-color: var(--state-info-border) !important;
+  background: var(--state-info-bg) !important;
+  color: var(--state-info-text) !important;
+}
+
+.state-success {
+  border-color: var(--state-success-border) !important;
+  background: var(--state-success-bg) !important;
+  color: var(--state-success-text) !important;
+}
+
+.state-warning {
+  border-color: var(--state-warning-border) !important;
+  background: var(--state-warning-bg) !important;
+  color: var(--state-warning-text) !important;
+}
+
+.state-danger {
+  border-color: var(--state-danger-border) !important;
+  background: var(--state-danger-bg) !important;
+  color: var(--state-danger-text) !important;
 }
 
 button,
@@ -25,6 +129,49 @@ input,
 select,
 textarea {
   font: inherit;
+}
+
+input,
+select,
+textarea {
+  border: 1px solid var(--border-soft);
+  background: var(--bg-surface-muted);
+  color: var(--text-primary);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-muted);
+  opacity: 1;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--focus-border);
+  outline: none;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--focus-ring);
+}
+
+input[type="checkbox"],
+input[type="radio"] {
+  accent-color: #ffd400;
+}
+
+button:disabled,
+input:disabled,
+select:disabled,
+textarea:disabled {
+  cursor: not-allowed;
+  opacity: var(--control-disabled-opacity);
 }
 
 @media (max-width: 640px) {
