@@ -5,8 +5,69 @@ import {
   Input,
   OnInit,
   Output,
+  SimpleChanges,
   signal,
 } from "@angular/core";
+
+let globalScrollLockCount = 0;
+let previousHtmlOverflow = "";
+let previousHtmlOverscrollBehavior = "";
+let previousBodyOverflow = "";
+let previousBodyOverscrollBehavior = "";
+let previousBodyPaddingRight = "";
+
+function lockGlobalScroll(): void {
+  if (typeof document === "undefined" || typeof window === "undefined") {
+    return;
+  }
+
+  globalScrollLockCount += 1;
+  if (globalScrollLockCount > 1) {
+    return;
+  }
+
+  const htmlStyle = document.documentElement.style;
+  const bodyStyle = document.body.style;
+  previousHtmlOverflow = htmlStyle.overflow;
+  previousHtmlOverscrollBehavior = htmlStyle.overscrollBehavior;
+  previousBodyOverflow = bodyStyle.overflow;
+  previousBodyOverscrollBehavior = bodyStyle.overscrollBehavior;
+  previousBodyPaddingRight = bodyStyle.paddingRight;
+
+  const scrollbarWidth =
+    window.innerWidth - document.documentElement.clientWidth;
+
+  htmlStyle.overflow = "hidden";
+  htmlStyle.overscrollBehavior = "none";
+  bodyStyle.overflow = "hidden";
+  bodyStyle.overscrollBehavior = "none";
+  if (scrollbarWidth > 0) {
+    bodyStyle.paddingRight = `${scrollbarWidth}px`;
+  }
+}
+
+function unlockGlobalScroll(): void {
+  if (typeof document === "undefined") {
+    return;
+  }
+
+  if (globalScrollLockCount === 0) {
+    return;
+  }
+
+  globalScrollLockCount -= 1;
+  if (globalScrollLockCount > 0) {
+    return;
+  }
+
+  const htmlStyle = document.documentElement.style;
+  const bodyStyle = document.body.style;
+  htmlStyle.overflow = previousHtmlOverflow;
+  htmlStyle.overscrollBehavior = previousHtmlOverscrollBehavior;
+  bodyStyle.overflow = previousBodyOverflow;
+  bodyStyle.overscrollBehavior = previousBodyOverscrollBehavior;
+  bodyStyle.paddingRight = previousBodyPaddingRight;
+}
 
 @Component({
   selector: "lfg-summary-card",
@@ -166,11 +227,32 @@ export class ModalComponent {
   @Input() title = "";
   @Output() close = new EventEmitter<void>();
 
+  ngOnChanges(changes: SimpleChanges): void {
+    if ("open" in changes) {
+      this.syncScrollLock();
+    }
+  }
+
+  ngOnDestroy(): void {
+    if (this.open) {
+      unlockGlobalScroll();
+    }
+  }
+
   @HostListener("document:keydown.escape")
   onEscape(): void {
     if (this.open) {
       this.close.emit();
     }
+  }
+
+  private syncScrollLock(): void {
+    if (this.open) {
+      lockGlobalScroll();
+      return;
+    }
+
+    unlockGlobalScroll();
   }
 }
 
@@ -230,8 +312,29 @@ export class ConfirmModalComponent {
   @Output() confirm = new EventEmitter<void>();
   @Output() cancel = new EventEmitter<void>();
 
+  ngOnChanges(changes: SimpleChanges): void {
+    if ("open" in changes) {
+      this.syncScrollLock();
+    }
+  }
+
+  ngOnDestroy(): void {
+    if (this.open) {
+      unlockGlobalScroll();
+    }
+  }
+
   @HostListener("document:keydown.escape")
   onEscape(): void {
     if (this.open) this.cancel.emit();
+  }
+
+  private syncScrollLock(): void {
+    if (this.open) {
+      lockGlobalScroll();
+      return;
+    }
+
+    unlockGlobalScroll();
   }
 }

@@ -19,7 +19,11 @@ type ContactReason = "participation" | "sponsor";
 type Game = {
   name: string;
   description: string;
+  details: string;
   image: string;
+  format: string;
+  audience: string;
+  highlights: string[];
 };
 
 type SponsorTier = {
@@ -479,12 +483,12 @@ type Countdown = {
             @for (game of games; track game.name) {
               <button
                 type="button"
-                class="card-lift group flex w-full touch-manipulation flex-col rounded-lg border border-soft bg-surface p-3 text-left shadow-sm transition hover:border-fossa focus:outline-none focus:ring-4 focus:ring-fossa/45 sm:p-5"
+                class="card-lift group flex w-full touch-manipulation flex-col rounded-lg border border-soft bg-surface p-1 text-left shadow-sm transition hover:border-fossa focus:outline-none focus:ring-4 focus:ring-fossa/45 sm:p-2"
                 [attr.aria-label]="'Apri dettagli ' + game.name"
                 (click)="openGameDetails(game)"
               >
                 <div
-                  class="aspect-square w-full items-center justify-center rounded-md bg-black p-4 sm:p-5 flex"
+                  class="aspect-square w-full items-center justify-center rounded-md bg-black p-0.5 sm:p-1 flex"
                 >
                   <img
                     [src]="game.image"
@@ -518,18 +522,116 @@ type Countdown = {
               (close)="closeGameDetails()"
             >
               <div class="text-ink">
-                <div class="flex justify-center">
-                  <div
-                    class="flex h-20 w-20 items-center justify-center rounded-2xl bg-[#111] p-4"
-                  >
-                    <img
-                      [src]="game.image"
-                      [alt]="game.name"
-                      class="h-full w-full object-contain"
-                    />
+                <div
+                  class="rounded-2xl border border-fossa/25 bg-gradient-to-br from-fossa/20 via-fossa/5 to-transparent p-4 sm:p-5"
+                >
+                  <div class="flex items-start gap-4 sm:items-center">
+                    <div
+                      class="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-[#111] p-3 shadow-[0_0_0_1px_rgba(255,212,0,0.2)] sm:h-20 sm:w-20 sm:p-4"
+                    >
+                      <img
+                        [src]="game.image"
+                        [alt]="game.name"
+                        class="h-full w-full object-contain"
+                      />
+                    </div>
+                    <div>
+                      <p
+                        class="text-[0.68rem] font-black uppercase tracking-[0.18em] text-muted"
+                      >
+                        Torneo ufficiale
+                      </p>
+                      <p
+                        class="mt-1 text-lg font-black uppercase leading-tight sm:text-xl"
+                      >
+                        {{ game.name }}
+                      </p>
+                      <p
+                        class="mt-2 text-sm font-semibold leading-6 text-black/70"
+                      >
+                        {{ game.details }}
+                      </p>
+                    </div>
                   </div>
                 </div>
-                <div class="mt-5">
+
+                <div class="mt-4 grid gap-2 sm:grid-cols-3">
+                  <div
+                    class="rounded-xl border border-soft bg-surface-muted px-3 py-2.5"
+                  >
+                    <p
+                      class="text-[0.62rem] font-black uppercase tracking-[0.18em] text-muted"
+                    >
+                      Formula
+                    </p>
+                    <p class="mt-1 text-sm font-black leading-5">
+                      {{ game.format }}
+                    </p>
+                  </div>
+                  <div
+                    class="rounded-xl border border-soft bg-surface-muted px-3 py-2.5"
+                  >
+                    <p
+                      class="text-[0.62rem] font-black uppercase tracking-[0.18em] text-muted"
+                    >
+                      Per chi
+                    </p>
+                    <p class="mt-1 text-sm font-black leading-5">
+                      {{ game.audience }}
+                    </p>
+                  </div>
+                  @if (tournamentForGame(game); as tournament) {
+                    <div
+                      class="rounded-xl border border-soft bg-surface-muted px-3 py-2.5"
+                    >
+                      <p
+                        class="text-[0.62rem] font-black uppercase tracking-[0.18em] text-muted"
+                      >
+                        Quota
+                      </p>
+                      <p class="mt-1 text-sm font-black leading-5">
+                        {{
+                          tournament.fee ? eur(tournament.fee) : "Da confermare"
+                        }}
+                      </p>
+                    </div>
+                  } @else {
+                    <div
+                      class="rounded-xl border border-soft bg-surface-muted px-3 py-2.5"
+                    >
+                      <p
+                        class="text-[0.62rem] font-black uppercase tracking-[0.18em] text-muted"
+                      >
+                        Iscrizioni
+                      </p>
+                      <p class="mt-1 text-sm font-black leading-5">Aperte</p>
+                    </div>
+                  }
+                </div>
+
+                <div
+                  class="mt-5 rounded-xl border border-soft bg-surface-muted p-4"
+                >
+                  <p
+                    class="text-[0.68rem] font-black uppercase tracking-[0.18em] text-muted"
+                  >
+                    Cosa aspettarti
+                  </p>
+                  <ul class="mt-3 grid gap-2">
+                    @for (highlight of game.highlights; track highlight) {
+                      <li
+                        class="grid grid-cols-[auto_1fr] items-start gap-2 text-sm font-semibold leading-6 text-black/75"
+                      >
+                        <span
+                          class="mt-2 h-1.5 w-1.5 rounded-full bg-fossa ring-2 ring-fossa/30"
+                        ></span>
+                        <span>{{ highlight }}</span>
+                      </li>
+                    }
+                  </ul>
+                </div>
+
+                <div class="mt-4">
                   <p
                     class="text-sm font-semibold leading-6 text-muted sm:text-base sm:leading-7"
                   >
@@ -1248,39 +1350,97 @@ export class LandingComponent implements OnInit, OnDestroy, AfterViewInit {
     {
       name: "Calcio a 5",
       description: "Squadre, gironi e partite ad alta intensità.",
-      image: "/assets/brand/icona-calcio.png",
+      details: "Il classico torneo di quartiere, ritmo alto e grande tifo.",
+      image: "/assets/icone/icona-calcio.svg",
+      format: "A squadre",
+      audience: "Open",
+      highlights: [
+        "Partite veloci e calendario concentrato.",
+        "Gironi iniziali e fase a eliminazione.",
+        "Premiazione finale in piazza.",
+      ],
     },
     {
       name: "Calcio a 5 under 15",
       description:
         "Il torneo dedicato ai più giovani, con spirito di squadra e fair play.",
-      image: "/assets/brand/icona-calcio.png",
+      details: "Spazio ai più piccoli con partite pensate per età e sicurezza.",
+      image: "/assets/icone/icona-calcio.svg",
+      format: "A squadre",
+      audience: "Under 15",
+      highlights: [
+        "Gironi bilanciati per categoria.",
+        "Focus su fair play e partecipazione.",
+        "Finale con premiazione dedicata.",
+      ],
     },
     {
       name: "Pallavolo",
       description: "Battute, muri e scambi di squadra sotto rete.",
-      image: "/assets/brand/icona-pallavolo.png",
+      image: "/assets/icone/icona-pallavolo.svg",
+      details: "Torneo dinamico con rotazioni e ritmo continuo.",
+      format: "A squadre",
+      audience: "Open",
+      highlights: [
+        "Match brevi con alta intensità.",
+        "Turni progressivi fino alla finale.",
+        "Contesto competitivo ma inclusivo.",
+      ],
     },
     {
       name: "Calcio balilla",
       description: "Coppie, riflessi e sfide punto su punto.",
-      image: "/assets/brand/icona-calcio-balilla.png",
+      image: "/assets/icone/icona-calcio-balilla.svg",
+      details:
+        "Sfide a coppie dove coordinazione e velocità fanno la differenza.",
+      format: "A coppie",
+      audience: "Open",
+      highlights: [
+        "Tabellone ad eliminazione diretta.",
+        "Partite rapide e spettacolari.",
+        "Finalissima davanti al pubblico.",
+      ],
     },
     {
       name: "Briscola",
       description: "Tavoli da gioco, lettura della mano e sangue freddo.",
-      image: "/assets/brand/icona-carte.png",
+      image: "/assets/icone/icona-briscola.svg",
+      details:
+        "Tradizione e strategia in un torneo a coppie da giocare con testa.",
+      format: "A coppie",
+      audience: "Open",
+      highlights: [
+        "Turni a tavoli con punteggio progressivo.",
+        "Partite equilibrate fino alle fasi finali.",
+        "Premio per la coppia vincitrice.",
+      ],
     },
     {
       name: "FIFA 26",
       description:
         "Console, controller e partite da vivere fino all'ultimo gol.",
-      image: "/assets/brand/icona-fifa-26.png",
+      image: "/assets/icone/icona-fc26.svg",
+      details: "Torneo eSports in presenza con partite uno contro uno.",
+      format: "Singolo",
+      audience: "Open",
+      highlights: [
+        "Bracket competitivo ad eliminazione.",
+        "Setup ufficiale e regole condivise.",
+        "Finale live con pubblico.",
+      ],
     },
     {
       name: "Ping pong",
       description: "Scambi rapidi, ritmo alto e concentrazione.",
-      image: "/assets/brand/icona-ping-pong.png",
+      image: "/assets/icone/icona-pingpong.svg",
+      details: "Velocità, tecnica e riflessi in un torneo individuale.",
+      format: "Singolo",
+      audience: "Open",
+      highlights: [
+        "Partite a set con tabellone progressivo.",
+        "Sfide ravvicinate e tempi rapidi.",
+        "Finale con premiazione sul palco.",
+      ],
     },
   ];
 
@@ -1511,11 +1671,19 @@ export class LandingComponent implements OnInit, OnDestroy, AfterViewInit {
     );
   }
 
-  private eur(value: number): string {
+  protected eur(value: number): string {
     return new Intl.NumberFormat("it-IT", {
       style: "currency",
       currency: "EUR",
     }).format(value);
+  }
+
+  protected tournamentForGame(game: Game): PublicTournament | null {
+    return (
+      this.tournaments().find((tournament) =>
+        this.sameTournamentName(tournament.name, game.name),
+      ) ?? null
+    );
   }
 
   private calculateCountdown(): Countdown {
