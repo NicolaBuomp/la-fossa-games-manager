@@ -1,11 +1,13 @@
 import {
+  AfterViewInit,
   Component,
+  ElementRef,
   EventEmitter,
-  HostListener,
   Input,
   OnInit,
   Output,
   SimpleChanges,
+  ViewChild,
   signal,
 } from "@angular/core";
 
@@ -188,28 +190,54 @@ export class EmptyStateComponent {
 @Component({
   selector: "lfg-modal",
   standalone: true,
+  styles: [
+    `
+      .lfg-modal-shell {
+        width: 100vw;
+        height: 100dvh;
+        max-width: none;
+        max-height: none;
+        margin: 0;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: inherit;
+      }
+
+      .lfg-modal-shell::backdrop {
+        background: rgba(0, 0, 0, 0.55);
+        animation: fade-in 0.18s ease-out;
+      }
+    `,
+  ],
   template: `
-    @if (open) {
+    <dialog
+      #dialog
+      class="lfg-modal-shell"
+      [attr.aria-label]="title"
+      (cancel)="onCancel($event)"
+      (click)="onBackdropClick($event)"
+    >
       <div
-        class="fixed inset-0 z-50 flex items-end justify-center bg-black/55 p-0 animate-fade-in sm:items-center sm:p-4"
-        (click)="close.emit()"
+        class="flex min-h-full items-end justify-center p-0 sm:items-center sm:p-4"
       >
         <section
-          role="dialog"
-          aria-modal="true"
-          [attr.aria-label]="title"
           class="max-h-[92dvh] w-full overflow-y-auto rounded-t-2xl bg-surface text-primary shadow-2xl animate-slide-up sm:max-w-2xl sm:rounded-2xl"
           (click)="$event.stopPropagation()"
         >
           <header
             class="sticky top-0 z-10 flex items-center justify-between gap-4 border-b border-soft bg-surface px-5 py-4"
           >
-            <h2 class="min-w-0 font-display text-lg uppercase leading-none">
+            <h2
+              class="min-w-0 truncate font-display text-lg uppercase leading-none text-primary sm:text-xl"
+            >
               {{ title }}
             </h2>
             <button
-              class="shrink-0 rounded-full bg-surface-muted px-3 py-2 text-sm font-bold"
-              (click)="close.emit()"
+              type="button"
+              aria-label="Chiudi finestra"
+              class="shrink-0 rounded-md border border-soft bg-surface-muted px-3 py-2 text-xs font-black uppercase tracking-[0.12em] text-primary transition hover:border-fossa hover:text-ink focus-visible:ring-fossa/30"
+              (click)="requestClose()"
             >
               Chiudi
             </button>
@@ -219,40 +247,80 @@ export class EmptyStateComponent {
           </div>
         </section>
       </div>
-    }
+    </dialog>
   `,
 })
-export class ModalComponent {
+export class ModalComponent implements AfterViewInit {
+  @ViewChild("dialog") private dialog?: ElementRef<HTMLDialogElement>;
   @Input() open = false;
   @Input() title = "";
   @Output() close = new EventEmitter<void>();
+  private viewReady = false;
+  private scrollLocked = false;
 
   ngOnChanges(changes: SimpleChanges): void {
     if ("open" in changes) {
-      this.syncScrollLock();
+      this.syncDialogState();
     }
   }
 
   ngOnDestroy(): void {
-    if (this.open) {
+    if (this.scrollLocked) {
       unlockGlobalScroll();
+      this.scrollLocked = false;
     }
   }
 
-  @HostListener("document:keydown.escape")
-  onEscape(): void {
+  ngAfterViewInit(): void {
+    this.viewReady = true;
+    this.syncDialogState();
+  }
+
+  onCancel(event: Event): void {
+    event.preventDefault();
+    this.requestClose();
+  }
+
+  onBackdropClick(event: MouseEvent): void {
+    if (event.target === this.dialog?.nativeElement) {
+      this.requestClose();
+    }
+  }
+
+  requestClose(): void {
     if (this.open) {
       this.close.emit();
     }
   }
 
-  private syncScrollLock(): void {
-    if (this.open) {
-      lockGlobalScroll();
+  private syncDialogState(): void {
+    if (!this.viewReady) {
       return;
     }
 
-    unlockGlobalScroll();
+    const dialog = this.dialog?.nativeElement;
+    if (!dialog) {
+      return;
+    }
+
+    if (this.open) {
+      if (!dialog.open) {
+        dialog.showModal();
+      }
+      if (!this.scrollLocked) {
+        lockGlobalScroll();
+        this.scrollLocked = true;
+      }
+      return;
+    }
+
+    if (dialog.open) {
+      dialog.close();
+    }
+    if (this.scrollLocked) {
+      unlockGlobalScroll();
+      this.scrollLocked = false;
+    }
   }
 }
 
@@ -270,25 +338,51 @@ export class StatusBadgeComponent {
 @Component({
   selector: "lfg-confirm",
   standalone: true,
+  styles: [
+    `
+      .lfg-confirm-shell {
+        width: 100vw;
+        height: 100dvh;
+        max-width: none;
+        max-height: none;
+        margin: 0;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: inherit;
+      }
+
+      .lfg-confirm-shell::backdrop {
+        background: rgba(0, 0, 0, 0.55);
+      }
+    `,
+  ],
   template: `
-    @if (open) {
+    <dialog
+      #dialog
+      class="lfg-confirm-shell"
+      role="alertdialog"
+      (cancel)="onCancel($event)"
+      (click)="onBackdropClick($event)"
+    >
       <div
-        class="fixed inset-0 z-[60] flex items-center justify-center bg-black/55 p-4"
-        (click)="cancel.emit()"
+        class="flex min-h-full items-center justify-center p-4"
       >
         <section
-          role="alertdialog"
-          aria-modal="true"
           class="w-full max-w-sm rounded-2xl bg-surface p-6 text-primary shadow-2xl"
           (click)="$event.stopPropagation()"
         >
-          <h3 class="font-display text-xl uppercase leading-tight">Conferma</h3>
-          <p class="mt-3 text-sm leading-6 text-muted">{{ message }}</p>
+          <h3 class="font-display text-xl uppercase leading-tight text-primary">
+            Conferma
+          </h3>
+          <p class="mt-3 text-sm font-semibold leading-6 text-muted">
+            {{ message }}
+          </p>
           <div class="mt-6 flex justify-end gap-3">
             <button
               type="button"
-              class="rounded-lg bg-surface-muted px-4 py-2.5 text-sm font-bold uppercase transition hover:opacity-90"
-              (click)="cancel.emit()"
+              class="rounded-md border border-soft bg-surface-muted px-4 py-2.5 text-sm font-black uppercase text-primary transition hover:border-fossa"
+              (click)="requestCancel()"
             >
               Annulla
             </button>
@@ -302,39 +396,81 @@ export class StatusBadgeComponent {
           </div>
         </section>
       </div>
-    }
+    </dialog>
   `,
 })
-export class ConfirmModalComponent {
+export class ConfirmModalComponent implements AfterViewInit {
+  @ViewChild("dialog") private dialog?: ElementRef<HTMLDialogElement>;
   @Input() open = false;
   @Input() message = "";
   @Input() confirmLabel = "Elimina";
   @Output() confirm = new EventEmitter<void>();
   @Output() cancel = new EventEmitter<void>();
+  private viewReady = false;
+  private scrollLocked = false;
 
   ngOnChanges(changes: SimpleChanges): void {
     if ("open" in changes) {
-      this.syncScrollLock();
+      this.syncDialogState();
     }
   }
 
   ngOnDestroy(): void {
-    if (this.open) {
+    if (this.scrollLocked) {
       unlockGlobalScroll();
+      this.scrollLocked = false;
     }
   }
 
-  @HostListener("document:keydown.escape")
-  onEscape(): void {
-    if (this.open) this.cancel.emit();
+  ngAfterViewInit(): void {
+    this.viewReady = true;
+    this.syncDialogState();
   }
 
-  private syncScrollLock(): void {
+  onCancel(event: Event): void {
+    event.preventDefault();
+    this.requestCancel();
+  }
+
+  onBackdropClick(event: MouseEvent): void {
+    if (event.target === this.dialog?.nativeElement) {
+      this.requestCancel();
+    }
+  }
+
+  requestCancel(): void {
     if (this.open) {
-      lockGlobalScroll();
+      this.cancel.emit();
+    }
+  }
+
+  private syncDialogState(): void {
+    if (!this.viewReady) {
       return;
     }
 
-    unlockGlobalScroll();
+    const dialog = this.dialog?.nativeElement;
+    if (!dialog) {
+      return;
+    }
+
+    if (this.open) {
+      if (!dialog.open) {
+        dialog.showModal();
+      }
+      if (!this.scrollLocked) {
+        lockGlobalScroll();
+        this.scrollLocked = true;
+      }
+      return;
+    }
+
+    if (dialog.open) {
+      dialog.close();
+    }
+    if (this.scrollLocked) {
+      unlockGlobalScroll();
+      this.scrollLocked = false;
+    }
   }
 }

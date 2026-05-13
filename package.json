@@ -4,17 +4,18 @@
   "private": true,
   "scripts": {
     "ng": "ng",
+    "sync:sponsors": "node scripts/generate-sponsor-assets.cjs",
     "sync:env": "node scripts/generate-environment.cjs",
     "sync:env:dev": "node scripts/generate-environment.cjs development",
     "sync:env:prod": "node scripts/generate-environment.cjs production",
-    "prestart": "npm run sync:env:dev",
+    "prestart": "npm run sync:sponsors && npm run sync:env:dev",
     "start": "ng serve",
-    "prebuild": "npm run sync:env:prod",
+    "prebuild": "npm run sync:sponsors && npm run sync:env:prod",
     "build": "ng build",
     "deploy:vercel": "node scripts/deploy-vercel.cjs",
-    "prewatch": "npm run sync:env:dev",
+    "prewatch": "npm run sync:sponsors && npm run sync:env:dev",
     "watch": "ng build --watch --configuration development",
-    "pretest": "npm run sync:env:dev",
+    "pretest": "npm run sync:sponsors && npm run sync:env:dev",
     "test": "ng test"
   },
   "dependencies": {

@@ -12,6 +12,7 @@ import { FormsModule } from "@angular/forms";
 import { PublicParticipationService } from "../../core/services/public-participation.service";
 import { SnackbarService } from "../../core/services/snackbar.service";
 import { PublicTournament } from "../../core/types/models";
+import { SPONSOR_ASSETS } from "../../core/generated/sponsor-assets";
 import { ModalComponent } from "../../shared/components/ui.component";
 
 type ContactReason = "participation" | "sponsor";
@@ -24,6 +25,7 @@ type Game = {
   format: string;
   audience: string;
   highlights: string[];
+  rules?: string[];
 };
 
 type SponsorTier = {
@@ -61,6 +63,14 @@ type Countdown = {
         to {
           opacity: 1;
           transform: translate3d(0, 0, 0);
+        }
+      }
+      @keyframes sponsorMarquee {
+        from {
+          transform: translate3d(0, 0, 0);
+        }
+        to {
+          transform: translate3d(-50%, 0, 0);
         }
       }
       .hero-title {
@@ -117,6 +127,13 @@ type Countdown = {
       .delay-3 {
         animation-delay: 320ms;
       }
+      .sponsor-marquee {
+        animation: sponsorMarquee 28s linear infinite;
+        width: max-content;
+      }
+      .sponsor-marquee:hover {
+        animation-play-state: paused;
+      }
       @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
         .hero-parallax-glow,
         .hero-parallax-content {
@@ -151,6 +168,10 @@ type Countdown = {
         }
         .reveal-up {
           opacity: 1;
+          animation: none;
+          transform: none;
+        }
+        .sponsor-marquee {
           animation: none;
           transform: none;
         }
@@ -483,34 +504,45 @@ type Countdown = {
             @for (game of games; track game.name) {
               <button
                 type="button"
-                class="card-lift group flex w-full touch-manipulation flex-col rounded-lg border border-soft bg-surface p-1 text-left shadow-sm transition hover:border-fossa focus:outline-none focus:ring-4 focus:ring-fossa/45 sm:p-2"
+                class="card-lift group flex min-h-[17.5rem] w-full touch-manipulation flex-col overflow-hidden rounded-lg border border-soft bg-surface text-left shadow-sm transition hover:border-fossa hover:shadow-[0_18px_44px_rgba(10,10,10,0.12)] focus:outline-none focus:ring-4 focus:ring-fossa/45 sm:min-h-[19rem]"
                 [attr.aria-label]="'Apri dettagli ' + game.name"
                 (click)="openGameDetails(game)"
               >
                 <div
-                  class="aspect-square w-full items-center justify-center rounded-md bg-black p-0.5 sm:p-1 flex"
+                  class="flex aspect-square w-full items-center justify-center border-b border-soft bg-ink p-2 sm:p-3"
                 >
                   <img
                     [src]="game.image"
                     [alt]="game.name"
-                    class="card-media h-full w-full object-contain"
+                    class="card-media h-full w-full object-contain drop-shadow-[0_10px_22px_rgba(255,212,0,0.18)]"
                   />
                 </div>
-                <h3
-                  class="mt-4 text-lg font-black uppercase leading-none sm:mt-5 sm:text-xl"
-                >
-                  {{ game.name }}
-                </h3>
-                <p
-                  class="mt-2.5 text-sm font-semibold leading-6 text-muted sm:mt-3"
-                >
-                  {{ game.description }}
-                </p>
-                <span
-                  class="mt-auto pt-4 text-xs font-black uppercase tracking-[0.16em] text-muted sm:pt-5"
-                >
-                  Dettagli
-                </span>
+                <div class="flex flex-1 flex-col p-3 sm:p-4">
+                  <p
+                    class="text-[0.62rem] font-black uppercase tracking-[0.18em] text-muted"
+                  >
+                    Torneo
+                  </p>
+                  <h3
+                    class="mt-2 text-lg font-black uppercase leading-[0.95] text-primary sm:text-xl"
+                  >
+                    {{ game.name }}
+                  </h3>
+                  <p
+                    class="mt-2 line-clamp-3 text-sm font-semibold leading-6 text-muted"
+                  >
+                    {{ game.description }}
+                  </p>
+                  <span
+                    class="mt-auto inline-flex items-center gap-2 pt-4 text-xs font-black uppercase tracking-[0.16em] text-primary transition group-hover:text-ink"
+                  >
+                    Dettagli
+                    <span
+                      aria-hidden="true"
+                      class="h-1.5 w-1.5 rounded-full bg-fossa transition group-hover:ring-4 group-hover:ring-fossa/25"
+                    ></span>
+                  </span>
+                </div>
               </button>
             }
           </div>
@@ -521,18 +553,18 @@ type Countdown = {
               [title]="game.name"
               (close)="closeGameDetails()"
             >
-              <div class="text-ink">
+              <div class="text-primary">
                 <div
-                  class="rounded-2xl border border-fossa/25 bg-gradient-to-br from-fossa/20 via-fossa/5 to-transparent p-4 sm:p-5"
+                  class="rounded-lg border border-fossa/30 bg-surface-muted p-4 sm:p-5"
                 >
                   <div class="flex items-start gap-4 sm:items-center">
                     <div
-                      class="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-[#111] p-3 shadow-[0_0_0_1px_rgba(255,212,0,0.2)] sm:h-20 sm:w-20 sm:p-4"
+                      class="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-fossa/25 bg-ink p-2 shadow-[0_14px_30px_rgba(10,10,10,0.24)] ring-1 ring-white/10 sm:h-24 sm:w-24 sm:p-2.5"
                     >
                       <img
                         [src]="game.image"
                         [alt]="game.name"
-                        class="h-full w-full object-contain"
+                        class="h-full w-full scale-[1.55] object-cover drop-shadow-[0_0_16px_rgba(255,212,0,0.35)]"
                       />
                     </div>
                     <div>
@@ -547,7 +579,7 @@ type Countdown = {
                         {{ game.name }}
                       </p>
                       <p
-                        class="mt-2 text-sm font-semibold leading-6 text-black/70"
+                        class="mt-2 text-sm font-semibold leading-6 text-muted"
                       >
                         {{ game.details }}
                       </p>
@@ -620,7 +652,7 @@ type Countdown = {
                   <ul class="mt-3 grid gap-2">
                     @for (highlight of game.highlights; track highlight) {
                       <li
-                        class="grid grid-cols-[auto_1fr] items-start gap-2 text-sm font-semibold leading-6 text-black/75"
+                        class="grid grid-cols-[auto_1fr] items-start gap-2 text-sm font-semibold leading-6 text-primary"
                       >
                         <span
                           class="mt-2 h-1.5 w-1.5 rounded-full bg-fossa ring-2 ring-fossa/30"
@@ -645,13 +677,28 @@ type Countdown = {
                     >
                       Regolamento
                     </p>
-                    <p class="mt-2 text-sm font-black leading-6">
-                      Il regolamento ufficiale sarà disponibile a breve.
-                    </p>
+                    @if (game.rules?.length) {
+                      <ul class="mt-3 grid gap-2">
+                        @for (rule of game.rules; track rule) {
+                          <li
+                            class="grid grid-cols-[auto_1fr] items-start gap-2 text-sm font-semibold leading-6 text-primary"
+                          >
+                            <span
+                              class="mt-2 h-1.5 w-1.5 rounded-full bg-fossa ring-2 ring-fossa/30"
+                            ></span>
+                            <span>{{ rule }}</span>
+                          </li>
+                        }
+                      </ul>
+                    } @else {
+                      <p class="mt-2 text-sm font-black leading-6 text-primary">
+                        Il regolamento ufficiale sarà disponibile a breve.
+                      </p>
+                    }
                   </div>
                   <button
                     type="button"
-                    class="mt-5 w-full rounded-md bg-fossa px-5 py-3 text-sm font-black uppercase tracking-[0.12em] text-ink transition hover:bg-black hover:text-fossa sm:w-auto"
+                    class="mt-5 w-full rounded-md bg-fossa px-5 py-3 text-sm font-black uppercase tracking-[0.12em] text-ink transition hover:bg-ink hover:text-fossa sm:w-auto"
                     (click)="requestGameInfo(game)"
                   >
                     Chiedi informazioni
@@ -761,6 +808,55 @@ type Countdown = {
               </a>
             </div>
           </div>
+
+          @if (sponsorLogos.length) {
+            <div
+              class="mt-10 overflow-hidden rounded-lg border border-white/10 bg-white/[0.04] py-5"
+              aria-label="Sponsor La Fossa Games"
+            >
+              <div
+                class="mb-5 flex flex-col gap-2 px-5 sm:flex-row sm:items-end sm:justify-between"
+              >
+                <div>
+                  <p
+                    class="text-xs font-black uppercase tracking-[0.28em] text-fossa"
+                  >
+                    I nostri sponsor
+                  </p>
+                  <h3
+                    class="mt-2 font-display text-3xl uppercase leading-none text-white sm:text-4xl"
+                  >
+                    Chi sostiene La Fossa Games.
+                  </h3>
+                </div>
+                <p
+                  class="max-w-md text-sm font-semibold leading-6 text-white/58"
+                >
+                  Aziende e attività che rendono possibile l'evento.
+                </p>
+              </div>
+              <div
+                [class]="
+                  sponsorLogos.length > 1
+                    ? 'sponsor-marquee flex items-center gap-4 px-4'
+                    : 'flex items-center justify-center px-5'
+                "
+              >
+                @for (logo of visibleSponsorLogos; track logo.src + $index) {
+                  <div
+                    class="flex h-24 w-44 shrink-0 items-center justify-center rounded-md border border-white/10 bg-white px-4 py-3 shadow-2xl sm:h-28 sm:w-56"
+                  >
+                    <img
+                      [src]="logo.src"
+                      [alt]="logo.name"
+                      class="max-h-full max-w-full object-contain"
+                      loading="lazy"
+                    />
+                  </div>
+                }
+              </div>
+            </div>
+          }
 
           <div class="mt-10 grid gap-4 lg:grid-cols-3">
             @for (tier of sponsorTiers; track tier.name) {
@@ -1357,7 +1453,18 @@ export class LandingComponent implements OnInit, OnDestroy, AfterViewInit {
       highlights: [
         "Partite veloci e calendario concentrato.",
         "Gironi iniziali e fase a eliminazione.",
-        "Premiazione finale in piazza.",
+        "Premiazione finale.",
+      ],
+      rules: [
+        "Squadre composte da massimo 8 giocatori.",
+        "Formula con gironi iniziali e fase a eliminazione diretta. In caso di pareggio nelle fasi finali si procede ai rigori.",
+        "In caso di parità in classifica valgono, nell'ordine: scontri diretti, differenza reti, gol fatti e sorteggio.",
+        "Si applicano le regole ufficiali del calcio a 5.",
+        "Ritardo massimo consentito: 10 minuti. Oltre il limite, sconfitta 6-0 a tavolino.",
+        "Rispetto obbligatorio per arbitri, avversari e organizzazione. Bestemmie, risse o comportamenti antisportivi possono portare ad ammonizione, espulsione o esclusione.",
+        "Quota: 80 euro per squadra, più 10 euro a partita per squadra.",
+        "Iscrizioni aperte fino al 19 giugno.",
+        "I capitani saranno inseriti in un gruppo WhatsApp dedicato con regolamento ufficiale e comunicazioni organizzative.",
       ],
     },
     {
@@ -1480,6 +1587,17 @@ export class LandingComponent implements OnInit, OnDestroy, AfterViewInit {
       ],
     },
   ];
+  protected readonly sponsorLogos = SPONSOR_ASSETS;
+  protected readonly sponsorLogoTrack = SPONSOR_ASSETS.length
+    ? Array.from(
+        { length: Math.max(6, SPONSOR_ASSETS.length) },
+        (_, index) => SPONSOR_ASSETS[index % SPONSOR_ASSETS.length],
+      )
+    : [];
+  protected readonly visibleSponsorLogos =
+    SPONSOR_ASSETS.length > 1
+      ? [...this.sponsorLogoTrack, ...this.sponsorLogoTrack]
+      : SPONSOR_ASSETS;
 
   async loadTournaments(): Promise<void> {
     this.loadingTournaments.set(true);
