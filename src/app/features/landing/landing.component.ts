@@ -1,4 +1,13 @@
-import { Component, OnDestroy, OnInit, inject, signal } from "@angular/core";
+import {
+  AfterViewInit,
+  Component,
+  computed,
+  ElementRef,
+  inject,
+  OnDestroy,
+  OnInit,
+  signal,
+} from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { PublicParticipationService } from "../../core/services/public-participation.service";
 import { SnackbarService } from "../../core/services/snackbar.service";
@@ -40,6 +49,16 @@ type Countdown = {
           background-position: 200% center;
         }
       }
+      @keyframes revealUp {
+        from {
+          opacity: 0;
+          transform: translate3d(0, 26px, 0);
+        }
+        to {
+          opacity: 1;
+          transform: translate3d(0, 0, 0);
+        }
+      }
       .hero-title {
         background: linear-gradient(
           90deg,
@@ -53,13 +72,97 @@ type Countdown = {
         background-clip: text;
         animation: shimmer 5s linear infinite;
       }
+      .page-grain {
+        background-image:
+          radial-gradient(
+            circle at 20% 20%,
+            rgba(255, 212, 0, 0.05),
+            transparent 45%
+          ),
+          radial-gradient(
+            circle at 80% 10%,
+            rgba(255, 255, 255, 0.02),
+            transparent 42%
+          ),
+          radial-gradient(
+            circle at 50% 80%,
+            rgba(255, 212, 0, 0.03),
+            transparent 42%
+          );
+      }
+      .page-grain::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.95' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E");
+        opacity: 0.17;
+        mix-blend-mode: soft-light;
+      }
+      .reveal-up {
+        opacity: 0;
+      }
+      .reveal-up.reveal-visible {
+        animation: revealUp 720ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+      }
+      .delay-1 {
+        animation-delay: 120ms;
+      }
+      .delay-2 {
+        animation-delay: 220ms;
+      }
+      .delay-3 {
+        animation-delay: 320ms;
+      }
+      @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+        .hero-parallax-glow,
+        .hero-parallax-content {
+          will-change: transform;
+        }
+      }
+      @media (hover: hover) and (pointer: fine) {
+        .card-lift {
+          transition:
+            transform 260ms cubic-bezier(0.22, 1, 0.36, 1),
+            border-color 220ms ease,
+            box-shadow 220ms ease;
+          transform: translate3d(0, 0, 0);
+          will-change: transform;
+        }
+        .card-lift:hover {
+          transform: translate3d(0, -8px, 0) rotateX(1.1deg);
+        }
+        .card-media {
+          transition: transform 300ms cubic-bezier(0.22, 1, 0.36, 1);
+          transform: translate3d(0, 0, 0);
+          will-change: transform;
+        }
+        .card-lift:hover .card-media {
+          transform: scale(1.05) rotate(-1deg);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .hero-title {
+          animation: none;
+          background-position: center;
+        }
+        .reveal-up {
+          opacity: 1;
+          animation: none;
+          transform: none;
+        }
+      }
     `,
   ],
   template: `
     <main class="min-h-screen overflow-hidden bg-[#070707] text-white">
+      <div
+        aria-hidden="true"
+        class="page-grain pointer-events-none fixed inset-0 z-0"
+      ></div>
       <section class="relative min-h-screen px-5 pb-8 pt-5 sm:px-8 lg:px-10">
         <div
-          class="absolute inset-0 bg-[radial-gradient(circle_at_18%_20%,rgba(255,193,7,0.18),transparent_28%),linear-gradient(135deg,rgba(15,61,46,0)_58%,rgba(15,61,46,0.58)_58%,rgba(15,61,46,0.58)_68%,rgba(15,61,46,0)_68%)]"
+          class="hero-parallax-glow absolute inset-0 bg-[radial-gradient(circle_at_18%_20%,rgba(255,193,7,0.18),transparent_28%),linear-gradient(135deg,rgba(15,61,46,0)_58%,rgba(15,61,46,0.58)_58%,rgba(15,61,46,0.58)_68%,rgba(15,61,46,0)_68%)]"
+          [style.transform]="heroGlowTransform()"
         ></div>
         <div
           class="absolute left-0 top-0 h-52 w-72 -skew-x-[24deg] border-r border-fossa/35 bg-fossa/5"
@@ -68,7 +171,9 @@ type Countdown = {
         <div
           class="relative z-10 mx-auto flex min-h-[calc(100vh-3.25rem)] w-full max-w-7xl flex-col"
         >
-          <nav class="flex items-center justify-between gap-4">
+          <nav
+            class="sticky top-3 z-30 flex items-center justify-between gap-4 rounded-md border border-white/10 bg-black/45 px-3 py-2 backdrop-blur-md"
+          >
             <a
               href="#top"
               class="flex items-center gap-3"
@@ -215,26 +320,29 @@ type Countdown = {
           }
 
           <div id="top" class="flex flex-1 items-center py-6 lg:py-8">
-            <div class="max-w-4xl">
+            <div
+              class="hero-parallax-content max-w-4xl"
+              [style.transform]="heroContentTransform()"
+            >
               <p
-                class="mb-5 flex items-center gap-3 text-xs font-black uppercase tracking-[0.32em] text-fossa"
+                class="reveal-up mb-5 flex items-center gap-3 text-xs font-black uppercase tracking-[0.32em] text-fossa"
               >
                 <span class="h-px w-10 bg-fossa"></span>
                 Santa Maria La Fossa
               </p>
               <h1
-                class="hero-title font-display text-[clamp(3.4rem,10vw,6.85rem)] uppercase leading-[0.8]"
+                class="hero-title reveal-up delay-1 font-display text-[clamp(3.4rem,10vw,6.85rem)] uppercase leading-[0.8]"
               >
                 La Fossa<br />Games
               </h1>
               <p
-                class="mt-5 max-w-2xl text-base font-semibold leading-7 text-white/78"
+                class="reveal-up delay-2 mt-5 max-w-2xl text-[0.97rem] font-semibold leading-6 text-white/78 sm:text-base sm:leading-7"
               >
                 Cinque giorni. Sei sport. Una piazza sola. Tornei aperti a
                 tutti, dal calcio a 5 alla briscola — si gioca per vincere, e
                 soprattutto per stare insieme.
               </p>
-              <div class="mt-5 flex flex-wrap gap-3">
+              <div class="reveal-up delay-2 mt-5 flex flex-wrap gap-3">
                 <a
                   href="#partecipa"
                   class="rounded-md bg-fossa px-5 py-3 text-sm font-black uppercase tracking-[0.14em] text-ink shadow-[0_0_34px_rgba(255,212,0,0.25)] transition hover:bg-white"
@@ -251,7 +359,7 @@ type Countdown = {
                 </a>
               </div>
               <div
-                class="mt-5 grid max-w-2xl grid-cols-3 overflow-hidden rounded-md border border-fossa/25 bg-black/70 text-center shadow-2xl backdrop-blur"
+                class="reveal-up delay-3 mt-5 grid max-w-2xl grid-cols-3 overflow-hidden rounded-md border border-fossa/25 bg-black/70 text-center shadow-2xl backdrop-blur"
               >
                 <div class="border-r border-fossa/20 px-3 py-3">
                   <p class="text-2xl font-black text-fossa">22-26</p>
@@ -284,7 +392,7 @@ type Countdown = {
               </div>
 
               <div
-                class="mt-3 max-w-2xl rounded-md border border-white/10 bg-white/[0.04] p-3 backdrop-blur"
+                class="reveal-up delay-3 mt-3 max-w-2xl rounded-md border border-white/10 bg-white/[0.04] p-3 backdrop-blur"
               >
                 <div class="flex flex-wrap items-center justify-between gap-2">
                   <p
@@ -347,7 +455,7 @@ type Countdown = {
         id="sport"
         class="scroll-mt-6 bg-surface px-5 py-16 text-primary sm:px-8 lg:px-10"
       >
-        <div class="mx-auto max-w-7xl">
+        <div class="mx-auto max-w-7xl reveal-up">
           <div
             class="flex flex-col justify-between gap-5 sm:flex-row sm:items-end"
           >
@@ -371,7 +479,7 @@ type Countdown = {
             @for (game of games; track game.name) {
               <button
                 type="button"
-                class="group flex w-full touch-manipulation flex-col rounded-lg border border-soft bg-surface p-3 text-left shadow-sm transition hover:-translate-y-1 hover:border-fossa focus:outline-none focus:ring-4 focus:ring-fossa/45 sm:p-5"
+                class="card-lift group flex w-full touch-manipulation flex-col rounded-lg border border-soft bg-surface p-3 text-left shadow-sm transition hover:border-fossa focus:outline-none focus:ring-4 focus:ring-fossa/45 sm:p-5"
                 [attr.aria-label]="'Apri dettagli ' + game.name"
                 (click)="openGameDetails(game)"
               >
@@ -381,7 +489,7 @@ type Countdown = {
                   <img
                     [src]="game.image"
                     [alt]="game.name"
-                    class="h-full w-full object-contain transition group-hover:scale-105"
+                    class="card-media h-full w-full object-contain"
                   />
                 </div>
                 <h3
@@ -455,7 +563,7 @@ type Countdown = {
 
       <section class="bg-fossa px-5 py-16 text-ink sm:px-8 lg:px-10">
         <div
-          class="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[1fr_0.8fr] lg:items-end"
+          class="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[1fr_0.8fr] lg:items-end reveal-up"
         >
           <div>
             <p class="text-xs font-black uppercase tracking-[0.28em]">
@@ -520,7 +628,7 @@ type Countdown = {
         id="sponsor"
         class="scroll-mt-6 bg-[#090909] px-5 py-16 text-white sm:px-8 lg:px-10"
       >
-        <div class="mx-auto max-w-7xl">
+        <div class="mx-auto max-w-7xl reveal-up">
           <div
             class="flex flex-col justify-between gap-5 lg:flex-row lg:items-end"
           >
@@ -555,7 +663,7 @@ type Countdown = {
           <div class="mt-10 grid gap-4 lg:grid-cols-3">
             @for (tier of sponsorTiers; track tier.name) {
               <article
-                class="relative rounded-lg border p-5 shadow-2xl transition hover:-translate-y-1 sm:p-6"
+                class="card-lift relative rounded-lg border p-5 shadow-2xl transition sm:p-6"
                 [class]="
                   tier.name === 'Gold'
                     ? 'border-[#ffd400]/50 bg-[#ffd400]/[0.06] ring-1 ring-[#ffd400]/20 shadow-[0_0_48px_rgba(255,212,0,0.10)]'
@@ -622,7 +730,7 @@ type Countdown = {
         class="scroll-mt-6 bg-[#07120e] px-5 py-16 text-white sm:px-8 lg:px-10"
       >
         <div
-          class="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.85fr_1fr] lg:items-start"
+          class="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.85fr_1fr] lg:items-start reveal-up"
         >
           <div>
             <p
@@ -1030,7 +1138,7 @@ type Countdown = {
     </main>
   `,
 })
-export class LandingComponent implements OnInit, OnDestroy {
+export class LandingComponent implements OnInit, OnDestroy, AfterViewInit {
   tournaments = signal<PublicTournament[]>([]);
   loadingTournaments = signal(false);
   submitting = signal(false);
@@ -1043,22 +1151,97 @@ export class LandingComponent implements OnInit, OnDestroy {
     "Via Vignale, 59, 81050 Santa Maria La Fossa CE";
   protected readonly countdown = signal<Countdown>(this.calculateCountdown());
   protected readonly selectedGame = signal<Game | null>(null);
+  private readonly heroParallaxOffset = signal(0);
+  protected readonly heroGlowTransform = computed(
+    () =>
+      `translate3d(0, ${this.heroParallaxOffset() * 0.18}px, 0) scale(1.04)`,
+  );
+  protected readonly heroContentTransform = computed(
+    () => `translate3d(0, ${this.heroParallaxOffset() * -0.12}px, 0)`,
+  );
+  private readonly host = inject(ElementRef<HTMLElement>);
+  private readonly participation = inject(PublicParticipationService);
   private readonly snackbar = inject(SnackbarService);
   private countdownIntervalId: ReturnType<typeof setInterval> | null = null;
+  private revealObserver: IntersectionObserver | null = null;
+  private parallaxEnabled = false;
+  private parallaxTicking = false;
 
-  constructor(private readonly participation: PublicParticipationService) {}
+  private readonly onScrollParallax = () => {
+    if (!this.parallaxEnabled || this.parallaxTicking) {
+      return;
+    }
+
+    this.parallaxTicking = true;
+    window.requestAnimationFrame(() => {
+      this.updateHeroParallax();
+      this.parallaxTicking = false;
+    });
+  };
 
   ngOnInit(): void {
     void this.loadTournaments();
     this.countdownIntervalId = setInterval(() => {
       this.countdown.set(this.calculateCountdown());
     }, 1000);
+
+    this.parallaxEnabled = this.canUseParallax();
+    if (this.parallaxEnabled) {
+      this.updateHeroParallax();
+      window.addEventListener("scroll", this.onScrollParallax, {
+        passive: true,
+      });
+    }
   }
 
   ngOnDestroy(): void {
     if (this.countdownIntervalId) {
       clearInterval(this.countdownIntervalId);
     }
+
+    if (this.parallaxEnabled) {
+      window.removeEventListener("scroll", this.onScrollParallax);
+    }
+
+    this.revealObserver?.disconnect();
+  }
+
+  ngAfterViewInit(): void {
+    const hostElement = this.host.nativeElement as HTMLElement;
+    const revealElements = hostElement.querySelectorAll(".reveal-up");
+    if (!revealElements.length) {
+      return;
+    }
+
+    const prefersReducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+    if (prefersReducedMotion || !("IntersectionObserver" in window)) {
+      revealElements.forEach((element: Element) =>
+        element.classList.add("reveal-visible"),
+      );
+      return;
+    }
+
+    this.revealObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) {
+            return;
+          }
+          entry.target.classList.add("reveal-visible");
+          this.revealObserver?.unobserve(entry.target);
+        });
+      },
+      {
+        threshold: 0.16,
+        rootMargin: "0px 0px -8% 0px",
+      },
+    );
+
+    revealElements.forEach((element: Element) =>
+      this.revealObserver?.observe(element),
+    );
   }
 
   protected readonly games: Game[] = [
@@ -1368,6 +1551,29 @@ export class LandingComponent implements OnInit, OnDestroy {
 
   private normalizePhone(phone: string): string {
     return phone.trim().replace(/\s+/g, "");
+  }
+
+  private canUseParallax(): boolean {
+    if (typeof window === "undefined") {
+      return false;
+    }
+
+    const hasFinePointer = window.matchMedia(
+      "(hover: hover) and (pointer: fine)",
+    ).matches;
+    const prefersReducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+
+    return hasFinePointer && !prefersReducedMotion && window.innerWidth >= 1024;
+  }
+
+  private updateHeroParallax(): void {
+    const scrollTop =
+      window.scrollY ||
+      window.pageYOffset ||
+      document.documentElement.scrollTop;
+    this.heroParallaxOffset.set(Math.min(scrollTop, 480));
   }
 
   private message(error: unknown): string {
