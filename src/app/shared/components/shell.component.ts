@@ -16,7 +16,6 @@ interface NavItem {
   path: string;
   label: string;
   short: string;
-  icon: string;
   badge?: "tournamentRequests" | "sponsorRequests";
   adminOnly?: boolean;
 }
@@ -74,11 +73,13 @@ interface NavItem {
               @for (mode of themeModes; track mode.id) {
                 <button
                   type="button"
-                  class="rounded-md px-2 py-1.5 text-[10px] font-bold uppercase tracking-wide transition"
+                  class="rounded-md border px-2 py-1.5 text-[10px] font-bold uppercase tracking-wide transition"
                   [class.bg-fossa]="theme.mode() === mode.id"
                   [class.text-ink]="theme.mode() === mode.id"
+                  [class.border-fossa]="theme.mode() === mode.id"
                   [class.bg-surface]="theme.mode() !== mode.id"
                   [class.text-primary]="theme.mode() !== mode.id"
+                  [class.border-soft]="theme.mode() !== mode.id"
                   (click)="setTheme(mode.id)"
                 >
                   {{ mode.label }}
@@ -93,7 +94,7 @@ interface NavItem {
             {{ auth.profile()?.role }}
           </p>
           <button
-            class="w-full rounded-lg bg-surface-muted px-4 py-2 text-sm font-bold uppercase tracking-wide"
+            class="w-full rounded-lg border border-soft bg-surface-muted px-4 py-2 text-sm font-bold uppercase tracking-wide text-primary transition hover:border-fossa"
             (click)="auth.signOut()"
           >
             Esci
@@ -129,7 +130,7 @@ interface NavItem {
               </button>
               <div class="min-w-0">
                 <p class="truncate font-display text-xl uppercase">
-                  La Fossa<span class="text-expense">.</span>
+                  La Fossa <span class="text-fossa">Games</span>
                 </p>
                 <p
                   class="truncate text-[10px] font-bold uppercase tracking-[0.18em] text-muted"
@@ -157,7 +158,7 @@ interface NavItem {
                 </svg>
               </a>
               <button
-                class="rounded-full bg-surface-muted px-4 py-2 text-xs font-bold uppercase tracking-wide text-primary ring-1 ring-black/15 transition hover:bg-fossa hover:text-ink"
+                class="rounded-full border border-soft bg-surface-muted px-4 py-2 text-xs font-bold uppercase tracking-wide text-primary transition hover:border-fossa hover:bg-fossa hover:text-ink"
                 (click)="auth.signOut()"
               >
                 Esci
@@ -187,7 +188,7 @@ interface NavItem {
               </div>
               <button
                 type="button"
-                class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-surface-muted text-primary"
+                class="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-soft bg-surface-muted text-primary transition hover:border-fossa"
                 aria-label="Chiudi menu"
                 (click)="closeMobileMenu()"
               >
@@ -213,10 +214,6 @@ interface NavItem {
                   class="flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-bold uppercase tracking-wide text-muted transition hover:bg-surface-muted hover:text-primary"
                   (click)="closeMobileMenu()"
                 >
-                  <span
-                    class="grid h-8 w-8 place-items-center rounded-full bg-surface-muted text-sm"
-                    >{{ item.icon }}</span
-                  >
                   <span class="min-w-0 flex-1">{{ item.label }}</span>
                   @if (badgeCount(item) > 0) {
                     <span
@@ -240,11 +237,13 @@ interface NavItem {
                   @for (mode of themeModes; track mode.id) {
                     <button
                       type="button"
-                      class="rounded-md px-2 py-1.5 text-[10px] font-bold uppercase tracking-wide transition"
+                      class="rounded-md border px-2 py-1.5 text-[10px] font-bold uppercase tracking-wide transition"
                       [class.bg-fossa]="theme.mode() === mode.id"
                       [class.text-ink]="theme.mode() === mode.id"
+                      [class.border-fossa]="theme.mode() === mode.id"
                       [class.bg-surface]="theme.mode() !== mode.id"
                       [class.text-primary]="theme.mode() !== mode.id"
+                      [class.border-soft]="theme.mode() !== mode.id"
                       (click)="setTheme(mode.id)"
                     >
                       {{ mode.label }}
@@ -259,7 +258,7 @@ interface NavItem {
                 {{ auth.profile()?.role }}
               </p>
               <button
-                class="w-full rounded-lg bg-surface-muted px-4 py-2 text-sm font-bold uppercase tracking-wide"
+                class="w-full rounded-lg border border-soft bg-surface-muted px-4 py-2 text-sm font-bold uppercase tracking-wide text-primary transition hover:border-fossa"
                 (click)="auth.signOut()"
               >
                 Esci
@@ -290,45 +289,39 @@ export class ShellComponent implements OnInit {
       path: "/app/dashboard",
       label: "Home",
       short: "H",
-      icon: "⌂",
       adminOnly: true,
     },
     {
       path: "/app/expenses",
       label: "Spese",
       short: "-",
-      icon: "-",
       adminOnly: true,
     },
     {
       path: "/app/incomes",
       label: "Entrate",
       short: "+",
-      icon: "+",
       adminOnly: true,
     },
-    { path: "/app/registrations", label: "Iscritti", short: "I", icon: "▦" },
+    { path: "/app/registrations", label: "Iscritti", short: "I" },
     {
       path: "/app/participation-requests",
       label: "Richieste",
       short: "R",
-      icon: "□",
       badge: "tournamentRequests",
     },
     {
       path: "/app/sponsors",
       label: "Sponsor",
       short: "S",
-      icon: "◆",
       badge: "sponsorRequests",
       adminOnly: true,
     },
-    { path: "/app/profile", label: "Profilo", short: "P", icon: "◉" },
+    { path: "/app/profile", label: "Profilo", short: "P" },
     {
       path: "/app/users",
       label: "Utenti",
       short: "U",
-      icon: "⋯",
       adminOnly: true,
     },
   ];

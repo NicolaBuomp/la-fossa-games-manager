@@ -124,7 +124,7 @@ export class SummaryCardComponent {
           >
         </span>
         <span
-          class="rounded-full bg-surface-muted px-3 py-1 text-xs font-black uppercase ring-1 ring-black/15 transition"
+          class="rounded-full border border-soft bg-surface-muted px-3 py-1 text-xs font-black uppercase text-primary transition"
         >
           {{ collapsed() ? "Apri" : "Chiudi" }}
         </span>
