@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from "@angular/core";
+import { Component, OnInit, computed, inject, signal } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import {
   ParticipationRequestTransferPayload,
@@ -19,6 +19,10 @@ import {
   StatusBadgeComponent,
   SummaryCardComponent,
 } from "../../shared/components/ui.component";
+import {
+  FilterOption,
+  StatusFilterPillsComponent,
+} from "../../shared/components/status-filter-pills.component";
 
 type RequestStatus = ParticipationRequest["status"];
 type TransferPerson = {
@@ -52,6 +56,7 @@ const DIRECT_CODES = [...SOLO_CODES, ...DUO_CODES];
     SummaryCardComponent,
     ModalComponent,
     ConfirmModalComponent,
+    StatusFilterPillsComponent,
   ],
   template: `
     <section class="space-y-5">
@@ -100,20 +105,33 @@ const DIRECT_CODES = [...SOLO_CODES, ...DUO_CODES];
         </section>
       </lfg-kpi-panel>
 
+      <lfg-status-filter-pills
+        [options]="statusFilterOptions"
+        (filterChange)="setStatusFilter($event)"
+      />
+
       @if (error()) {
         <p class="state-danger rounded-lg border p-3 text-sm">
           {{ error() }}
         </p>
       }
 
-      @if (!requests().length && !loading()) {
+      @if (!filteredRequests().length && !loading()) {
         <lfg-empty-state
-          title="Nessuna richiesta"
-          text="Le richieste inviate dal sito pubblico compariranno qui."
+          [title]="
+            requests().length
+              ? 'Nessuna richiesta per questo stato'
+              : 'Nessuna richiesta'
+          "
+          [text]="
+            requests().length
+              ? 'Cambia filtro per vedere altre richieste.'
+              : 'Le richieste inviate dal sito pubblico compariranno qui.'
+          "
         />
       } @else {
         <div class="grid gap-3">
-          @for (request of requests(); track request.id) {
+          @for (request of filteredRequests(); track request.id) {
             <article
               class="rounded-lg border border-soft bg-surface p-4 shadow-sm"
             >
@@ -431,11 +449,33 @@ export class ParticipationRequestsComponent implements OnInit {
   error = signal("");
   savingNoteId = signal<string | null>(null);
   updatingRequestId = signal<string | null>(null);
+  statusFilter = signal<RequestStatus | "all">("all");
   transferRequest = signal<ParticipationRequestWithTournament | null>(null);
   confirmPending = signal<(() => Promise<void>) | null>(null);
   confirmMessage = signal("");
   private readonly snackbar = inject(SnackbarService);
   transferForm: TransferForm = this.emptyTransferForm();
+  requestStatuses: Array<{ id: RequestStatus; label: string }> = [
+    { id: "nuova", label: "Nuove" },
+    { id: "in_gestione", label: "In gestione" },
+    { id: "contattata", label: "Contattate" },
+    { id: "archiviata", label: "Archiviate" },
+    { id: "trasferita", label: "Trasferite" },
+  ];
+  statusFilterOptions = computed<FilterOption[]>(() => [
+    { label: "Tutte", value: "all", active: this.statusFilter() === "all" },
+    ...this.requestStatuses.map((status) => ({
+      label: status.label,
+      value: status.id,
+      active: this.statusFilter() === status.id,
+    })),
+  ]);
+  filteredRequests = computed(() => {
+    const status = this.statusFilter();
+    return status === "all"
+      ? this.requests()
+      : this.requests().filter((request) => request.status === status);
+  });
 
   constructor(
     private readonly service: ParticipationRequestsService,
@@ -484,6 +524,10 @@ export class ParticipationRequestsComponent implements OnInit {
     } finally {
       this.updatingRequestId.set(null);
     }
+  }
+
+  setStatusFilter(value: string): void {
+    this.statusFilter.set(value as RequestStatus | "all");
   }
 
   openTransferModal(request: ParticipationRequestWithTournament): void {

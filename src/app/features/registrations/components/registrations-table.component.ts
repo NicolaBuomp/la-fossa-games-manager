@@ -1,8 +1,8 @@
 import { Component, EventEmitter, Input, Output } from "@angular/core";
 import {
   TeamParticipant,
-  TournamentWithTeams,
   TournamentTeamWithParticipants,
+  TournamentWithTeams,
 } from "../../../core/types/models";
 import { StatusBadgeComponent } from "../../../shared/components/ui.component";
 
@@ -13,21 +13,27 @@ import { StatusBadgeComponent } from "../../../shared/components/ui.component";
   template: `
     <div class="grid gap-3">
       @for (team of items(); track team.id) {
-        <article class="rounded-lg border border-soft bg-surface p-4 shadow-sm">
-          <div class="flex flex-wrap items-start justify-between gap-3">
-            <div class="min-w-0 flex-1">
+        <article
+          class="rounded-lg border border-soft bg-surface p-3 shadow-sm sm:p-4"
+        >
+          <div class="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
+            <div class="min-w-0">
               @if (isDirect()) {
-                <h3 class="truncate text-base font-bold">
+                <h3 class="break-words text-base font-bold leading-snug">
                   {{ directLabel(team) }}
                 </h3>
                 @if (directContactLabel(team)) {
-                  <p class="mt-1 text-xs text-muted">
+                  <p
+                    class="mt-1 whitespace-pre-line break-words text-xs leading-5 text-muted"
+                  >
                     {{ directContactLabel(team) }}
                   </p>
                 }
               } @else {
-                <h3 class="truncate text-base font-bold">{{ team.name }}</h3>
-                <p class="mt-1 text-xs text-muted">
+                <h3 class="break-words text-base font-bold leading-snug">
+                  {{ team.name }}
+                </h3>
+                <p class="mt-1 text-xs leading-5 text-muted">
                   @if (team.captain_name) {
                     Capitano: {{ team.captain_name }}
                   }
@@ -40,63 +46,75 @@ import { StatusBadgeComponent } from "../../../shared/components/ui.component";
                 </p>
               }
               @if (team.notes) {
-                <p class="mt-2 text-sm text-muted">{{ team.notes }}</p>
+                <p class="mt-2 break-words text-sm leading-5 text-muted">
+                  {{ team.notes }}
+                </p>
               }
             </div>
-            <div class="flex flex-wrap items-center justify-end gap-2">
-              <lfg-status-badge
-                [label]="team.paid ? 'Pagata' : 'Da pagare'"
-                [className]="team.paid ? 'state-success' : 'state-warning'"
-              />
-              <button
-                type="button"
-                class="rounded-md bg-surface-muted px-3 py-1.5 text-xs font-bold uppercase transition hover:bg-surface-muted/80"
-                (click)="togglePaid.emit(team)"
+
+            <div class="grid gap-2 sm:min-w-72">
+              <div class="flex justify-start sm:justify-end">
+                <lfg-status-badge
+                  [label]="team.paid ? 'Pagata' : 'Da pagare'"
+                  [className]="team.paid ? 'state-success' : 'state-warning'"
+                />
+              </div>
+              <div
+                class="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-end"
               >
-                {{ team.paid ? "Non pagata" : "Pagata" }}
-              </button>
-              <button
-                type="button"
-                class="rounded-md bg-surface-muted px-3 py-1.5 text-xs font-bold uppercase transition hover:bg-surface-muted/80"
-                (click)="isDirect() ? editDirectEntry.emit(team) : editTeam.emit(team)"
-              >
-                Modifica
-              </button>
-              @if (auth.isAdmin()) {
                 <button
                   type="button"
-                  class="state-danger rounded-md border px-3 py-1.5 text-xs font-bold uppercase transition hover:border-opacity-80"
-                  (click)="deleteTeam.emit(team.id)"
+                  class="min-h-10 rounded-md bg-surface-muted px-3 py-2 text-xs font-bold uppercase transition hover:bg-surface-muted/80 sm:min-h-0 sm:py-1.5"
+                  (click)="togglePaid.emit(team)"
                 >
-                  Elimina
+                  {{ team.paid ? "Non pagata" : "Pagata" }}
                 </button>
-              }
+                <button
+                  type="button"
+                  class="min-h-10 rounded-md bg-surface-muted px-3 py-2 text-xs font-bold uppercase transition hover:bg-surface-muted/80 sm:min-h-0 sm:py-1.5"
+                  (click)="
+                    isDirect() ? editDirectEntry.emit(team) : editTeam.emit(team)
+                  "
+                >
+                  Modifica
+                </button>
+                @if (auth.isAdmin()) {
+                  <button
+                    type="button"
+                    class="state-danger col-span-2 min-h-10 rounded-md border px-3 py-2 text-xs font-bold uppercase transition hover:border-opacity-80 sm:col-span-1 sm:min-h-0 sm:py-1.5"
+                    (click)="deleteTeam.emit(team.id)"
+                  >
+                    Elimina
+                  </button>
+                }
+              </div>
             </div>
           </div>
+
           @if (!isDirect() && team.team_participants.length) {
             <div class="mt-4 grid gap-2 border-t border-soft pt-3">
               @for (p of team.team_participants; track p.id) {
                 <div
-                  class="flex flex-wrap items-center justify-between gap-2 rounded-md bg-surface-muted p-2 text-xs"
+                  class="grid gap-2 rounded-md bg-surface-muted p-3 text-xs sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:p-2"
                 >
-                  <span class="font-medium"
-                    >{{ p.first_name }} {{ p.last_name }}</span
-                  >
-                  <div class="flex gap-2">
+                  <span class="min-w-0 break-words font-medium">
+                    {{ p.first_name }} {{ p.last_name }}
+                  </span>
+                  <div class="flex justify-end gap-2">
                     <button
                       type="button"
-                      class="text-muted hover:text-ink"
+                      class="min-h-9 rounded-md bg-surface px-3 text-muted hover:text-ink sm:min-h-0 sm:bg-transparent sm:px-0"
                       (click)="editParticipant.emit(p)"
                     >
-                      ✏️
+                      Modifica
                     </button>
                     @if (auth.isAdmin()) {
                       <button
                         type="button"
-                        class="text-muted hover:text-red-500"
+                        class="min-h-9 rounded-md bg-surface px-3 text-muted hover:text-red-500 sm:min-h-0 sm:bg-transparent sm:px-0"
                         (click)="deleteParticipant.emit(p.id)"
                       >
-                        ✕
+                        Elimina
                       </button>
                     }
                   </div>
@@ -104,11 +122,12 @@ import { StatusBadgeComponent } from "../../../shared/components/ui.component";
               }
             </div>
           }
+
           @if (!isDirect() && canAddParticipant(team)) {
-            <div class="mt-3 flex justify-end border-t border-soft pt-3">
+            <div class="mt-3 border-t border-soft pt-3">
               <button
                 type="button"
-                class="rounded-md bg-surface-muted px-3 py-1.5 text-xs font-bold uppercase transition hover:bg-surface-muted/80"
+                class="min-h-10 w-full rounded-md bg-surface-muted px-3 py-2 text-xs font-bold uppercase transition hover:bg-surface-muted/80 sm:w-auto sm:py-1.5"
                 (click)="addParticipant.emit(team.id)"
               >
                 Aggiungi persona
@@ -146,7 +165,7 @@ export class RegistrationsTableComponent {
     return team.team_participants
       .map((p) => p.contact)
       .filter(Boolean)
-      .join(" · ");
+      .join("\n");
   }
 
   canAddParticipant(team: TournamentTeamWithParticipants): boolean {

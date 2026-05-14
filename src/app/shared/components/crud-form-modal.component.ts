@@ -5,7 +5,14 @@ import { ModalComponent } from "./ui.component";
 export interface CrudFormField {
   name: string;
   label: string;
-  type: "text" | "email" | "number" | "date" | "textarea" | "select";
+  type:
+    | "text"
+    | "email"
+    | "number"
+    | "date"
+    | "textarea"
+    | "select"
+    | "checkbox";
   required?: boolean;
   placeholder?: string;
   min?: number;
@@ -13,6 +20,8 @@ export interface CrudFormField {
   step?: number;
   options?: { label: string; value: unknown }[];
   rows?: number;
+  help?: string;
+  disabled?: boolean | (() => boolean);
 }
 
 @Component({
@@ -20,11 +29,34 @@ export interface CrudFormField {
   standalone: true,
   imports: [FormsModule, ModalComponent],
   template: `
-    <lfg-modal [open]="open()" [title]="title()" (close)="close.emit()">
+    <lfg-modal [open]="open" [title]="title" (close)="close.emit()">
       <form class="grid gap-4" (ngSubmit)="submit()">
         <fieldset [disabled]="loading()" class="grid gap-4 disabled:opacity-70">
           @for (field of fields(); track field.name) {
-            @if (field.type === "textarea") {
+            @if (field.type === "checkbox") {
+              <label
+                class="flex items-start gap-3 rounded-lg border border-soft bg-surface-muted p-3 text-sm font-bold"
+              >
+                <input
+                  type="checkbox"
+                  class="mt-1 h-4 w-4 accent-ink disabled:cursor-not-allowed disabled:opacity-70"
+                  [name]="field.name"
+                  [ngModel]="form[field.name]"
+                  (ngModelChange)="updateForm(field.name, $event)"
+                  [disabled]="fieldDisabled(field)"
+                />
+                <span>
+                  {{ field.label }}
+                  @if (field.help) {
+                    <span
+                      class="mt-1 block text-xs font-semibold leading-5 text-muted"
+                    >
+                      {{ field.help }}
+                    </span>
+                  }
+                </span>
+              </label>
+            } @else if (field.type === "textarea") {
               <label class="grid gap-1 text-sm font-bold">
                 {{ field.label }}
                 @if (field.required) {
@@ -32,13 +64,14 @@ export interface CrudFormField {
                 }
                 <textarea
                   [name]="field.name"
-                  [ngModel]="form()[field.name]"
+                  [ngModel]="form[field.name]"
                   (ngModelChange)="updateForm(field.name, $event)"
                   [required]="field.required ?? false"
                   [rows]="field.rows ?? 3"
                   [placeholder]="field.placeholder ?? ''"
+                  [disabled]="fieldDisabled(field)"
                   class="rounded-lg border border-soft bg-surface-muted px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"
-                />
+                ></textarea>
               </label>
             } @else if (field.type === "select") {
               <label class="grid gap-1 text-sm font-bold">
@@ -48,14 +81,15 @@ export interface CrudFormField {
                 }
                 <select
                   [name]="field.name"
-                  [ngModel]="form()[field.name]"
+                  [ngModel]="form[field.name]"
                   (ngModelChange)="updateForm(field.name, $event)"
                   [required]="field.required ?? false"
+                  [disabled]="fieldDisabled(field)"
                   class="rounded-lg border border-soft bg-surface-muted px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"
                 >
                   <option value="">Seleziona...</option>
-                  @for (opt of field.options; track opt.value) {
-                    <option [value]="opt.value">{{ opt.label }}</option>
+                  @for (opt of field.options ?? []; track opt.value) {
+                    <option [ngValue]="opt.value">{{ opt.label }}</option>
                   }
                 </select>
               </label>
@@ -68,13 +102,14 @@ export interface CrudFormField {
                 <input
                   [type]="field.type"
                   [name]="field.name"
-                  [ngModel]="form()[field.name]"
+                  [ngModel]="form[field.name]"
                   (ngModelChange)="updateForm(field.name, $event)"
                   [required]="field.required ?? false"
                   [placeholder]="field.placeholder ?? ''"
                   [min]="field.min"
                   [max]="field.max"
                   [step]="field.step"
+                  [disabled]="fieldDisabled(field)"
                   class="rounded-lg border border-soft bg-surface-muted px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"
                 />
               </label>
@@ -99,26 +134,28 @@ export interface CrudFormField {
   `,
 })
 export class CrudFormModalComponent {
-  @Input({ required: true }) open!: () => boolean;
-  @Input({ required: true }) title!: () => string;
+  @Input({ required: true }) open = false;
+  @Input({ required: true }) title = "";
   @Input({ required: true }) fields!: () => CrudFormField[];
-  @Input({ required: true }) form!: () => Record<string, unknown>;
+  @Input({ required: true }) form!: Record<string, unknown>;
   @Input() loading = signal(false);
   @Input() error = signal("");
   @Output() close = new EventEmitter<void>();
   @Output() save = new EventEmitter<Record<string, unknown>>();
 
   updateForm(field: string, value: unknown): void {
-    const current = this.form();
-    const updated = { ...current, [field]: value };
-    // This is a workaround because @Input form is read-only
-    // The parent component should update its form signal when this fires
     this.formUpdated.emit({ [field]: value });
   }
 
   @Output() formUpdated = new EventEmitter<Record<string, unknown>>();
 
+  fieldDisabled(field: CrudFormField): boolean {
+    return typeof field.disabled === "function"
+      ? field.disabled()
+      : (field.disabled ?? false);
+  }
+
   submit(): void {
-    this.save.emit(this.form());
+    this.save.emit(this.form);
   }
 }

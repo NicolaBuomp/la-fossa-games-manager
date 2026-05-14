@@ -23,7 +23,7 @@ import {
   standalone: true,
   imports: [RouterLink, KpiPanelComponent, SummaryCardComponent],
   template: `
-    <div class="space-y-5">
+    <section class="space-y-5">
       <div class="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p class="text-xs font-bold uppercase tracking-[0.18em] text-muted">
@@ -224,7 +224,7 @@ import {
           </div>
         }
       </section>
-    </div>
+    </section>
   `,
 })
 export class DashboardComponent implements OnInit {

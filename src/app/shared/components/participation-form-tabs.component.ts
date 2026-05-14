@@ -1,268 +1,243 @@
-import { Component, inject, signal } from "@angular/core";
+import { Component, EventEmitter, Input, Output } from "@angular/core";
 import { FormsModule } from "@angular/forms";
-import { PublicParticipationService } from "../../core/services/public-participation.service";
-import { SnackbarService } from "../../core/services/snackbar.service";
+import { PublicTournament } from "../../core/types/models";
+
+export type ParticipationFormReason = "participation" | "sponsor";
+
+export interface ParticipationFormValue {
+  reason: ParticipationFormReason;
+  tournament_id: string;
+  company_name: string;
+  first_name: string;
+  last_name: string;
+  phone: string;
+  privacy_accepted: boolean;
+  whatsapp_accepted: boolean;
+  rules_accepted: boolean;
+}
 
 @Component({
   selector: "lfg-participation-form-tabs",
   standalone: true,
   imports: [FormsModule],
+  host: { class: "block" },
   template: `
-    <section class="space-y-6">
-      <div class="flex gap-2">
-        <button
-          (click)="tab.set('tournament')"
-          [class.text-ink]="tab() === 'tournament'"
-          [class.text-muted]="tab() !== 'tournament'"
-          [class.border-b-2]="tab() === 'tournament'"
-          [class.border-fossa]="tab() === 'tournament'"
-          class="pb-2 text-sm font-bold uppercase transition"
-        >
-          Partecipa a un Torneo
-        </button>
-        <button
-          (click)="tab.set('sponsor')"
-          [class.text-ink]="tab() === 'sponsor'"
-          [class.text-muted]="tab() !== 'sponsor'"
-          [class.border-b-2]="tab() === 'sponsor'"
-          [class.border-fossa]="tab() === 'sponsor'"
-          class="pb-2 text-sm font-bold uppercase transition"
-        >
-          Diventa Sponsor
-        </button>
+    <form
+      class="rounded-lg border border-fossa/20 bg-black p-5 shadow-2xl sm:p-6"
+      (ngSubmit)="submit.emit()"
+    >
+      <div class="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p class="text-xs font-black uppercase tracking-[0.24em] text-fossa">
+            Richiesta contatto
+          </p>
+          <h3 class="mt-2 font-display text-2xl uppercase leading-none sm:text-3xl">
+            {{ title() }}
+          </h3>
+        </div>
+        @if (loadingTournaments()) {
+          <span
+            class="rounded-full border border-white/10 px-3 py-1 text-xs font-bold text-white/60"
+            >Caricamento</span
+          >
+        }
       </div>
 
-      @if (tab() === "tournament") {
-        <form class="space-y-4" (ngSubmit)="submitTournament()">
-          <fieldset [disabled]="saving()" class="space-y-4 disabled:opacity-70">
-            <label class="grid gap-1 text-sm font-bold">
-              Nome e Cognome <span class="text-red-500">*</span>
-              <input
-                type="text"
-                required
-                [(ngModel)]="tournamentForm.contact_name"
-                name="contact_name"
-                placeholder="Es. Mario Rossi"
-                class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-2 text-sm font-normal focus:border-ink focus:outline-none focus:ring-2 focus:ring-fossa/20"
-              />
-            </label>
-            <label class="grid gap-1 text-sm font-bold">
-              Email <span class="text-red-500">*</span>
-              <input
-                type="email"
-                required
-                [(ngModel)]="tournamentForm.email"
-                name="email"
-                placeholder="Es. mario@example.com"
-                class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-2 text-sm font-normal focus:border-ink focus:outline-none focus:ring-2 focus:ring-fossa/20"
-              />
-            </label>
-            <label class="grid gap-1 text-sm font-bold">
-              Telefono <span class="text-red-500">*</span>
-              <input
-                type="tel"
-                required
-                [(ngModel)]="tournamentForm.phone"
-                name="phone"
-                placeholder="Es. 3XXXXXXXXX"
-                class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-2 text-sm font-normal focus:border-ink focus:outline-none focus:ring-2 focus:ring-fossa/20"
-              />
-            </label>
-            <label class="grid gap-1 text-sm font-bold">
-              Torneo di interesse <span class="text-red-500">*</span>
-              <input
-                type="text"
-                required
-                [(ngModel)]="tournamentForm.tournament"
-                name="tournament"
-                placeholder="Es. Calcio a 5"
-                class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-2 text-sm font-normal focus:border-ink focus:outline-none focus:ring-2 focus:ring-fossa/20"
-              />
-            </label>
-            <label class="grid gap-1 text-sm font-bold">
-              Messaggio
-              <textarea
-                [(ngModel)]="tournamentForm.message"
-                name="message"
-                rows="4"
-                placeholder="Condividi i tuoi dettagli o domande..."
-                class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-2 text-sm font-normal focus:border-ink focus:outline-none focus:ring-2 focus:ring-fossa/20"
-              ></textarea>
-            </label>
-            @if (error()) {
-              <p
-                class="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700"
-              >
-                {{ error() }}
-              </p>
-            }
-            <button
-              type="submit"
-              class="w-full rounded-lg bg-fossa px-4 py-3 text-sm font-bold uppercase text-ink transition hover:bg-fossa/90 disabled:opacity-60"
-            >
-              {{ saving() ? "Invio…" : "Invia Richiesta" }}
-            </button>
-          </fieldset>
-        </form>
+      @if (success()) {
+        <p class="state-success mt-5 rounded-md border p-3 text-sm font-semibold">
+          {{ successMessage() }}
+        </p>
       }
 
-      @if (tab() === "sponsor") {
-        <form class="space-y-4" (ngSubmit)="submitSponsor()">
-          <fieldset [disabled]="saving()" class="space-y-4 disabled:opacity-70">
-            <label class="grid gap-1 text-sm font-bold">
-              Ragione Sociale <span class="text-red-500">*</span>
-              <input
-                type="text"
-                required
-                [(ngModel)]="sponsorForm.company_name"
-                name="company_name"
-                placeholder="Es. Azienda Rossi s.r.l."
-                class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-2 text-sm font-normal focus:border-ink focus:outline-none focus:ring-2 focus:ring-fossa/20"
-              />
-            </label>
-            <label class="grid gap-1 text-sm font-bold">
-              Contatto <span class="text-red-500">*</span>
-              <input
-                type="text"
-                required
-                [(ngModel)]="sponsorForm.contact_name"
-                name="contact_name"
-                placeholder="Es. Luca Bianchi"
-                class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-2 text-sm font-normal focus:border-ink focus:outline-none focus:ring-2 focus:ring-fossa/20"
-              />
-            </label>
-            <label class="grid gap-1 text-sm font-bold">
-              Email <span class="text-red-500">*</span>
-              <input
-                type="email"
-                required
-                [(ngModel)]="sponsorForm.email"
-                name="email"
-                placeholder="Es. luca@azienda.com"
-                class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-2 text-sm font-normal focus:border-ink focus:outline-none focus:ring-2 focus:ring-fossa/20"
-              />
-            </label>
-            <label class="grid gap-1 text-sm font-bold">
-              Telefono <span class="text-red-500">*</span>
-              <input
-                type="tel"
-                required
-                [(ngModel)]="sponsorForm.phone"
-                name="phone"
-                placeholder="Es. 3XXXXXXXXX"
-                class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-2 text-sm font-normal focus:border-ink focus:outline-none focus:ring-2 focus:ring-fossa/20"
-              />
-            </label>
-            <label class="grid gap-1 text-sm font-bold">
-              Messaggio
-              <textarea
-                [(ngModel)]="sponsorForm.message"
-                name="message"
-                rows="4"
-                placeholder="Descrivi il tuo interesse di sponsorship..."
-                class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-2 text-sm font-normal focus:border-ink focus:outline-none focus:ring-2 focus:ring-fossa/20"
-              ></textarea>
-            </label>
-            @if (error()) {
-              <p
-                class="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700"
-              >
-                {{ error() }}
-              </p>
-            }
-            <button
-              type="submit"
-              class="w-full rounded-lg bg-fossa px-4 py-3 text-sm font-bold uppercase text-ink transition hover:bg-fossa/90 disabled:opacity-60"
-            >
-              {{ saving() ? "Invio…" : "Contattami" }}
-            </button>
-          </fieldset>
-        </form>
+      @if (error()) {
+        <p class="state-danger mt-5 rounded-md border p-3 text-sm font-semibold">
+          {{ error() }}
+        </p>
       }
-    </section>
+
+      <fieldset
+        [disabled]="
+          submitting() ||
+          (form.reason === 'participation' && loadingTournaments())
+        "
+        class="mt-5 grid gap-4 disabled:opacity-70"
+      >
+        <div
+          class="grid grid-cols-2 gap-2 rounded-md border border-white/10 bg-white/[0.03] p-1"
+        >
+          <button
+            type="button"
+            class="rounded px-3 py-2 text-xs font-black uppercase tracking-[0.12em] transition"
+            [class.bg-fossa]="form.reason === 'participation'"
+            [class.text-ink]="form.reason === 'participation'"
+            [class.text-white]="form.reason !== 'participation'"
+            (click)="setReason('participation')"
+          >
+            Torneo
+          </button>
+          <button
+            type="button"
+            class="rounded px-3 py-2 text-xs font-black uppercase tracking-[0.12em] transition"
+            [class.bg-fossa]="form.reason === 'sponsor'"
+            [class.text-ink]="form.reason === 'sponsor'"
+            [class.text-white]="form.reason !== 'sponsor'"
+            (click)="setReason('sponsor')"
+          >
+            Sponsor
+          </button>
+        </div>
+
+        @if (form.reason === "participation") {
+          <label
+            class="grid gap-2 text-sm font-black uppercase tracking-[0.12em] text-white/72"
+          >
+            Torneo
+            <select
+              required
+              name="tournament"
+              [(ngModel)]="form.tournament_id"
+              class="rounded-md border border-white/20 bg-[#101010] px-3 py-3 text-base font-semibold normal-case tracking-normal text-white outline-none transition focus:border-fossa focus:ring-2 focus:ring-fossa/20"
+            >
+              <option value="" disabled>Seleziona un torneo</option>
+              @for (tournament of tournaments(); track tournament.id) {
+                <option [value]="tournament.id">
+                  {{ tournamentLabel(tournament) }}
+                </option>
+              }
+            </select>
+          </label>
+        } @else {
+          <label
+            class="grid gap-2 text-sm font-black uppercase tracking-[0.12em] text-white/72"
+          >
+            Azienda o attività
+            <input
+              required
+              name="companyName"
+              [(ngModel)]="form.company_name"
+              autocomplete="organization"
+              class="rounded-md border border-white/20 bg-[#101010] px-3 py-3 text-base font-semibold normal-case tracking-normal text-white outline-none transition focus:border-fossa focus:ring-2 focus:ring-fossa/20"
+            />
+          </label>
+        }
+
+        <div class="grid gap-4 sm:grid-cols-2">
+          <label
+            class="grid gap-2 text-sm font-black uppercase tracking-[0.12em] text-white/72"
+          >
+            Nome
+            <input
+              required
+              name="firstName"
+              [(ngModel)]="form.first_name"
+              autocomplete="given-name"
+              class="rounded-md border border-white/20 bg-[#101010] px-3 py-3 text-base font-semibold normal-case tracking-normal text-white outline-none transition focus:border-fossa focus:ring-2 focus:ring-fossa/20"
+            />
+          </label>
+          <label
+            class="grid gap-2 text-sm font-black uppercase tracking-[0.12em] text-white/72"
+          >
+            Cognome
+            <input
+              required
+              name="lastName"
+              [(ngModel)]="form.last_name"
+              autocomplete="family-name"
+              class="rounded-md border border-white/20 bg-[#101010] px-3 py-3 text-base font-semibold normal-case tracking-normal text-white outline-none transition focus:border-fossa focus:ring-2 focus:ring-fossa/20"
+            />
+          </label>
+        </div>
+
+        <label
+          class="grid gap-2 text-sm font-black uppercase tracking-[0.12em] text-white/72"
+        >
+          Telefono
+          <input
+            required
+            type="tel"
+            name="phone"
+            [(ngModel)]="form.phone"
+            autocomplete="tel"
+            class="rounded-md border border-white/20 bg-[#101010] px-3 py-3 text-base font-semibold normal-case tracking-normal text-white outline-none transition focus:border-fossa focus:ring-2 focus:ring-fossa/20"
+          />
+        </label>
+
+        <div class="grid gap-3 rounded-md border border-white/10 bg-white/[0.03] p-4">
+          <label class="flex gap-3 text-sm font-semibold leading-6 text-white/74">
+            <input
+              required
+              type="checkbox"
+              name="privacy"
+              [(ngModel)]="form.privacy_accepted"
+              class="mt-1 h-4 w-4 shrink-0 accent-fossa"
+            />
+            <span>
+              Accetto il trattamento dei dati personali per la gestione della
+              richiesta di contatto.
+            </span>
+          </label>
+          <label class="flex gap-3 text-sm font-semibold leading-6 text-white/74">
+            <input
+              required
+              type="checkbox"
+              name="whatsapp"
+              [(ngModel)]="form.whatsapp_accepted"
+              class="mt-1 h-4 w-4 shrink-0 accent-fossa"
+            />
+            <span>
+              Autorizzo il contatto via WhatsApp per conferme, dettagli
+              organizzativi e informazioni richieste.
+            </span>
+          </label>
+          @if (form.reason === "participation") {
+            <label
+              class="flex gap-3 text-sm font-semibold leading-6 text-white/74"
+            >
+              <input
+                required
+                type="checkbox"
+                name="rules"
+                [(ngModel)]="form.rules_accepted"
+                class="mt-1 h-4 w-4 shrink-0 accent-fossa"
+              />
+              <span>
+                Dichiaro di accettare regolamento, comunicazioni operative e
+                condizioni di partecipazione.
+              </span>
+            </label>
+          }
+        </div>
+
+        <button
+          type="submit"
+          [disabled]="
+            submitting() ||
+            (form.reason === 'participation' && loadingTournaments())
+          "
+          class="rounded-md bg-fossa px-5 py-3 text-sm font-black uppercase tracking-[0.14em] text-ink transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {{ submitting() ? "Invio in corso" : submitLabel() }}
+        </button>
+      </fieldset>
+    </form>
   `,
 })
 export class ParticipationFormTabsComponent {
-  private readonly service = inject(PublicParticipationService);
-  private readonly snackbar = inject(SnackbarService);
+  @Input({ required: true }) form!: ParticipationFormValue;
+  @Input({ required: true }) tournaments!: () => PublicTournament[];
+  @Input({ required: true }) loadingTournaments!: () => boolean;
+  @Input({ required: true }) submitting!: () => boolean;
+  @Input({ required: true }) success!: () => boolean;
+  @Input({ required: true }) error!: () => string;
+  @Input({ required: true }) title!: () => string;
+  @Input({ required: true }) submitLabel!: () => string;
+  @Input({ required: true }) successMessage!: () => string;
+  @Input({ required: true }) tournamentLabel!: (tournament: PublicTournament) => string;
+  @Output() reasonChange = new EventEmitter<ParticipationFormReason>();
+  @Output() submit = new EventEmitter<void>();
 
-  tab = signal<"tournament" | "sponsor">("tournament");
-  saving = signal(false);
-  error = signal("");
-
-  tournamentForm = {
-    contact_name: "",
-    email: "",
-    phone: "",
-    tournament: "",
-    message: "",
-  };
-
-  sponsorForm = {
-    company_name: "",
-    contact_name: "",
-    email: "",
-    phone: "",
-    message: "",
-  };
-
-  async submitTournament(): Promise<void> {
-    if (this.saving()) return;
-    this.saving.set(true);
-    this.error.set("");
-    try {
-      await this.service.createRequest({
-        contact_name: this.tournamentForm.contact_name,
-        email: this.tournamentForm.email,
-        phone: this.tournamentForm.phone,
-        tournament: this.tournamentForm.tournament,
-        notes: this.tournamentForm.message,
-      });
-      this.snackbar.success("Richiesta inviata con successo!");
-      this.tournamentForm = {
-        contact_name: "",
-        email: "",
-        phone: "",
-        tournament: "",
-        message: "",
-      };
-    } catch (e) {
-      const msg =
-        e instanceof Error ? e.message : "Errore nell'invio della richiesta";
-      this.error.set(msg);
-      this.snackbar.error(msg);
-    } finally {
-      this.saving.set(false);
-    }
-  }
-
-  async submitSponsor(): Promise<void> {
-    if (this.saving()) return;
-    this.saving.set(true);
-    this.error.set("");
-    try {
-      await this.service.createSponsorLead({
-        company_name: this.sponsorForm.company_name,
-        contact_name: this.sponsorForm.contact_name,
-        email: this.sponsorForm.email,
-        phone: this.sponsorForm.phone,
-        notes: this.sponsorForm.message,
-      });
-      this.snackbar.success("Richiesta sponsor inviata con successo!");
-      this.sponsorForm = {
-        company_name: "",
-        contact_name: "",
-        email: "",
-        phone: "",
-        message: "",
-      };
-    } catch (e) {
-      const msg =
-        e instanceof Error ? e.message : "Errore nell'invio della richiesta";
-      this.error.set(msg);
-      this.snackbar.error(msg);
-    } finally {
-      this.saving.set(false);
-    }
+  setReason(reason: ParticipationFormReason): void {
+    this.form.reason = reason;
+    this.reasonChange.emit(reason);
   }
 }

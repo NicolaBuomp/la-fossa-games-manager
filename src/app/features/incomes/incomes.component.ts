@@ -1,5 +1,4 @@
-import { Component, OnInit, inject, signal } from "@angular/core";
-import { FormsModule } from "@angular/forms";
+import { Component, OnInit, computed, inject, signal } from "@angular/core";
 import { AuthService } from "../../core/services/auth.service";
 import { ExportService } from "../../core/services/export.service";
 import { IncomesService } from "../../core/services/incomes.service";
@@ -11,19 +10,21 @@ import {
   ConfirmModalComponent,
   EmptyStateComponent,
   KpiPanelComponent,
-  ModalComponent,
   SummaryCardComponent,
 } from "../../shared/components/ui.component";
+import {
+  CrudFormField,
+  CrudFormModalComponent,
+} from "../../shared/components/crud-form-modal.component";
 
 @Component({
   standalone: true,
   imports: [
-    FormsModule,
     EmptyStateComponent,
     KpiPanelComponent,
-    ModalComponent,
     SummaryCardComponent,
     ConfirmModalComponent,
+    CrudFormModalComponent,
   ],
   template: `
     <section class="space-y-5">
@@ -133,101 +134,17 @@ import {
       }
     </section>
 
-    <lfg-modal
+    <lfg-crud-form-modal
       [open]="modalOpen()"
       [title]="editing() ? 'Modifica entrata' : 'Nuova entrata'"
+      [fields]="formFields"
+      [form]="form"
+      [loading]="saving"
+      [error]="error"
       (close)="modalOpen.set(false)"
-    >
-      <form class="grid gap-4" (ngSubmit)="save()">
-        <fieldset [disabled]="saving()" class="grid gap-4 disabled:opacity-70">
-          <label class="grid gap-1 text-sm font-bold"
-            >Fonte
-            <input
-              required
-              name="source"
-              [(ngModel)]="form.source"
-              class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"
-          /></label>
-          <div class="grid gap-3 sm:grid-cols-2">
-            <label class="grid gap-1 text-sm font-bold"
-              >Importo
-              <input
-                required
-                type="number"
-                min="0"
-                step="0.01"
-                name="amount"
-                [(ngModel)]="form.amount"
-                class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"
-            /></label>
-            <label class="grid gap-1 text-sm font-bold"
-              >Data
-              <input
-                required
-                type="date"
-                name="date"
-                [(ngModel)]="form.date"
-                class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"
-            /></label>
-          </div>
-          <div class="grid gap-3 sm:grid-cols-2">
-            <label class="grid gap-1 text-sm font-bold"
-              >Categoria
-              <select
-                name="category"
-                [(ngModel)]="form.category"
-                class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"
-              >
-                @for (c of categories; track c) {
-                  <option [value]="c">{{ c }}</option>
-                }
-              </select></label
-            >
-            <label class="grid gap-1 text-sm font-bold"
-              >Metodo
-              <select
-                name="payment_method"
-                [(ngModel)]="form.payment_method"
-                class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"
-              >
-                @for (m of methods; track m) {
-                  <option [value]="m">{{ m }}</option>
-                }
-              </select></label
-            >
-          </div>
-          <label class="grid gap-1 text-sm font-bold"
-            >Incassato da
-            <select
-              name="received_by"
-              [(ngModel)]="form.received_by"
-              class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"
-            >
-              <option value="">Non indicato</option>
-              @for (profile of profilesList(); track profile.id) {
-                <option [value]="profileDisplayName(profile)">
-                  {{ profileDisplayName(profile) }}
-                </option>
-              }
-            </select>
-          </label>
-          <label class="grid gap-1 text-sm font-bold"
-            >Note
-            <textarea
-              name="notes"
-              [(ngModel)]="form.notes"
-              rows="3"
-              class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"
-            ></textarea>
-          </label>
-          <button
-            class="rounded-lg bg-ink px-4 py-3 text-sm font-bold uppercase text-white disabled:opacity-60"
-          >
-            {{ saving() ? "Salvataggio…" : "Salva" }}
-          </button>
-        </fieldset>
-      </form>
-    </lfg-modal>
+      (formUpdated)="updateForm($event)"
+      (save)="save()"
+    />
 
     <lfg-confirm
       [open]="!!confirmPending()"
@@ -251,6 +168,46 @@ export class IncomesComponent implements OnInit {
   categories = INCOME_CATEGORIES;
   methods = PAYMENT_METHODS;
   form: InsertIncome = this.emptyForm();
+  formFields = computed<CrudFormField[]>(() => [
+    { name: "source", label: "Fonte", type: "text", required: true },
+    {
+      name: "amount",
+      label: "Importo",
+      type: "number",
+      required: true,
+      min: 0,
+      step: 0.01,
+    },
+    { name: "date", label: "Data", type: "date", required: true },
+    {
+      name: "category",
+      label: "Categoria",
+      type: "select",
+      options: this.categories.map((category) => ({
+        label: category,
+        value: category,
+      })),
+    },
+    {
+      name: "payment_method",
+      label: "Metodo",
+      type: "select",
+      options: this.methods.map((method) => ({ label: method, value: method })),
+    },
+    {
+      name: "received_by",
+      label: "Incassato da",
+      type: "select",
+      options: [
+        { label: "Non indicato", value: "" },
+        ...this.profilesList().map((profile) => ({
+          label: this.profileDisplayName(profile),
+          value: this.profileDisplayName(profile),
+        })),
+      ],
+    },
+    { name: "notes", label: "Note", type: "textarea", rows: 3 },
+  ]);
 
   constructor(
     readonly auth: AuthService,
@@ -321,6 +278,10 @@ export class IncomesComponent implements OnInit {
     } finally {
       this.saving.set(false);
     }
+  }
+
+  updateForm(patch: Record<string, unknown>): void {
+    this.form = { ...this.form, ...patch };
   }
 
   askRemove(item: Income): void {

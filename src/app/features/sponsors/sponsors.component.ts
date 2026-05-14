@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from "@angular/core";
+import { Component, OnInit, computed, inject, signal } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { AuthService } from "../../core/services/auth.service";
 import { ExportService } from "../../core/services/export.service";
@@ -17,10 +17,19 @@ import {
   ConfirmModalComponent,
   EmptyStateComponent,
   KpiPanelComponent,
-  ModalComponent,
   StatusBadgeComponent,
   SummaryCardComponent,
 } from "../../shared/components/ui.component";
+import {
+  CrudFormField,
+  CrudFormModalComponent,
+} from "../../shared/components/crud-form-modal.component";
+import {
+  FilterOption,
+  StatusFilterPillsComponent,
+} from "../../shared/components/status-filter-pills.component";
+
+type SponsorForm = InsertSponsor & { withoutValue: boolean };
 
 @Component({
   standalone: true,
@@ -28,10 +37,11 @@ import {
     FormsModule,
     EmptyStateComponent,
     KpiPanelComponent,
-    ModalComponent,
     StatusBadgeComponent,
     SummaryCardComponent,
     ConfirmModalComponent,
+    StatusFilterPillsComponent,
+    CrudFormModalComponent,
   ],
   template: `
     <section class="space-y-5">
@@ -63,28 +73,10 @@ import {
           </button>
         </div>
       </div>
-      <div class="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
-        <button
-          class="shrink-0 rounded-full px-4 py-2 text-sm font-bold ring-1 ring-black/10 transition"
-          [class.bg-ink]="statusFilter() === 'all'"
-          [class.text-white]="statusFilter() === 'all'"
-          [class.bg-surface]="statusFilter() !== 'all'"
-          (click)="statusFilter.set('all')"
-        >
-          Tutti
-        </button>
-        @for (status of statuses; track status.id) {
-          <button
-            class="shrink-0 rounded-full px-4 py-2 text-sm font-bold ring-1 ring-black/10 transition"
-            [class.bg-ink]="statusFilter() === status.id"
-            [class.text-white]="statusFilter() === status.id"
-            [class.bg-surface]="statusFilter() !== status.id"
-            (click)="statusFilter.set(status.id)"
-          >
-            {{ status.label }}
-          </button>
-        }
-      </div>
+      <lfg-status-filter-pills
+        [options]="statusFilterOptions"
+        (filterChange)="setStatusFilter($event)"
+      />
       <lfg-kpi-panel title="KPI sponsor" storageKey="sponsors">
         <section class="grid gap-3 sm:grid-cols-3">
           <lfg-summary-card
@@ -263,109 +255,17 @@ import {
       }
     </section>
 
-    <lfg-modal
+    <lfg-crud-form-modal
       [open]="modalOpen()"
       [title]="editing() ? 'Modifica sponsor' : 'Nuovo sponsor'"
+      [fields]="formFields"
+      [form]="form"
+      [loading]="saving"
+      [error]="error"
       (close)="modalOpen.set(false)"
-    >
-      <form class="grid gap-4" (ngSubmit)="save()">
-        <fieldset [disabled]="saving()" class="grid gap-4 disabled:opacity-70">
-          <label class="grid gap-1 text-sm font-bold"
-            >Nome azienda
-            <input
-              required
-              name="company_name"
-              [(ngModel)]="form.company_name"
-              class="rounded-lg border border-soft bg-surface-muted px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"
-          /></label>
-          <div class="grid gap-3 sm:grid-cols-2">
-            <label class="grid gap-1 text-sm font-bold"
-              >Referente
-              <input
-                name="contact_name"
-                [(ngModel)]="form.contact_name"
-                class="rounded-lg border border-soft bg-surface-muted px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"
-            /></label>
-            <label class="grid gap-1 text-sm font-bold"
-              >Contatto
-              <input
-                name="contact_info"
-                [(ngModel)]="form.contact_info"
-                class="rounded-lg border border-soft bg-surface-muted px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"
-            /></label>
-          </div>
-          <div class="grid gap-3 sm:grid-cols-3">
-            <label class="grid gap-1 text-sm font-bold"
-              >Importo/valore
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                name="value"
-                [(ngModel)]="form.value"
-                [disabled]="withoutValue"
-                class="rounded-lg border border-soft bg-surface-muted px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"
-            /></label>
-            <label class="grid gap-1 text-sm font-bold"
-              >Metodo
-              <select
-                name="type"
-                [(ngModel)]="form.type"
-                class="rounded-lg border border-soft bg-surface-muted px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"
-              >
-                <option value="cash">Cash</option>
-                <option value="bonifico">Bonifico</option>
-              </select></label
-            >
-            <label class="grid gap-1 text-sm font-bold"
-              >Stato
-              <select
-                name="status"
-                [(ngModel)]="form.status"
-                class="rounded-lg border border-soft bg-surface-muted px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"
-              >
-                @for (s of statuses; track s.id) {
-                  <option [value]="s.id">{{ s.label }}</option>
-                }
-              </select></label
-            >
-          </div>
-          <label
-            class="flex items-start gap-3 rounded-lg border border-soft bg-surface-muted p-3 text-sm font-bold"
-          >
-            <input
-              type="checkbox"
-              class="mt-1 h-4 w-4 accent-ink"
-              [(ngModel)]="withoutValue"
-              [ngModelOptions]="{ standalone: true }"
-              (ngModelChange)="syncValueMode()"
-            />
-            <span>
-              Sponsor senza importo per ora
-              <span
-                class="mt-1 block text-xs font-semibold leading-5 text-muted"
-                >Usalo per contatti, lead e trattative da richiamare: resta
-                tracciato ma non entra nei totali economici.</span
-              >
-            </span>
-          </label>
-          <label class="grid gap-1 text-sm font-bold"
-            >Note
-            <textarea
-              rows="3"
-              name="notes"
-              [(ngModel)]="form.notes"
-              class="rounded-lg border border-soft bg-surface-muted px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"
-            ></textarea>
-          </label>
-          <button
-            class="rounded-lg bg-ink px-4 py-3 text-sm font-bold uppercase text-white disabled:opacity-60"
-          >
-            {{ saving() ? "Salvataggio…" : "Salva" }}
-          </button>
-        </fieldset>
-      </form>
-    </lfg-modal>
+      (formUpdated)="updateForm($event)"
+      (save)="save()"
+    />
 
     <lfg-confirm
       [open]="!!confirmPending()"
@@ -389,8 +289,58 @@ export class SponsorsComponent implements OnInit {
   confirmMessage = signal("");
   private readonly snackbar = inject(SnackbarService);
   statuses = SPONSOR_STATUSES;
-  form: InsertSponsor = this.emptyForm();
-  withoutValue = true;
+  statusFilterOptions = computed<FilterOption[]>(() => [
+    { label: "Tutti", value: "all", active: this.statusFilter() === "all" },
+    ...this.statuses.map((status) => ({
+      label: status.label,
+      value: status.id,
+      active: this.statusFilter() === status.id,
+    })),
+  ]);
+  form: SponsorForm = this.emptyForm();
+  formFields = computed<CrudFormField[]>(() => [
+    {
+      name: "company_name",
+      label: "Nome azienda",
+      type: "text",
+      required: true,
+    },
+    { name: "contact_name", label: "Referente", type: "text" },
+    { name: "contact_info", label: "Contatto", type: "text" },
+    {
+      name: "value",
+      label: "Importo/valore",
+      type: "number",
+      min: 0,
+      step: 0.01,
+      disabled: () => this.form.withoutValue,
+    },
+    {
+      name: "type",
+      label: "Metodo",
+      type: "select",
+      options: [
+        { label: "Cash", value: "cash" },
+        { label: "Bonifico", value: "bonifico" },
+      ],
+    },
+    {
+      name: "status",
+      label: "Stato",
+      type: "select",
+      options: this.statuses.map((status) => ({
+        label: status.label,
+        value: status.id,
+      })),
+    },
+    {
+      name: "withoutValue",
+      label: "Sponsor senza importo per ora",
+      type: "checkbox",
+      help: "Usalo per contatti, lead e trattative da richiamare: resta tracciato ma non entra nei totali economici.",
+    },
+    { name: "notes", label: "Note", type: "textarea", rows: 3 },
+  ]);
 
   constructor(
     readonly auth: AuthService,
@@ -422,13 +372,13 @@ export class SponsorsComponent implements OnInit {
     this.error.set("");
     this.editing.set(null);
     this.form = this.emptyForm();
-    this.withoutValue = false;
+    this.form.withoutValue = false;
     this.modalOpen.set(true);
   }
 
   newLead(): void {
     this.newItem();
-    this.withoutValue = true;
+    this.form.withoutValue = true;
     this.form.value = 0;
     this.form.status = "contattato";
     this.form.notes = "Lead sponsor da ricontattare.";
@@ -446,8 +396,8 @@ export class SponsorsComponent implements OnInit {
       status: item.status,
       deliverables: item.deliverables,
       notes: item.notes,
+      withoutValue: Number(item.value || 0) === 0,
     };
-    this.withoutValue = Number(item.value || 0) === 0;
     this.modalOpen.set(true);
   }
 
@@ -456,9 +406,10 @@ export class SponsorsComponent implements OnInit {
     this.saving.set(true);
     this.error.set("");
     try {
+      const { withoutValue, ...form } = this.form;
       const payload = {
-        ...this.form,
-        value: this.withoutValue ? 0 : Number(this.form.value || 0),
+        ...form,
+        value: withoutValue ? 0 : Number(form.value || 0),
       };
       const current = this.editing();
       if (current) await this.service.update(current.id, payload);
@@ -532,6 +483,13 @@ export class SponsorsComponent implements OnInit {
       ? this.items()
       : this.items().filter((item) => item.status === status);
   }
+  setStatusFilter(value: string): void {
+    this.statusFilter.set(value as SponsorStatus | "all");
+  }
+  updateForm(patch: Record<string, unknown>): void {
+    this.form = { ...this.form, ...patch };
+    this.syncValueMode();
+  }
   statusLabel(status: SponsorStatus): string {
     return this.statuses.find((item) => item.id === status)?.label ?? status;
   }
@@ -561,7 +519,7 @@ export class SponsorsComponent implements OnInit {
   insertMeta(item: Sponsor): string {
     return `Inserito da ${this.userNames()[item.created_by ?? ""] ?? "Utente non disponibile"} · ${this.formatDateTime(item.created_at)}`;
   }
-  emptyForm(): InsertSponsor {
+  emptyForm(): SponsorForm {
     return {
       company_name: "",
       contact_name: "",
@@ -571,10 +529,11 @@ export class SponsorsComponent implements OnInit {
       status: "contattato",
       deliverables: "",
       notes: "",
+      withoutValue: true,
     };
   }
   syncValueMode(): void {
-    if (this.withoutValue) this.form.value = 0;
+    if (this.form.withoutValue) this.form.value = 0;
   }
   private message(error: unknown): string {
     return error instanceof Error ? error.message : "Operazione non riuscita.";

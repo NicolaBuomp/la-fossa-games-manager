@@ -13,6 +13,7 @@ import { SPONSOR_ASSETS } from "../../core/generated/sponsor-assets";
 import { PublicParticipationService } from "../../core/services/public-participation.service";
 import { SnackbarService } from "../../core/services/snackbar.service";
 import { PublicTournament } from "../../core/types/models";
+import { ParticipationFormTabsComponent } from "../../shared/components/participation-form-tabs.component";
 import { ModalComponent } from "../../shared/components/ui.component";
 
 type ContactReason = "participation" | "sponsor";
@@ -44,7 +45,7 @@ type Countdown = {
 
 @Component({
   standalone: true,
-  imports: [FormsModule, ModalComponent],
+  imports: [FormsModule, ModalComponent, ParticipationFormTabsComponent],
   styles: [
     `
       @keyframes shimmer {
@@ -1032,211 +1033,20 @@ type Countdown = {
             </div>
           </div>
 
-          <form
-            class="rounded-lg border border-fossa/20 bg-black p-5 shadow-2xl sm:p-6"
-            (ngSubmit)="submitParticipation()"
-          >
-            <div class="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <p
-                  class="text-xs font-black uppercase tracking-[0.24em] text-fossa"
-                >
-                  Richiesta contatto
-                </p>
-                <h3
-                  class="mt-2 font-display text-2xl uppercase leading-none sm:text-3xl"
-                >
-                  {{ formTitle() }}
-                </h3>
-              </div>
-              @if (loadingTournaments()) {
-                <span
-                  class="rounded-full border border-white/10 px-3 py-1 text-xs font-bold text-white/60"
-                  >Caricamento</span
-                >
-              }
-            </div>
-
-            @if (success()) {
-              <p
-                class="state-success mt-5 rounded-md border p-3 text-sm font-semibold"
-              >
-                {{ successMessage() }}
-              </p>
-            }
-
-            @if (error()) {
-              <p
-                class="state-danger mt-5 rounded-md border p-3 text-sm font-semibold"
-              >
-                {{ error() }}
-              </p>
-            }
-
-            <fieldset
-              [disabled]="
-                submitting() ||
-                (participationForm.reason === 'participation' &&
-                  loadingTournaments())
-              "
-              class="mt-5 grid gap-4 disabled:opacity-70"
-            >
-              <label
-                class="grid gap-2 text-sm font-black uppercase tracking-[0.12em] text-white/72"
-              >
-                Motivo del contatto
-                <select
-                  required
-                  name="contactReason"
-                  [(ngModel)]="participationForm.reason"
-                  (ngModelChange)="onReasonChange()"
-                  class="rounded-md border border-white/20 bg-[#101010] px-3 py-3 text-base font-semibold normal-case tracking-normal text-white outline-none transition focus:border-fossa focus:ring-2 focus:ring-fossa/20"
-                >
-                  <option value="participation">Informazioni torneo</option>
-                  <option value="sponsor">Informazioni sponsor</option>
-                </select>
-              </label>
-
-              @if (participationForm.reason === "participation") {
-                <label
-                  class="grid gap-2 text-sm font-black uppercase tracking-[0.12em] text-white/72"
-                >
-                  Torneo
-                  <select
-                    required
-                    name="tournament"
-                    [(ngModel)]="participationForm.tournament_id"
-                    class="rounded-md border border-white/20 bg-[#101010] px-3 py-3 text-base font-semibold normal-case tracking-normal text-white outline-none transition focus:border-fossa focus:ring-2 focus:ring-fossa/20"
-                  >
-                    <option value="" disabled>Seleziona un torneo</option>
-                    @for (tournament of tournaments(); track tournament.id) {
-                      <option [value]="tournament.id">
-                        {{ tournamentLabel(tournament) }}
-                      </option>
-                    }
-                  </select>
-                </label>
-              } @else {
-                <label
-                  class="grid gap-2 text-sm font-black uppercase tracking-[0.12em] text-white/72"
-                >
-                  Azienda o attività
-                  <input
-                    required
-                    name="companyName"
-                    [(ngModel)]="participationForm.company_name"
-                    autocomplete="organization"
-                    class="rounded-md border border-white/20 bg-[#101010] px-3 py-3 text-base font-semibold normal-case tracking-normal text-white outline-none transition focus:border-fossa focus:ring-2 focus:ring-fossa/20"
-                  />
-                </label>
-              }
-
-              <div class="grid gap-4 sm:grid-cols-2">
-                <label
-                  class="grid gap-2 text-sm font-black uppercase tracking-[0.12em] text-white/72"
-                >
-                  Nome
-                  <input
-                    required
-                    name="firstName"
-                    [(ngModel)]="participationForm.first_name"
-                    autocomplete="given-name"
-                    class="rounded-md border border-white/20 bg-[#101010] px-3 py-3 text-base font-semibold normal-case tracking-normal text-white outline-none transition focus:border-fossa focus:ring-2 focus:ring-fossa/20"
-                  />
-                </label>
-                <label
-                  class="grid gap-2 text-sm font-black uppercase tracking-[0.12em] text-white/72"
-                >
-                  Cognome
-                  <input
-                    required
-                    name="lastName"
-                    [(ngModel)]="participationForm.last_name"
-                    autocomplete="family-name"
-                    class="rounded-md border border-white/20 bg-[#101010] px-3 py-3 text-base font-semibold normal-case tracking-normal text-white outline-none transition focus:border-fossa focus:ring-2 focus:ring-fossa/20"
-                  />
-                </label>
-              </div>
-
-              <label
-                class="grid gap-2 text-sm font-black uppercase tracking-[0.12em] text-white/72"
-              >
-                Telefono
-                <input
-                  required
-                  type="tel"
-                  name="phone"
-                  [(ngModel)]="participationForm.phone"
-                  autocomplete="tel"
-                  class="rounded-md border border-white/20 bg-[#101010] px-3 py-3 text-base font-semibold normal-case tracking-normal text-white outline-none transition focus:border-fossa focus:ring-2 focus:ring-fossa/20"
-                />
-              </label>
-
-              <div
-                class="grid gap-3 rounded-md border border-white/10 bg-white/[0.03] p-4"
-              >
-                <label
-                  class="flex gap-3 text-sm font-semibold leading-6 text-white/74"
-                >
-                  <input
-                    required
-                    type="checkbox"
-                    name="privacy"
-                    [(ngModel)]="participationForm.privacy_accepted"
-                    class="mt-1 h-4 w-4 shrink-0 accent-fossa"
-                  />
-                  <span
-                    >Accetto il trattamento dei dati personali per la gestione
-                    della richiesta di contatto.</span
-                  >
-                </label>
-                <label
-                  class="flex gap-3 text-sm font-semibold leading-6 text-white/74"
-                >
-                  <input
-                    required
-                    type="checkbox"
-                    name="whatsapp"
-                    [(ngModel)]="participationForm.whatsapp_accepted"
-                    class="mt-1 h-4 w-4 shrink-0 accent-fossa"
-                  />
-                  <span
-                    >Autorizzo il contatto via WhatsApp per conferme, dettagli
-                    organizzativi e informazioni richieste.</span
-                  >
-                </label>
-                @if (participationForm.reason === "participation") {
-                  <label
-                    class="flex gap-3 text-sm font-semibold leading-6 text-white/74"
-                  >
-                    <input
-                      required
-                      type="checkbox"
-                      name="rules"
-                      [(ngModel)]="participationForm.rules_accepted"
-                      class="mt-1 h-4 w-4 shrink-0 accent-fossa"
-                    />
-                    <span
-                      >Dichiaro di accettare regolamento, comunicazioni
-                      operative e condizioni di partecipazione.</span
-                    >
-                  </label>
-                }
-              </div>
-
-              <button
-                type="submit"
-                [disabled]="
-                  submitting() ||
-                  (participationForm.reason === 'participation' &&
-                    loadingTournaments())
-                "
-                class="rounded-md bg-fossa px-5 py-3 text-sm font-black uppercase tracking-[0.14em] text-ink transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {{ submitting() ? "Invio in corso" : submitLabel() }}
-              </button>
-            </fieldset>
-          </form>
+          <lfg-participation-form-tabs
+            [form]="participationForm"
+            [tournaments]="tournaments"
+            [loadingTournaments]="loadingTournaments"
+            [submitting]="submitting"
+            [success]="success"
+            [error]="error"
+            [title]="formTitle.bind(this)"
+            [submitLabel]="submitLabel.bind(this)"
+            [successMessage]="successMessage.bind(this)"
+            [tournamentLabel]="tournamentLabel.bind(this)"
+            (reasonChange)="onReasonChange()"
+            (submit)="submitParticipation()"
+          />
         </div>
       </section>
 

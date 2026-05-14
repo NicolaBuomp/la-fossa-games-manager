@@ -19,6 +19,10 @@ import {
   KpiPanelComponent,
   SummaryCardComponent,
 } from "../../shared/components/ui.component";
+import {
+  FilterOption,
+  StatusFilterPillsComponent,
+} from "../../shared/components/status-filter-pills.component";
 import { DirectEntryModalComponent } from "./components/direct-entry-modal.component";
 import { ParticipantModalComponent } from "./components/participant-modal.component";
 import { RegistrationsTableComponent } from "./components/registrations-table.component";
@@ -56,6 +60,7 @@ const DIRECT_CODES = [...SOLO_CODES, ...DUO_CODES];
     ParticipantModalComponent,
     DirectEntryModalComponent,
     RegistrationsTableComponent,
+    StatusFilterPillsComponent,
   ],
   template: `
     <section class="space-y-5">
@@ -96,38 +101,10 @@ const DIRECT_CODES = [...SOLO_CODES, ...DUO_CODES];
         </div>
       </lfg-kpi-panel>
 
-      <div class="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
-        <button
-          type="button"
-          class="shrink-0 rounded-full px-4 py-2 text-sm font-bold ring-1 ring-black/10"
-          [class.bg-ink]="paymentFilter() === 'all'"
-          [class.text-white]="paymentFilter() === 'all'"
-          [class.bg-surface]="paymentFilter() !== 'all'"
-          (click)="paymentFilter.set('all')"
-        >
-          Tutte
-        </button>
-        <button
-          type="button"
-          class="shrink-0 rounded-full px-4 py-2 text-sm font-bold ring-1 ring-black/10"
-          [class.bg-ink]="paymentFilter() === 'paid'"
-          [class.text-white]="paymentFilter() === 'paid'"
-          [class.bg-surface]="paymentFilter() !== 'paid'"
-          (click)="paymentFilter.set('paid')"
-        >
-          Pagate
-        </button>
-        <button
-          type="button"
-          class="shrink-0 rounded-full px-4 py-2 text-sm font-bold ring-1 ring-black/10"
-          [class.bg-ink]="paymentFilter() === 'pending'"
-          [class.text-white]="paymentFilter() === 'pending'"
-          [class.bg-surface]="paymentFilter() !== 'pending'"
-          (click)="paymentFilter.set('pending')"
-        >
-          Da pagare
-        </button>
-      </div>
+      <lfg-status-filter-pills
+        [options]="paymentFilterOptions"
+        (filterChange)="setPaymentFilter($event)"
+      />
 
       @if (error()) {
         <p class="rounded-lg bg-red-50 p-3 text-sm text-red-700">
@@ -279,6 +256,16 @@ export class RegistrationsComponent implements OnInit {
     return this.filterTeamsByPayment(teams);
   });
 
+  paymentFilterOptions = computed<FilterOption[]>(() => [
+    { label: "Tutte", value: "all", active: this.paymentFilter() === "all" },
+    { label: "Pagate", value: "paid", active: this.paymentFilter() === "paid" },
+    {
+      label: "Da pagare",
+      value: "pending",
+      active: this.paymentFilter() === "pending",
+    },
+  ]);
+
   teamCount = computed(() =>
     this.tournaments().reduce(
       (sum, t) => sum + (t.tournament_teams?.length || 0),
@@ -388,6 +375,10 @@ export class RegistrationsComponent implements OnInit {
 
   selectTournament(id: string): void {
     this.selectedTournamentId.set(id);
+  }
+
+  setPaymentFilter(value: string): void {
+    this.paymentFilter.set(value as PaymentFilter);
   }
 
   editTournament(tournament: Tournament): void {

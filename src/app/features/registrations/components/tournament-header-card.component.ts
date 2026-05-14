@@ -4,35 +4,36 @@ import { TournamentWithTeams } from "../../../core/types/models";
 @Component({
   selector: "lfg-tournament-header-card",
   standalone: true,
+  host: { class: "block" },
   template: `
-    <article class="rounded-lg border border-soft bg-surface p-4 shadow-sm">
-      <div class="flex flex-wrap items-start justify-between gap-3">
+    <article class="rounded-lg border border-soft bg-surface p-3 shadow-sm sm:p-4">
+      <div class="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
         @if (tournament(); as currentTournament) {
-          <div class="min-w-0 flex-1">
-            <h2 class="truncate text-xl font-bold">
+          <div class="min-w-0">
+            <h2 class="break-words text-xl font-bold leading-tight">
               {{ currentTournament.name }}
             </h2>
-            <p class="mt-1 text-xs text-muted">
+            <p class="mt-1 text-xs leading-5 text-muted">
               {{ currentTournament.sport }} · Quota:
               {{ eur(currentTournament.fee || 0) }}
             </p>
             @if (currentTournament.notes) {
-              <p class="mt-2 text-sm text-muted">
+              <p class="mt-2 break-words text-sm leading-5 text-muted">
                 {{ currentTournament.notes }}
               </p>
             }
           </div>
-          <div class="flex gap-2">
+          <div class="grid grid-cols-2 gap-2 sm:flex">
             <button
               type="button"
-              class="rounded-md bg-surface-muted px-3 py-1.5 text-xs font-bold uppercase transition hover:bg-surface-muted/80"
+              class="min-h-10 rounded-md bg-surface-muted px-3 py-2 text-xs font-bold uppercase transition hover:bg-surface-muted/80 sm:min-h-0 sm:py-1.5"
               (click)="editTournament.emit()"
             >
               Modifica
             </button>
             <button
               type="button"
-              class="rounded-md bg-ink px-3 py-1.5 text-xs font-bold uppercase text-white transition hover:bg-ink/90"
+              class="min-h-10 rounded-md bg-ink px-3 py-2 text-xs font-bold uppercase text-white transition hover:bg-ink/90 sm:min-h-0 sm:py-1.5"
               (click)="addTeamOrParticipant.emit()"
             >
               {{
