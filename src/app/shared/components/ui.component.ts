@@ -105,6 +105,7 @@ export class SummaryCardComponent {
 @Component({
   selector: "lfg-kpi-panel",
   standalone: true,
+  host: { class: "block" },
   template: `
     <section class="rounded-lg border border-soft bg-surface">
       <button

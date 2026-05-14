@@ -29,7 +29,7 @@ import {
     ConfirmModalComponent,
   ],
   template: `
-    <section class="space-y-4">
+    <section class="space-y-5">
       <div class="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p

@@ -1,5 +1,4 @@
-import { Component, OnInit, inject, signal } from "@angular/core";
-import { FormsModule } from "@angular/forms";
+import { Component, OnInit, computed, inject, signal } from "@angular/core";
 import { AuthService } from "../../core/services/auth.service";
 import { ExportService } from "../../core/services/export.service";
 import { ProfileService } from "../../core/services/profile.service";
@@ -18,10 +17,15 @@ import {
   ConfirmModalComponent,
   EmptyStateComponent,
   KpiPanelComponent,
-  ModalComponent,
-  StatusBadgeComponent,
   SummaryCardComponent,
 } from "../../shared/components/ui.component";
+import { DirectEntryModalComponent } from "./components/direct-entry-modal.component";
+import { ParticipantModalComponent } from "./components/participant-modal.component";
+import { RegistrationsTableComponent } from "./components/registrations-table.component";
+import { TeamModalComponent } from "./components/team-modal.component";
+import { TournamentHeaderCardComponent } from "./components/tournament-header-card.component";
+import { TournamentModalComponent } from "./components/tournament-modal.component";
+import { TournamentSelectorComponent } from "./components/tournament-selector.component";
 
 type ModalMode = "tournament" | "team" | "participant" | "direct" | null;
 type PaymentFilter = "all" | "paid" | "pending";
@@ -38,18 +42,23 @@ const DUO_CODES = ["briscola", "calcio-balilla"];
 const DIRECT_CODES = [...SOLO_CODES, ...DUO_CODES];
 
 @Component({
+  selector: "lfg-registrations",
   standalone: true,
   imports: [
-    FormsModule,
     EmptyStateComponent,
     KpiPanelComponent,
-    ModalComponent,
-    StatusBadgeComponent,
     SummaryCardComponent,
     ConfirmModalComponent,
+    TournamentSelectorComponent,
+    TournamentHeaderCardComponent,
+    TournamentModalComponent,
+    TeamModalComponent,
+    ParticipantModalComponent,
+    DirectEntryModalComponent,
+    RegistrationsTableComponent,
   ],
   template: `
-    <section class="space-y-4">
+    <section class="space-y-5">
       <div class="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p class="text-xs font-bold uppercase tracking-[0.18em] text-muted">
@@ -69,7 +78,7 @@ const DIRECT_CODES = [...SOLO_CODES, ...DUO_CODES];
         <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           <lfg-summary-card
             label="Iscritti"
-            [value]="String(teamCount())"
+            [value]="teamCount().toString()"
             [hint]="participantCount() + ' persone'"
           />
           <lfg-summary-card
@@ -89,6 +98,7 @@ const DIRECT_CODES = [...SOLO_CODES, ...DUO_CODES];
 
       <div class="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
         <button
+          type="button"
           class="shrink-0 rounded-full px-4 py-2 text-sm font-bold ring-1 ring-black/10"
           [class.bg-ink]="paymentFilter() === 'all'"
           [class.text-white]="paymentFilter() === 'all'"
@@ -98,6 +108,7 @@ const DIRECT_CODES = [...SOLO_CODES, ...DUO_CODES];
           Tutte
         </button>
         <button
+          type="button"
           class="shrink-0 rounded-full px-4 py-2 text-sm font-bold ring-1 ring-black/10"
           [class.bg-ink]="paymentFilter() === 'paid'"
           [class.text-white]="paymentFilter() === 'paid'"
@@ -107,6 +118,7 @@ const DIRECT_CODES = [...SOLO_CODES, ...DUO_CODES];
           Pagate
         </button>
         <button
+          type="button"
           class="shrink-0 rounded-full px-4 py-2 text-sm font-bold ring-1 ring-black/10"
           [class.bg-ink]="paymentFilter() === 'pending'"
           [class.text-white]="paymentFilter() === 'pending'"
@@ -129,628 +141,87 @@ const DIRECT_CODES = [...SOLO_CODES, ...DUO_CODES];
           text="I tornei vengono creati automaticamente al primo accesso."
         />
       } @else {
-        <div class="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
-          @for (tournament of tournaments(); track tournament.id) {
-            <button
-              class="shrink-0 rounded-full px-4 py-2 text-sm font-bold ring-1 ring-black/10"
-              [class.bg-ink]="selectedTournamentId() === tournament.id"
-              [class.text-white]="selectedTournamentId() === tournament.id"
-              [class.bg-surface]="selectedTournamentId() !== tournament.id"
-              (click)="selectTournament(tournament.id)"
-            >
-              {{ tournament.name }}
-            </button>
-          }
-        </div>
+        <lfg-tournament-selector
+          [tournaments]="tournaments"
+          [selectedTournamentId]="selectedTournamentId"
+          (selectTournament)="selectTournament($event)"
+        />
 
         @if (activeTournament(); as tournament) {
-          <article
-            class="rounded-lg border border-soft bg-surface p-4 shadow-sm"
-          >
-            <div class="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <h2 class="font-display text-2xl uppercase">
-                  {{ tournament.name }}
-                </h2>
-                <p class="mt-1 text-sm text-muted">
-                  {{ filteredTournamentTeams(tournament).length }}
-                  {{
-                    isDirect(tournament)
-                      ? "iscritti visibili"
-                      : "squadre visibili"
-                  }}
-                  @if (tournament.fee) {
-                    · quota {{ eur(tournament.fee) }}
-                  }
-                </p>
-              </div>
-              <div class="flex flex-wrap gap-2">
-                @if (auth.isAdmin()) {
-                  <button
-                    class="rounded-md bg-surface-muted px-3 py-2 text-xs font-bold uppercase"
-                    (click)="editTournament(tournament)"
-                  >
-                    Modifica
-                  </button>
-                }
-                @if (isDirect(tournament)) {
-                  <button
-                    class="rounded-md bg-ink px-3 py-2 text-xs font-bold uppercase text-white"
-                    (click)="newDirectEntry(tournament)"
-                  >
-                    {{
-                      isDuo(tournament)
-                        ? "Aggiungi coppia"
-                        : "Aggiungi partecipante"
-                    }}
-                  </button>
-                } @else {
-                  <button
-                    class="rounded-md bg-ink px-3 py-2 text-xs font-bold uppercase text-white"
-                    (click)="newTeam(tournament.id)"
-                  >
-                    Aggiungi squadra
-                  </button>
-                }
-              </div>
-            </div>
-          </article>
+          <lfg-tournament-header-card
+            [tournament]="activeTournament"
+            [isTeamTournament]="isActiveTeamTournament"
+            (editTournament)="editTournament(tournament)"
+            (addTeamOrParticipant)="openNewTeamOrDirectModal(tournament)"
+          />
 
-          @if (isDirect(tournament)) {
-            <!-- Tornei a iscrizione diretta: ping pong, fifa, briscola, calcio balilla -->
-            @if (!tournament.tournament_teams.length) {
-              <lfg-empty-state
-                [title]="
-                  isDuo(tournament)
-                    ? 'Nessuna coppia iscritta'
-                    : 'Nessun partecipante iscritto'
-                "
-                [text]="
-                  isDuo(tournament)
-                    ? 'Aggiungi la prima coppia.'
-                    : 'Aggiungi il primo partecipante.'
-                "
-              />
-            } @else if (!filteredTournamentTeams(tournament).length) {
-              <lfg-empty-state
-                title="Nessuna iscrizione per questo stato"
-                text="Cambia filtro per vedere altre iscrizioni."
-              />
-            } @else {
-              <div class="grid gap-3 xl:grid-cols-2">
-                @for (
-                  team of filteredTournamentTeams(tournament);
-                  track team.id
-                ) {
-                  <article
-                    class="rounded-lg border border-soft bg-surface p-4 shadow-sm"
-                  >
-                    <div
-                      class="flex flex-wrap items-start justify-between gap-3"
-                    >
-                      <div class="min-w-0">
-                        @if (isDuo(tournament)) {
-                          <div class="grid gap-3 sm:grid-cols-2">
-                            @for (p of team.team_participants; track p.id) {
-                              <div>
-                                <p class="text-sm font-black">
-                                  {{ personName(p) }}
-                                </p>
-                                @if (p.contact) {
-                                  <p class="text-xs text-muted">
-                                    {{ p.contact }}
-                                  </p>
-                                }
-                              </div>
-                            }
-                          </div>
-                        } @else {
-                          <p class="text-base font-black">
-                            {{ personName(team.team_participants[0]) }}
-                          </p>
-                          @if (team.team_participants[0]?.contact) {
-                            <p class="text-xs text-muted">
-                              {{ team.team_participants[0].contact }}
-                            </p>
-                          }
-                        }
-                        <p class="mt-1 text-xs font-semibold text-muted">
-                          {{ insertMeta(team) }}
-                        </p>
-                      </div>
-                      <div class="text-right">
-                        @if (tournament.fee) {
-                          <p class="font-black">{{ eur(teamFee(team)) }}</p>
-                        }
-                        <lfg-status-badge
-                          [label]="team.paid ? 'Pagato' : 'Da pagare'"
-                          [className]="
-                            team.paid ? 'state-success' : 'state-warning'
-                          "
-                        />
-                      </div>
-                    </div>
-                    <div
-                      class="mt-4 flex flex-wrap justify-end gap-2 border-t border-soft pt-3"
-                    >
-                      @if (tournament.fee) {
-                        <button
-                          class="rounded-md bg-surface-muted px-3 py-1.5 text-xs font-bold uppercase"
-                          (click)="togglePaid(team)"
-                        >
-                          {{ team.paid ? "Segna non pagato" : "Segna pagato" }}
-                        </button>
-                      }
-                      <button
-                        class="rounded-md bg-surface-muted px-3 py-1.5 text-xs font-bold uppercase"
-                        (click)="editDirectEntry(tournament, team)"
-                      >
-                        Modifica
-                      </button>
-                      @if (auth.isAdmin()) {
-                        <button
-                          class="rounded-md bg-red-50 px-3 py-1.5 text-xs font-bold uppercase text-red-700"
-                          (click)="askRemoveTeam(team)"
-                        >
-                          Elimina
-                        </button>
-                      }
-                    </div>
-                  </article>
-                }
-              </div>
-            }
-          } @else {
-            <!-- Tornei a squadre: calcio e green volley -->
-            @if (!tournament.tournament_teams.length) {
-              <lfg-empty-state
-                title="Nessuna squadra"
-                text="Aggiungi una squadra iscritta a questo torneo."
-              />
-            } @else if (!filteredTournamentTeams(tournament).length) {
-              <lfg-empty-state
-                title="Nessuna squadra per questo stato"
-                text="Cambia filtro per vedere altre iscrizioni."
-              />
-            } @else {
-              <div class="grid gap-3 xl:grid-cols-2">
-                @for (
-                  team of filteredTournamentTeams(tournament);
-                  track team.id
-                ) {
-                  <article
-                    class="rounded-lg border border-soft bg-surface p-4 shadow-sm"
-                  >
-                    <div
-                      class="flex flex-wrap items-start justify-between gap-3"
-                    >
-                      <div class="min-w-0">
-                        <h3 class="truncate text-lg font-black">
-                          {{ team.name }}
-                        </h3>
-                        <p
-                          class="mt-1 text-xs font-semibold uppercase tracking-wide text-muted"
-                        >
-                          {{ teamHint(tournament, team) }}
-                        </p>
-                        <p class="mt-1 text-xs font-semibold text-muted">
-                          {{ insertMeta(team) }}
-                        </p>
-                      </div>
-                      <div class="text-right">
-                        <p class="font-black">{{ eur(teamFee(team)) }}</p>
-                        <lfg-status-badge
-                          [label]="team.paid ? 'Pagata' : 'Da pagare'"
-                          [className]="
-                            team.paid ? 'state-success' : 'state-warning'
-                          "
-                        />
-                      </div>
-                    </div>
-
-                    @if (team.notes) {
-                      <p class="mt-3 text-sm text-muted">{{ team.notes }}</p>
-                    }
-
-                    @if (tournament.sport === "calcio") {
-                      <div
-                        class="mt-4 grid gap-2 rounded-lg border border-soft p-3 sm:grid-cols-2"
-                      >
-                        <div>
-                          <p
-                            class="text-[10px] font-bold uppercase tracking-wide text-muted"
-                          >
-                            Capitano
-                          </p>
-                          <p class="text-sm font-bold">
-                            {{ namePart(team.captain_name) || "Non inserito" }}
-                          </p>
-                          @if (team.captain_contact) {
-                            <p class="text-xs text-muted">
-                              {{ team.captain_contact }}
-                            </p>
-                          }
-                        </div>
-                        <div>
-                          <p
-                            class="text-[10px] font-bold uppercase tracking-wide text-muted"
-                          >
-                            Vicecapitano
-                          </p>
-                          <p class="text-sm font-bold">
-                            {{
-                              namePart(team.vice_captain_name) || "Non inserito"
-                            }}
-                          </p>
-                          @if (team.vice_captain_contact) {
-                            <p class="text-xs text-muted">
-                              {{ team.vice_captain_contact }}
-                            </p>
-                          }
-                        </div>
-                      </div>
-                    } @else {
-                      <div
-                        class="mt-4 divide-y divide-black/5 rounded-lg border border-soft"
-                      >
-                        @if (!team.team_participants.length) {
-                          <p class="px-3 py-4 text-sm text-muted">
-                            Nessuna persona inserita.
-                          </p>
-                        } @else {
-                          @for (
-                            participant of team.team_participants;
-                            track participant.id
-                          ) {
-                            <div
-                              class="flex flex-wrap items-center justify-between gap-2 px-3 py-2"
-                            >
-                              <div>
-                                <p class="text-sm font-bold">
-                                  {{ personName(participant) }}
-                                </p>
-                                @if (participant.contact) {
-                                  <p class="text-xs text-muted">
-                                    {{ participant.contact }}
-                                  </p>
-                                }
-                              </div>
-                              <div class="flex gap-2">
-                                <button
-                                  class="rounded-md bg-surface-muted px-2.5 py-1.5 text-[10px] font-bold uppercase"
-                                  (click)="editParticipant(participant)"
-                                >
-                                  Modifica
-                                </button>
-                                @if (auth.isAdmin()) {
-                                  <button
-                                    class="rounded-md bg-red-50 px-2.5 py-1.5 text-[10px] font-bold uppercase text-red-700"
-                                    (click)="askRemoveParticipant(participant)"
-                                  >
-                                    Elimina
-                                  </button>
-                                }
-                              </div>
-                            </div>
-                          }
-                        }
-                      </div>
-                    }
-
-                    <div
-                      class="mt-4 flex flex-wrap justify-end gap-2 border-t border-soft pt-3"
-                    >
-                      <button
-                        class="rounded-md bg-surface-muted px-3 py-1.5 text-xs font-bold uppercase"
-                        (click)="togglePaid(team)"
-                      >
-                        {{ team.paid ? "Segna non pagata" : "Segna pagata" }}
-                      </button>
-                      <button
-                        class="rounded-md bg-surface-muted px-3 py-1.5 text-xs font-bold uppercase"
-                        (click)="editTeam(team)"
-                      >
-                        Modifica squadra
-                      </button>
-                      @if (
-                        tournament.sport !== "calcio" &&
-                        canAddParticipant(tournament, team)
-                      ) {
-                        <button
-                          class="rounded-md bg-surface-muted px-3 py-1.5 text-xs font-bold uppercase"
-                          (click)="newParticipant(team.id)"
-                        >
-                          Aggiungi persona
-                        </button>
-                      }
-                      @if (auth.isAdmin()) {
-                        <button
-                          class="rounded-md bg-red-50 px-3 py-1.5 text-xs font-bold uppercase text-red-700"
-                          (click)="askRemoveTeam(team)"
-                        >
-                          Elimina squadra
-                        </button>
-                      }
-                    </div>
-                  </article>
-                }
-              </div>
-            }
-          }
+          <lfg-registrations-table
+            [items]="() => filteredTeams()"
+            [tournament]="activeTournament"
+            [isDirect]="isActiveDirectTournament"
+            [isDuo]="isDuoSelected"
+            [auth]="auth"
+            (editTeam)="editTeam($event)"
+            (editDirectEntry)="editDirectEntry($event)"
+            (togglePaid)="togglePaid($event)"
+            (addParticipant)="newParticipant($event)"
+            (deleteTeam)="askRemoveTeam($event)"
+            (editParticipant)="editParticipant($event)"
+            (deleteParticipant)="askRemoveParticipant($event)"
+          />
         }
       }
     </section>
 
-    <!-- Modal: modifica torneo -->
-    <lfg-modal
-      [open]="modalMode() === 'tournament'"
-      title="Modifica torneo"
+    <!-- Tournament Modal -->
+    <lfg-tournament-modal
+      [open]="() => modalMode() === 'tournament'"
+      [title]="() => editingTournament() ? 'Modifica torneo' : 'Nuovo torneo'"
+      [tournament]="editingTournament"
+      [loading]="saving"
+      [error]="modalError"
       (close)="closeModal()"
-    >
-      <form class="grid gap-4" (ngSubmit)="saveTournament()">
-        <fieldset [disabled]="saving()" class="grid gap-4 disabled:opacity-70">
-          <div class="grid gap-3 sm:grid-cols-2">
-            <label class="grid gap-1 text-sm font-bold"
-              >Nome torneo
-              <input
-                required
-                name="tournamentName"
-                [(ngModel)]="tournamentForm.name"
-                class="rounded-lg border border-soft bg-surface-muted px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"
-            /></label>
-            <label class="grid gap-1 text-sm font-bold"
-              >Quota
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                name="tournamentFee"
-                [(ngModel)]="tournamentForm.fee"
-                class="rounded-lg border border-soft bg-surface-muted px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"
-            /></label>
-          </div>
-          <button
-            class="rounded-lg bg-ink px-4 py-3 text-sm font-bold uppercase text-white disabled:opacity-60"
-          >
-            {{ saving() ? "Salvataggio…" : "Salva torneo" }}
-          </button>
-        </fieldset>
-      </form>
-    </lfg-modal>
+      (save)="saveTournament($event)"
+    />
 
-    <!-- Modal: nuova/modifica squadra (calcio/green volley) -->
-    <lfg-modal
-      [open]="modalMode() === 'team'"
-      [title]="editingTeam() ? 'Modifica squadra' : 'Nuova squadra'"
+    <!-- Team Modal -->
+    <lfg-team-modal
+      [open]="() => modalMode() === 'team'"
+      [profiles]="() => profiles()"
+      [formValue]="teamForm"
+      [editing]="!!editingTeam()"
+      [loading]="saving"
+      [error]="modalError"
       (close)="closeModal()"
-    >
-      <form class="grid gap-4" (ngSubmit)="saveTeam()">
-        <fieldset [disabled]="saving()" class="grid gap-4 disabled:opacity-70">
-          <label class="grid gap-1 text-sm font-bold"
-            >Squadra
-            <input
-              required
-              name="teamName"
-              [(ngModel)]="teamForm.name"
-              class="rounded-lg border border-soft bg-surface-muted px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"
-          /></label>
-          @if (selectedTeamSport() === "calcio") {
-            <div class="grid gap-3 sm:grid-cols-2">
-              <label class="grid gap-1 text-sm font-bold"
-                >Capitano
-                <input
-                  required
-                  name="captainName"
-                  [(ngModel)]="teamForm.captain_name"
-                  class="rounded-lg border border-soft bg-surface-muted px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"
-              /></label>
-              <label class="grid gap-1 text-sm font-bold"
-                >Contatto capitano
-                <input
-                  name="captainContact"
-                  [(ngModel)]="teamForm.captain_contact"
-                  class="rounded-lg border border-soft bg-surface-muted px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"
-              /></label>
-            </div>
-            <div class="grid gap-3 sm:grid-cols-2">
-              <label class="grid gap-1 text-sm font-bold"
-                >Vicecapitano
-                <input
-                  required
-                  name="viceCaptainName"
-                  [(ngModel)]="teamForm.vice_captain_name"
-                  class="rounded-lg border border-soft bg-surface-muted px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"
-              /></label>
-              <label class="grid gap-1 text-sm font-bold"
-                >Contatto vicecapitano
-                <input
-                  name="viceCaptainContact"
-                  [(ngModel)]="teamForm.vice_captain_contact"
-                  class="rounded-lg border border-soft bg-surface-muted px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"
-              /></label>
-            </div>
-          }
-          <label
-            class="flex items-center gap-3 rounded-lg bg-surface-muted p-3 text-sm font-bold"
-            ><input
-              type="checkbox"
-              name="teamPaid"
-              [(ngModel)]="teamForm.paid"
-              class="h-5 w-5 accent-emerald-600 disabled:cursor-not-allowed disabled:opacity-70"
-            />
-            Squadra pagata</label
-          >
-          <label class="grid gap-1 text-sm font-bold"
-            >Note
-            <textarea
-              rows="3"
-              name="teamNotes"
-              [(ngModel)]="teamForm.notes"
-              class="rounded-lg border border-soft bg-surface-muted px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"
-            ></textarea>
-          </label>
-          <button
-            class="rounded-lg bg-ink px-4 py-3 text-sm font-bold uppercase text-white disabled:opacity-60"
-          >
-            {{ saving() ? "Salvataggio…" : "Salva squadra" }}
-          </button>
-        </fieldset>
-      </form>
-    </lfg-modal>
+      (save)="saveTeam($event)"
+    />
 
-    <!-- Modal: nuovo/modifica partecipante (green volley) -->
-    <lfg-modal
-      [open]="modalMode() === 'participant'"
-      [title]="
-        editingParticipant() ? 'Modifica partecipante' : 'Nuovo partecipante'
-      "
+    <!-- Participant Modal -->
+    <lfg-participant-modal
+      [open]="() => modalMode() === 'participant'"
+      [isFipavSport]="() => selectedParticipantSport() === 'pallavolo'"
+      [formValue]="participantForm"
+      [editing]="!!editingParticipant()"
+      [loading]="saving"
+      [error]="modalError"
       (close)="closeModal()"
-    >
-      <form class="grid gap-4" (ngSubmit)="saveParticipant()">
-        <fieldset [disabled]="saving()" class="grid gap-4 disabled:opacity-70">
-          <div class="grid gap-3 sm:grid-cols-2">
-            <label class="grid gap-1 text-sm font-bold"
-              >Nome
-              <input
-                required
-                name="firstName"
-                [(ngModel)]="participantForm.first_name"
-                class="rounded-lg border border-soft bg-surface-muted px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"
-            /></label>
-            <label class="grid gap-1 text-sm font-bold"
-              >Cognome
-              <input
-                required
-                name="lastName"
-                [(ngModel)]="participantForm.last_name"
-                class="rounded-lg border border-soft bg-surface-muted px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"
-            /></label>
-          </div>
-          <label class="grid gap-1 text-sm font-bold"
-            >Contatto
-            <input
-              name="participantContact"
-              [(ngModel)]="participantForm.contact"
-              class="rounded-lg border border-soft bg-surface-muted px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"
-          /></label>
-          @if (selectedParticipantSport() === "pallavolo") {
-            <label
-              class="flex items-center gap-3 rounded-lg bg-surface-muted p-3 text-sm font-bold"
-            >
-              <input
-                type="checkbox"
-                name="participantRegistered"
-                [(ngModel)]="participantForm.registered"
-                class="h-5 w-5 accent-emerald-600 disabled:cursor-not-allowed disabled:opacity-70"
-              />
-              Tesserato FIPAV
-            </label>
-          }
-          <button
-            class="rounded-lg bg-ink px-4 py-3 text-sm font-bold uppercase text-white disabled:opacity-60"
-          >
-            {{ saving() ? "Salvataggio…" : "Salva partecipante" }}
-          </button>
-        </fieldset>
-      </form>
-    </lfg-modal>
+      (save)="saveParticipant($event)"
+    />
 
-    <!-- Modal: iscrizione diretta (solo/duo) -->
-    <lfg-modal
-      [open]="modalMode() === 'direct'"
-      [title]="directModalTitle()"
+    <!-- Direct Entry Modal -->
+    <lfg-direct-entry-modal
+      [open]="() => modalMode() === 'direct'"
+      [isDuo]="isDuoSelected"
+      [modalTitle]="directModalTitle"
+      [formValue]="directForm"
+      [fee]="activeTournament()?.fee"
+      [loading]="saving"
+      [error]="modalError"
       (close)="closeModal()"
-    >
-      <form class="grid gap-4" (ngSubmit)="saveDirectEntry()">
-        <fieldset [disabled]="saving()" class="grid gap-4 disabled:opacity-70">
-          @if (activeTournament()?.fee) {
-            <label
-              class="flex items-center gap-3 rounded-lg bg-surface-muted p-3 text-sm font-bold"
-            >
-              <input
-                type="checkbox"
-                name="directPaid"
-                [(ngModel)]="directForm.paid"
-                class="h-5 w-5 accent-emerald-600 disabled:cursor-not-allowed disabled:opacity-70"
-              />
-              {{ isDuoSelected() ? "Coppia pagata" : "Iscrizione pagata" }}
-            </label>
-          }
-          <fieldset class="grid gap-3 rounded-lg border border-soft p-4">
-            <legend
-              class="px-1 text-xs font-black uppercase tracking-[0.16em] text-muted"
-            >
-              {{ isDuoSelected() ? "Persona 1" : "Partecipante" }}
-            </legend>
-            <div class="grid gap-3 sm:grid-cols-2">
-              <label class="grid gap-1 text-sm font-bold"
-                >Nome
-                <input
-                  required
-                  name="p1First"
-                  [(ngModel)]="directForm.person1.first_name"
-                  class="rounded-lg border border-soft bg-surface-muted px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"
-              /></label>
-              <label class="grid gap-1 text-sm font-bold"
-                >Cognome
-                <input
-                  required
-                  name="p1Last"
-                  [(ngModel)]="directForm.person1.last_name"
-                  class="rounded-lg border border-soft bg-surface-muted px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"
-              /></label>
-            </div>
-            <label class="grid gap-1 text-sm font-bold"
-              >Contatto
-              <input
-                name="p1Contact"
-                [(ngModel)]="directForm.person1.contact"
-                class="rounded-lg border border-soft bg-surface-muted px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"
-            /></label>
-          </fieldset>
-          @if (isDuoSelected()) {
-            <fieldset class="grid gap-3 rounded-lg border border-soft p-4">
-              <legend
-                class="px-1 text-xs font-black uppercase tracking-[0.16em] text-muted"
-              >
-                Persona 2
-              </legend>
-              <div class="grid gap-3 sm:grid-cols-2">
-                <label class="grid gap-1 text-sm font-bold"
-                  >Nome
-                  <input
-                    required
-                    name="p2First"
-                    [(ngModel)]="directForm.person2.first_name"
-                    class="rounded-lg border border-soft bg-surface-muted px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"
-                /></label>
-                <label class="grid gap-1 text-sm font-bold"
-                  >Cognome
-                  <input
-                    required
-                    name="p2Last"
-                    [(ngModel)]="directForm.person2.last_name"
-                    class="rounded-lg border border-soft bg-surface-muted px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"
-                /></label>
-              </div>
-              <label class="grid gap-1 text-sm font-bold"
-                >Contatto
-                <input
-                  name="p2Contact"
-                  [(ngModel)]="directForm.person2.contact"
-                  class="rounded-lg border border-soft bg-surface-muted px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"
-              /></label>
-            </fieldset>
-          }
-          <button
-            class="rounded-lg bg-ink px-4 py-3 text-sm font-bold uppercase text-white disabled:opacity-60"
-          >
-            {{ saving() ? "Salvataggio…" : "Salva" }}
-          </button>
-        </fieldset>
-      </form>
-    </lfg-modal>
+      (save)="saveDirectEntry($event)"
+    />
 
+    <!-- Confirm Modal -->
     <lfg-confirm
       [open]="!!confirmPending()"
       [message]="confirmMessage()"
@@ -760,31 +231,139 @@ const DIRECT_CODES = [...SOLO_CODES, ...DUO_CODES];
   `,
 })
 export class RegistrationsComponent implements OnInit {
+  readonly auth = inject(AuthService);
+  private readonly service = inject(RegistrationsService);
+  private readonly exporter = inject(ExportService);
+  private readonly profilesService = inject(ProfileService);
+  private readonly snackbar = inject(SnackbarService);
+
+  // State
   tournaments = signal<TournamentWithTeams[]>([]);
-  userNames = signal<Record<string, string>>({});
+  profiles = signal<any[]>([]);
   selectedTournamentId = signal<string | null>(null);
-  error = signal("");
+  paymentFilter = signal<PaymentFilter>("all");
   modalMode = signal<ModalMode>(null);
+  saving = signal(false);
+  modalError = signal("");
+  error = signal("");
   editingTournament = signal<Tournament | null>(null);
   editingTeam = signal<TournamentTeamWithParticipants | null>(null);
   editingParticipant = signal<TeamParticipant | null>(null);
   editingDirectTeam = signal<TournamentTeamWithParticipants | null>(null);
-  saving = signal(false);
-  paymentFilter = signal<PaymentFilter>("all");
   confirmPending = signal<(() => Promise<void>) | null>(null);
   confirmMessage = signal("");
-  private readonly snackbar = inject(SnackbarService);
-  tournamentForm: InsertTournament = this.emptyTournamentForm();
-  teamForm: InsertTournamentTeam = this.emptyTeamForm("");
-  participantForm: InsertTeamParticipant = this.emptyParticipantForm("");
-  directForm: DirectForm = this.emptyDirectForm("");
+  selectedParticipantSport = signal("");
 
-  constructor(
-    readonly auth: AuthService,
-    private readonly service: RegistrationsService,
-    private readonly exporter: ExportService,
-    private readonly profiles: ProfileService,
-  ) {}
+  // Forms
+  teamForm: InsertTournamentTeam = this.emptyTeamForm();
+  participantForm: InsertTeamParticipant = this.emptyParticipantForm();
+  directForm: DirectForm = this.emptyDirectForm();
+
+  // Computed
+  activeTournament = computed(() => {
+    const id = this.selectedTournamentId();
+    return this.tournaments().find((t) => t.id === id);
+  });
+
+  filteredTeams = computed(() => {
+    const t = this.activeTournament();
+    if (!t) return [];
+    const teams = t.tournament_teams || [];
+    return this.filterTeamsByPayment(teams);
+  });
+
+  filteredDirects = computed(() => {
+    const t = this.activeTournament();
+    if (!t || !this.isDirect(t)) return [];
+    const teams = t.tournament_teams || [];
+    return this.filterTeamsByPayment(teams);
+  });
+
+  teamCount = computed(() =>
+    this.tournaments().reduce(
+      (sum, t) => sum + (t.tournament_teams?.length || 0),
+      0,
+    ),
+  );
+
+  participantCount = computed(() => {
+    let count = 0;
+    for (const t of this.tournaments()) {
+      if (this.isDirect(t)) {
+        count +=
+          (t.tournament_teams?.length || 0) * (this.isDuoTournament(t) ? 2 : 1);
+      } else {
+        for (const team of t.tournament_teams || []) {
+          count += team.team_participants?.length || 0;
+        }
+      }
+    }
+    return count;
+  });
+
+  paidCount = computed(() => {
+    const paid = this.tournaments().reduce(
+      (sum, t) =>
+        sum + (t.tournament_teams?.filter((team) => team.paid).length || 0),
+      0,
+    );
+    return paid;
+  });
+
+  pendingCount = computed(() => {
+    const pending = this.tournaments().reduce(
+      (sum, t) =>
+        sum +
+        (t.tournament_teams?.filter((team) => !team.paid && t.fee).length || 0),
+      0,
+    );
+    return pending;
+  });
+
+  paidAmount = computed(() => {
+    let sum = 0;
+    for (const t of this.tournaments()) {
+      for (const team of t.tournament_teams || []) {
+        if (team.paid && t.fee) sum += t.fee;
+      }
+    }
+    return sum;
+  });
+
+  pendingAmount = computed(() => {
+    let sum = 0;
+    for (const t of this.tournaments()) {
+      for (const team of t.tournament_teams || []) {
+        if (!team.paid && t.fee) sum += t.fee;
+      }
+    }
+    return sum;
+  });
+
+  isDuoSelected = computed(() => {
+    const t = this.activeTournament();
+    return t ? this.isDuoTournament(t) : false;
+  });
+
+  isActiveTeamTournament = computed(() => {
+    const t = this.activeTournament();
+    return t ? !this.isDirect(t) : false;
+  });
+
+  isActiveDirectTournament = computed(() => {
+    const t = this.activeTournament();
+    return t ? this.isDirect(t) : false;
+  });
+
+  directModalTitle = computed(() => {
+    if (this.isDuoSelected()) {
+      return this.editingDirectTeam() ? "Modifica coppia" : "Nuova coppia";
+    } else {
+      return this.editingDirectTeam()
+        ? "Modifica partecipante"
+        : "Nuovo partecipante";
+    }
+  });
 
   ngOnInit(): void {
     void this.load();
@@ -793,355 +372,166 @@ export class RegistrationsComponent implements OnInit {
   async load(): Promise<void> {
     this.error.set("");
     try {
-      const tournaments = await this.service.listTournaments();
+      const [tournaments, profiles] = await Promise.all([
+        this.service.listTournaments(),
+        this.profilesService.list(),
+      ]);
       this.tournaments.set(tournaments);
-      this.userNames.set(
-        await this.profiles.displayNames(
-          tournaments.flatMap((t) =>
-            t.tournament_teams.map((team) => team.created_by),
-          ),
-        ),
-      );
-      if (
-        !this.selectedTournamentId() ||
-        !tournaments.some((t) => t.id === this.selectedTournamentId())
-      ) {
-        this.selectedTournamentId.set(tournaments[0]?.id ?? null);
+      this.profiles.set(profiles);
+      if (!this.selectedTournamentId() && tournaments.length) {
+        this.selectedTournamentId.set(tournaments[0].id);
       }
-    } catch (error) {
-      this.setError(this.message(error));
-    } finally {
+    } catch (e) {
+      this.setError(e);
     }
-  }
-
-  activeTournament(): TournamentWithTeams | undefined {
-    return this.tournaments().find((t) => t.id === this.selectedTournamentId());
   }
 
   selectTournament(id: string): void {
     this.selectedTournamentId.set(id);
   }
 
-  // ─── Helpers: direct-entry sports ───────────────────────────────────────────
-
-  isDirect(tournament: TournamentWithTeams): boolean {
-    return DIRECT_CODES.includes(tournament.code ?? "");
-  }
-
-  isDuo(tournament: TournamentWithTeams): boolean {
-    return DUO_CODES.includes(tournament.code ?? "");
-  }
-
-  isDuoSelected(): boolean {
-    const tournament = this.findTournament(this.directForm.tournament_id);
-    return DUO_CODES.includes(tournament?.code ?? "");
-  }
-
-  directModalTitle(): string {
-    const editing = !!this.editingDirectTeam();
-    return this.isDuoSelected()
-      ? editing
-        ? "Modifica coppia"
-        : "Nuova coppia"
-      : editing
-        ? "Modifica partecipante"
-        : "Nuovo partecipante";
-  }
-
-  // ─── Direct entry CRUD ──────────────────────────────────────────────────────
-
-  newDirectEntry(tournament: TournamentWithTeams): void {
-    this.editingDirectTeam.set(null);
-    this.directForm = this.emptyDirectForm(tournament.id);
-    this.modalMode.set("direct");
-  }
-
-  editDirectEntry(
-    tournament: TournamentWithTeams,
-    team: TournamentTeamWithParticipants,
-  ): void {
-    this.editingDirectTeam.set(team);
-    const p1 = team.team_participants[0];
-    const p2 = team.team_participants[1];
-    this.directForm = {
-      tournament_id: team.tournament_id,
-      paid: team.paid,
-      person1: {
-        first_name: p1?.first_name ?? "",
-        last_name: p1?.last_name ?? "",
-        contact: p1?.contact ?? "",
-      },
-      person2: {
-        first_name: p2?.first_name ?? "",
-        last_name: p2?.last_name ?? "",
-        contact: p2?.contact ?? "",
-      },
-    };
-    this.modalMode.set("direct");
-  }
-
-  async saveDirectEntry(): Promise<void> {
-    if (this.saving()) return;
-    this.saving.set(true);
-    try {
-      const duo = this.isDuoSelected();
-      const p1 = this.normalizedDirectPerson(this.directForm.person1);
-      const p2 = this.normalizedDirectPerson(this.directForm.person2);
-      const current = this.editingDirectTeam();
-      const teamName = duo
-        ? `${p1.first_name} / ${p2.first_name}`
-        : `${p1.first_name} ${p1.last_name}`;
-
-      if (current) {
-        await this.service.updateTeam(current.id, {
-          name: teamName,
-          paid: this.directForm.paid,
-        });
-        if (current.team_participants[0]) {
-          await this.service.updateParticipant(
-            current.team_participants[0].id,
-            {
-              team_id: current.id,
-              first_name: p1.first_name,
-              last_name: p1.last_name,
-              contact: p1.contact.trim() || null,
-              gender: "uomo",
-              registered: false,
-            },
-          );
-        }
-        if (duo && current.team_participants[1]) {
-          await this.service.updateParticipant(
-            current.team_participants[1].id,
-            {
-              team_id: current.id,
-              first_name: p2.first_name,
-              last_name: p2.last_name,
-              contact: p2.contact.trim() || null,
-              gender: "uomo",
-              registered: false,
-            },
-          );
-        }
-      } else {
-        const team = await this.service.createTeam({
-          tournament_id: this.directForm.tournament_id,
-          name: teamName,
-          captain_name: null,
-          captain_contact: null,
-          vice_captain_name: null,
-          vice_captain_contact: null,
-          fee: this.tournamentFee(this.directForm.tournament_id),
-          paid: this.directForm.paid,
-          notes: null,
-        });
-        await this.service.createParticipant({
-          team_id: team.id,
-          first_name: p1.first_name,
-          last_name: p1.last_name,
-          contact: p1.contact.trim() || null,
-          gender: "uomo",
-          registered: false,
-        });
-        if (duo) {
-          await this.service.createParticipant({
-            team_id: team.id,
-            first_name: p2.first_name,
-            last_name: p2.last_name,
-            contact: p2.contact.trim() || null,
-            gender: "uomo",
-            registered: false,
-          });
-        }
-      }
-      this.selectedTournamentId.set(this.directForm.tournament_id);
-      this.closeModal();
-      await this.load();
-    } catch (error) {
-      this.setError(this.message(error));
-    } finally {
-      this.saving.set(false);
-    }
-  }
-
-  // ─── Tournament CRUD ────────────────────────────────────────────────────────
-
   editTournament(tournament: Tournament): void {
     if (!this.auth.isAdmin()) return;
+    this.error.set("");
     this.editingTournament.set(tournament);
-    this.tournamentForm = {
-      name: tournament.name,
-      sport: tournament.sport,
-      fee: tournament.fee,
-      date: null,
-      notes: null,
-    };
     this.modalMode.set("tournament");
   }
 
-  async saveTournament(): Promise<void> {
-    const current = this.editingTournament();
-    if (!this.auth.isAdmin() || !current || this.saving()) return;
+  async saveTournament(payload: InsertTournament): Promise<void> {
+    if (this.saving()) return;
     this.saving.set(true);
+    this.modalError.set("");
     try {
-      const saved = await this.service.updateTournament(current.id, {
-        name: this.tournamentForm.name.trim(),
-        fee: Number(this.tournamentForm.fee || 0),
-      });
-      this.selectedTournamentId.set(saved.id);
+      const current = this.editingTournament();
+      if (current) {
+        await this.service.updateTournament(current.id, payload);
+      } else {
+        await this.service.createTournament(payload);
+      }
       this.closeModal();
       await this.load();
-    } catch (error) {
-      this.setError(this.message(error));
+    } catch (e) {
+      this.setModalError(e);
     } finally {
       this.saving.set(false);
     }
   }
 
-  askRemoveTournament(tournament: Tournament): void {
-    this.confirmMessage.set(
-      `Eliminare il torneo "${tournament.name}" con tutte le squadre e i partecipanti?`,
-    );
-    this.confirmPending.set(async () => {
-      try {
-        await this.service.removeTournament(tournament.id);
-        await this.load();
-      } catch (error) {
-        this.setError(this.message(error));
-      }
-    });
-  }
-
-  // ─── Team CRUD (calcio/green volley) ────────────────────────────────────────
-
-  newTeam(tournamentId: string): void {
-    this.editingTeam.set(null);
-    this.teamForm = this.emptyTeamForm(tournamentId);
-    this.modalMode.set("team");
+  openNewTeamOrDirectModal(tournament: TournamentWithTeams): void {
+    this.error.set("");
+    if (this.isDirect(tournament)) {
+      this.editingDirectTeam.set(null);
+      this.directForm = this.emptyDirectForm();
+      this.directForm.tournament_id = tournament.id;
+      this.modalMode.set("direct");
+    } else {
+      this.editingTeam.set(null);
+      this.teamForm = this.emptyTeamForm();
+      this.teamForm.tournament_id = tournament.id;
+      this.modalMode.set("team");
+    }
   }
 
   editTeam(team: TournamentTeamWithParticipants): void {
+    this.error.set("");
     this.editingTeam.set(team);
     this.teamForm = {
       tournament_id: team.tournament_id,
       name: team.name,
       captain_name: team.captain_name,
-      captain_contact: team.captain_contact,
-      vice_captain_name: team.vice_captain_name,
-      vice_captain_contact: team.vice_captain_contact,
+      captain_contact: team.captain_contact || "",
+      vice_captain_name: team.vice_captain_name || "",
+      vice_captain_contact: team.vice_captain_contact || "",
       fee: team.fee,
       paid: team.paid,
-      notes: team.notes,
+      notes: team.notes || "",
     };
     this.modalMode.set("team");
   }
 
-  async saveTeam(): Promise<void> {
+  async saveTeam(payload: InsertTournamentTeam): Promise<void> {
     if (this.saving()) return;
     this.saving.set(true);
+    this.modalError.set("");
     try {
-      const isFootball = this.selectedTeamSport() === "calcio";
-      const payload = {
-        ...this.teamForm,
-        captain_name: isFootball
-          ? this.namePart(this.teamForm.captain_name) || null
-          : null,
-        captain_contact: isFootball
-          ? this.teamForm.captain_contact?.trim() || null
-          : null,
-        vice_captain_name: isFootball
-          ? this.namePart(this.teamForm.vice_captain_name) || null
-          : null,
-        vice_captain_contact: isFootball
-          ? this.teamForm.vice_captain_contact?.trim() || null
-          : null,
-        fee: this.tournamentFee(this.teamForm.tournament_id),
-        notes: this.teamForm.notes || null,
+      const normalizedPayload: InsertTournamentTeam = {
+        ...payload,
+        name: payload.name.trim(),
+        captain_name: payload.captain_name?.trim() || null,
+        captain_contact: payload.captain_contact?.trim() || null,
+        vice_captain_name: payload.vice_captain_name?.trim() || null,
+        vice_captain_contact: payload.vice_captain_contact?.trim() || null,
+        fee: this.tournamentFee(payload.tournament_id),
+        notes: payload.notes?.trim() || null,
       };
       const current = this.editingTeam();
-      await (current
-        ? this.service.updateTeam(current.id, payload)
-        : this.service.createTeam(payload));
-      this.selectedTournamentId.set(payload.tournament_id);
+      if (current) {
+        await this.service.updateTeam(current.id, normalizedPayload);
+      } else {
+        await this.service.createTeam(normalizedPayload);
+      }
       this.closeModal();
       await this.load();
-    } catch (error) {
-      this.setError(this.message(error));
+    } catch (e) {
+      this.setModalError(e);
     } finally {
       this.saving.set(false);
     }
   }
 
-  async togglePaid(team: TournamentTeamWithParticipants): Promise<void> {
-    try {
-      await this.service.updateTeam(team.id, { paid: !team.paid });
-      await this.load();
-    } catch (error) {
-      this.setError(this.message(error));
-    }
-  }
-
-  askRemoveTeam(team: TournamentTeamWithParticipants): void {
-    this.confirmMessage.set(`Eliminare questa iscrizione?`);
-    this.confirmPending.set(async () => {
-      try {
-        await this.service.removeTeam(team.id);
-        await this.load();
-      } catch (error) {
-        this.setError(this.message(error));
-      }
-    });
-  }
-
-  // ─── Participant CRUD (green volley) ─────────────────────────────────────────
-
-  newParticipant(teamId: string): void {
-    const team = this.findTeam(teamId);
-    const tournament = team
-      ? this.findTournament(team.tournament_id)
-      : undefined;
-    if (team && tournament && !this.canAddParticipant(tournament, team)) return;
-    this.editingParticipant.set(null);
-    this.participantForm = this.emptyParticipantForm(teamId);
-    this.modalMode.set("participant");
-  }
-
   editParticipant(participant: TeamParticipant): void {
+    this.error.set("");
     this.editingParticipant.set(participant);
+    const tournament = this.activeTournament();
+    this.selectedParticipantSport.set(tournament?.sport || "");
     this.participantForm = {
       team_id: participant.team_id,
       first_name: participant.first_name,
       last_name: participant.last_name,
-      contact: participant.contact,
-      gender: participant.gender,
-      registered: participant.registered,
+      contact: participant.contact || "",
+      gender: participant.gender || "uomo",
+      registered: participant.registered || false,
     };
     this.modalMode.set("participant");
   }
 
-  async saveParticipant(): Promise<void> {
+  newParticipant(teamId: string): void {
+    const team = this.findTeam(teamId);
+    const tournament = team
+      ? this.tournaments().find((t) => t.id === team.tournament_id)
+      : undefined;
+    if (team && tournament && !this.canAddParticipant(tournament, team)) {
+      const message = `Limite persone raggiunto per ${tournament.name}.`;
+      this.error.set(message);
+      this.snackbar.warning(message);
+      return;
+    }
+    this.error.set("");
+    this.editingParticipant.set(null);
+    this.participantForm = this.emptyParticipantForm();
+    this.participantForm.team_id = teamId;
+    this.selectedParticipantSport.set(tournament?.sport || "");
+    this.modalMode.set("participant");
+  }
+
+  async saveParticipant(payload: InsertTeamParticipant): Promise<void> {
     if (this.saving()) return;
     this.saving.set(true);
+    this.modalError.set("");
     try {
-      const current = this.editingParticipant();
-      const team = this.findTeam(this.participantForm.team_id);
+      const team = this.findTeam(payload.team_id);
       const tournament = team
-        ? this.findTournament(team.tournament_id)
+        ? this.tournaments().find((t) => t.id === team.tournament_id)
         : undefined;
+      const current = this.editingParticipant();
       if (
         !current &&
         team &&
         tournament &&
         !this.canAddParticipant(tournament, team)
       ) {
-        this.error.set(`Limite persone raggiunto per ${tournament.name}.`);
-        this.snackbar.warning(
-          `Limite persone raggiunto per ${tournament.name}.`,
-        );
-        this.closeModal();
-        return;
+        throw new Error(`Limite persone raggiunto per ${tournament.name}.`);
       }
-      const wantsRegistered = Boolean(this.participantForm.registered);
       const registeredCount =
         team?.team_participants.filter(
           (participant) =>
@@ -1149,46 +539,183 @@ export class RegistrationsComponent implements OnInit {
         ).length ?? 0;
       if (
         tournament?.sport === "pallavolo" &&
-        wantsRegistered &&
+        payload.registered &&
         registeredCount >= 1
       ) {
-        const message =
-          "Per il Green Volley è consentito massimo 1 tesserato FIPAV per squadra.";
-        this.error.set(message);
-        this.snackbar.warning(message);
-        return;
+        throw new Error(
+          "Per il Green Volley è consentito massimo 1 tesserato FIPAV per squadra.",
+        );
       }
-      const payload = {
-        ...this.participantForm,
-        first_name: this.namePart(this.participantForm.first_name),
-        last_name: this.namePart(this.participantForm.last_name),
-        contact: this.participantForm.contact?.trim() || null,
-        gender: "uomo" as const,
+      const normalizedPayload: InsertTeamParticipant = {
+        ...payload,
+        first_name: payload.first_name.trim(),
+        last_name: payload.last_name.trim(),
+        contact: payload.contact?.trim() || null,
         registered:
-          tournament?.sport === "pallavolo"
-            ? wantsRegistered
-            : false,
+          tournament?.sport === "pallavolo" ? Boolean(payload.registered) : false,
       };
-      await (current
-        ? this.service.updateParticipant(current.id, payload)
-        : this.service.createParticipant(payload));
+      if (current) {
+        await this.service.updateParticipant(current.id, normalizedPayload);
+      } else {
+        await this.service.createParticipant(normalizedPayload);
+      }
       this.closeModal();
       await this.load();
-    } catch (error) {
-      this.setError(this.message(error));
+    } catch (e) {
+      this.setModalError(e);
     } finally {
       this.saving.set(false);
     }
   }
 
-  askRemoveParticipant(participant: TeamParticipant): void {
-    this.confirmMessage.set(`Eliminare "${this.personName(participant)}"?`);
+  editDirectEntry(team: TournamentTeamWithParticipants): void {
+    this.error.set("");
+    this.editingDirectTeam.set(team);
+    const p1 = team.team_participants?.[0];
+    const p2 = team.team_participants?.[1];
+    this.directForm = {
+      tournament_id: team.tournament_id,
+      paid: team.paid,
+      person1: {
+        first_name: p1?.first_name || "",
+        last_name: p1?.last_name || "",
+        contact: p1?.contact || "",
+      },
+      person2: {
+        first_name: p2?.first_name || "",
+        last_name: p2?.last_name || "",
+        contact: p2?.contact || "",
+      },
+    };
+    this.modalMode.set("direct");
+  }
+
+  async saveDirectEntry(payload: DirectForm): Promise<void> {
+    if (this.saving()) return;
+    this.saving.set(true);
+    this.modalError.set("");
+    try {
+      const tournament = this.tournaments().find(
+        (t) => t.id === payload.tournament_id,
+      );
+      if (!tournament) throw new Error("Torneo non trovato");
+
+      const isDuo = this.isDuoTournament(tournament);
+      const p1 = this.normalizeDirectPerson(payload.person1);
+      const p2 = this.normalizeDirectPerson(payload.person2);
+      const teamName = isDuo
+        ? `${p1.first_name} / ${p2.first_name}`
+        : `${p1.first_name} ${p1.last_name}`;
+      const current = this.editingDirectTeam();
+
+      if (current) {
+        await this.service.updateTeam(current.id, {
+          name: teamName,
+          paid: payload.paid,
+        });
+
+        if (current.team_participants?.[0]) {
+          await this.service.updateParticipant(
+            current.team_participants[0].id,
+            {
+              team_id: current.id,
+              first_name: p1.first_name,
+              last_name: p1.last_name,
+              contact: p1.contact,
+              gender: "uomo",
+              registered: false,
+            },
+          );
+        }
+
+        if (isDuo && current.team_participants?.[1]) {
+          await this.service.updateParticipant(
+            current.team_participants[1].id,
+            {
+              team_id: current.id,
+              first_name: p2.first_name,
+              last_name: p2.last_name,
+              contact: p2.contact,
+              gender: "uomo",
+              registered: false,
+            },
+          );
+        }
+      } else {
+        const team = await this.service.createTeam({
+          tournament_id: payload.tournament_id,
+          name: teamName,
+          captain_name: null,
+          captain_contact: null,
+          vice_captain_name: null,
+          vice_captain_contact: null,
+          fee: tournament.fee,
+          paid: payload.paid,
+          notes: null,
+        });
+
+        await this.service.createParticipant({
+          team_id: team.id,
+          first_name: p1.first_name,
+          last_name: p1.last_name,
+          contact: p1.contact,
+          gender: "uomo",
+          registered: false,
+        });
+
+        if (isDuo) {
+          await this.service.createParticipant({
+            team_id: team.id,
+            first_name: p2.first_name,
+            last_name: p2.last_name,
+            contact: p2.contact,
+            gender: "uomo",
+            registered: false,
+          });
+        }
+      }
+
+      this.closeModal();
+      await this.load();
+    } catch (e) {
+      this.setModalError(e);
+    } finally {
+      this.saving.set(false);
+    }
+  }
+
+  askRemoveTeam(teamId: string): void {
+    this.confirmMessage.set("Eliminare questa iscrizione?");
     this.confirmPending.set(async () => {
       try {
-        await this.service.removeParticipant(participant.id);
+        await this.service.removeTeam(teamId);
         await this.load();
-      } catch (error) {
-        this.setError(this.message(error));
+      } catch (e) {
+        this.setError(e);
+      }
+    });
+  }
+
+  askRemoveParticipant(participantId: string): void {
+    this.confirmMessage.set("Eliminare questo partecipante?");
+    this.confirmPending.set(async () => {
+      try {
+        await this.service.removeParticipant(participantId);
+        await this.load();
+      } catch (e) {
+        this.setError(e);
+      }
+    });
+  }
+
+  askRemoveDirectEntry(teamId: string): void {
+    this.confirmMessage.set("Eliminare questa iscrizione?");
+    this.confirmPending.set(async () => {
+      try {
+        await this.service.removeTeam(teamId);
+        await this.load();
+      } catch (e) {
+        this.setError(e);
       }
     });
   }
@@ -1201,144 +728,88 @@ export class RegistrationsComponent implements OnInit {
 
   closeModal(): void {
     this.modalMode.set(null);
-  }
-
-  // ─── Stats ───────────────────────────────────────────────────────────────────
-
-  teamCount(): number {
-    return this.tournaments().reduce(
-      (sum, t) => sum + t.tournament_teams.length,
-      0,
-    );
-  }
-
-  participantCount(): number {
-    return this.tournaments().reduce(
-      (sum, t) =>
-        sum +
-        t.tournament_teams.reduce(
-          (s, team) => s + this.teamPeopleCount(t, team),
-          0,
-        ),
-      0,
-    );
-  }
-
-  paidCount(): number {
-    return this.allTeams().filter((t) => t.paid).length;
-  }
-  pendingCount(): number {
-    return this.allTeams().filter((t) => !t.paid).length;
-  }
-  paidAmount(): number {
-    return this.allTeams()
-      .filter((t) => t.paid)
-      .reduce((s, t) => s + this.teamFee(t), 0);
-  }
-  pendingAmount(): number {
-    return this.allTeams()
-      .filter((t) => !t.paid)
-      .reduce((s, t) => s + this.teamFee(t), 0);
-  }
-  filteredTournamentTeams(
-    tournament: TournamentWithTeams,
-  ): TournamentTeamWithParticipants[] {
-    return this.filterTeams(tournament.tournament_teams);
-  }
-
-  eur(value: number): string {
-    return new Intl.NumberFormat("it-IT", {
-      style: "currency",
-      currency: "EUR",
-    }).format(value);
-  }
-  formatDateTime(value: string): string {
-    return new Intl.DateTimeFormat("it-IT", {
-      dateStyle: "short",
-      timeStyle: "short",
-    }).format(new Date(value));
-  }
-  insertMeta(team: TournamentTeamWithParticipants): string {
-    return `Inserita da ${this.userNames()[team.created_by ?? ""] ?? "Utente non disponibile"} · ${this.formatDateTime(team.created_at)}`;
-  }
-
-  personName(
-    participant:
-      | Pick<TeamParticipant, "first_name" | "last_name">
-      | null
-      | undefined,
-  ): string {
-    if (!participant) return "";
-    return [
-      this.namePart(participant.first_name),
-      this.namePart(participant.last_name),
-    ]
-      .filter(Boolean)
-      .join(" ");
-  }
-
-  teamHint(
-    tournament: TournamentWithTeams,
-    team: TournamentTeamWithParticipants,
-  ): string {
-    if (tournament.sport === "calcio") {
-      const contacts = this.footballContactCount(team);
-      return contacts ? `${contacts} referenti` : "Referenti non inseriti";
-    }
-
-    const limit = this.participantLimit(tournament);
-    return limit
-      ? `${team.team_participants.length}/${limit} persone`
-      : `${team.team_participants.length} partecipanti`;
-  }
-
-  canAddParticipant(
-    tournament: TournamentWithTeams,
-    team: TournamentTeamWithParticipants,
-  ): boolean {
-    const limit = this.participantLimit(tournament);
-    return !limit || team.team_participants.length < limit;
-  }
-
-  teamFee(team: TournamentTeamWithParticipants): number {
-    return this.tournamentFee(team.tournament_id);
-  }
-
-  selectedTeamSport(): string {
-    return this.findTournament(this.teamForm.tournament_id)?.sport ?? "calcio";
-  }
-
-  selectedParticipantSport(): string {
-    const team = this.findTeam(this.participantForm.team_id);
-    return team
-      ? (this.findTournament(team.tournament_id)?.sport ?? "altro")
-      : "altro";
-  }
-
-  sportLabel(sport: string): string {
-    if (sport === "pallavolo") return "Green Volley";
-    if (sport === "calcio") return "Calcio";
-    return "Altro";
+    this.editingTournament.set(null);
+    this.editingTeam.set(null);
+    this.editingParticipant.set(null);
+    this.editingDirectTeam.set(null);
+    this.modalError.set("");
   }
 
   export(): void {
-    const rows = this.tournaments().flatMap((tournament) =>
-      this.filterTeams(tournament.tournament_teams).flatMap((team) =>
-        team.team_participants.length
-          ? team.team_participants.map((p) =>
-              this.exportRow(tournament, team, p),
-            )
-          : [this.exportRow(tournament, team, null)],
-      ),
-    );
+    const rows: any[] = [];
+    for (const tournament of this.tournaments()) {
+      for (const team of tournament.tournament_teams || []) {
+        if (this.isDirect(tournament)) {
+          rows.push({
+            tournament: tournament.name,
+            sport: tournament.sport,
+            iscritti: team.team_participants
+              ?.map((p) => `${p.first_name} ${p.last_name}`)
+              .join(", "),
+            pagato: team.paid ? "Sì" : "No",
+          });
+        } else {
+          if (!team.team_participants?.length) {
+            rows.push({
+              tournament: tournament.name,
+              sport: tournament.sport,
+              squadra: team.name,
+              capitano: team.captain_name,
+              vice_capitano: team.vice_captain_name,
+              pagato: team.paid ? "Sì" : "No",
+            });
+          } else {
+            for (const participant of team.team_participants) {
+              rows.push({
+                tournament: tournament.name,
+                sport: tournament.sport,
+                squadra: team.name,
+                partecipante: `${participant.first_name} ${participant.last_name}`,
+                contatto: participant.contact,
+                pagato: team.paid ? "Sì" : "No",
+              });
+            }
+          }
+        }
+      }
+    }
     this.exporter.downloadCsv(
       "tornei-squadre-partecipanti-la-fossa-games.csv",
       rows,
     );
   }
 
-  private participantLimit(tournament: TournamentWithTeams): number | null {
-    return (
+  isDirect(t: TournamentWithTeams): boolean {
+    return DIRECT_CODES.includes(t.code || "");
+  }
+
+  async togglePaid(team: TournamentTeamWithParticipants): Promise<void> {
+    try {
+      await this.service.updateTeam(team.id, { paid: !team.paid });
+      await this.load();
+    } catch (e) {
+      this.setError(e);
+    }
+  }
+
+  isDuoTournament(t: TournamentWithTeams): boolean {
+    return DUO_CODES.includes(t.code || "");
+  }
+
+  private filterTeamsByPayment(
+    teams: TournamentTeamWithParticipants[],
+  ): TournamentTeamWithParticipants[] {
+    const filter = this.paymentFilter();
+    if (filter === "paid") return teams.filter((t) => t.paid);
+    if (filter === "pending") return teams.filter((t) => !t.paid);
+    return teams;
+  }
+
+  private canAddParticipant(
+    tournament: TournamentWithTeams,
+    team: TournamentTeamWithParticipants,
+  ): boolean {
+    const limit =
       (
         {
           pallavolo: 5,
@@ -1347,59 +818,34 @@ export class RegistrationsComponent implements OnInit {
           "ping-pong": 1,
           "calcio-balilla": 2,
         } as Record<string, number>
-      )[tournament.code ?? ""] ?? null
-    );
-  }
-
-  private teamPeopleCount(
-    tournament: TournamentWithTeams,
-    team: TournamentTeamWithParticipants,
-  ): number {
-    return tournament.sport === "calcio"
-      ? this.footballContactCount(team)
-      : team.team_participants.length;
-  }
-
-  private footballContactCount(team: TournamentTeamWithParticipants): number {
-    return [team.captain_name, team.vice_captain_name].filter((value) =>
-      Boolean(this.namePart(value)),
-    ).length;
-  }
-
-  private allTeams(): TournamentTeamWithParticipants[] {
-    return this.tournaments().flatMap((t) => t.tournament_teams);
-  }
-
-  private filterTeams(
-    teams: TournamentTeamWithParticipants[],
-  ): TournamentTeamWithParticipants[] {
-    const payment = this.paymentFilter();
-    if (payment === "paid") return teams.filter((team) => team.paid);
-    if (payment === "pending") return teams.filter((team) => !team.paid);
-    return teams;
-  }
-
-  private findTournament(
-    tournamentId: string,
-  ): TournamentWithTeams | undefined {
-    return this.tournaments().find((t) => t.id === tournamentId);
+      )[tournament.code ?? ""] ?? null;
+    return !limit || team.team_participants.length < limit;
   }
 
   private findTeam(teamId: string): TournamentTeamWithParticipants | undefined {
-    return this.allTeams().find((team) => team.id === teamId);
+    return this.tournaments()
+      .flatMap((tournament) => tournament.tournament_teams)
+      .find((team) => team.id === teamId);
   }
 
   private tournamentFee(tournamentId: string): number {
-    return Number(this.findTournament(tournamentId)?.fee || 0);
+    return Number(
+      this.tournaments().find((tournament) => tournament.id === tournamentId)
+        ?.fee || 0,
+    );
   }
 
-  private emptyTournamentForm(): InsertTournament {
-    return { name: "", sport: "calcio", fee: 0, date: null, notes: null };
-  }
-
-  private emptyTeamForm(tournamentId: string): InsertTournamentTeam {
+  private normalizeDirectPerson(person: DirectPerson): DirectPerson {
     return {
-      tournament_id: tournamentId,
+      first_name: person.first_name.trim(),
+      last_name: person.last_name.trim(),
+      contact: person.contact.trim(),
+    };
+  }
+
+  private emptyTeamForm(): InsertTournamentTeam {
+    return {
+      tournament_id: "",
       name: "",
       captain_name: "",
       captain_contact: "",
@@ -1411,9 +857,9 @@ export class RegistrationsComponent implements OnInit {
     };
   }
 
-  private emptyParticipantForm(teamId: string): InsertTeamParticipant {
+  private emptyParticipantForm(): InsertTeamParticipant {
     return {
-      team_id: teamId,
+      team_id: "",
       first_name: "",
       last_name: "",
       contact: "",
@@ -1422,69 +868,31 @@ export class RegistrationsComponent implements OnInit {
     };
   }
 
-  private emptyDirectForm(tournamentId: string): DirectForm {
+  private emptyDirectForm(): DirectForm {
     return {
-      tournament_id: tournamentId,
+      tournament_id: "",
       paid: false,
       person1: { first_name: "", last_name: "", contact: "" },
       person2: { first_name: "", last_name: "", contact: "" },
     };
   }
 
-  private exportRow(
-    tournament: TournamentWithTeams,
-    team: TournamentTeamWithParticipants,
-    participant: TeamParticipant | null,
-  ): Record<string, unknown> {
-    return {
-      torneo: tournament.name,
-      sport: this.sportLabel(tournament.sport),
-      iscrizione: team.name,
-      quota: tournament.fee,
-      pagata: team.paid ? "si" : "no",
-      capitano: this.namePart(team.captain_name),
-      contatto_capitano: team.captain_contact ?? "",
-      vicecapitano: this.namePart(team.vice_captain_name),
-      contatto_vicecapitano: team.vice_captain_contact ?? "",
-      nome: this.namePart(participant?.first_name ?? ""),
-      cognome: this.namePart(participant?.last_name ?? ""),
-      contatto: participant?.contact ?? "",
-      tesserato_fipav:
-        participant && tournament.sport === "pallavolo"
-          ? participant.registered
-            ? "si"
-            : "no"
-          : "",
-    };
+  private setError(e: unknown): void {
+    const msg = e instanceof Error ? e.message : "Operazione non riuscita";
+    this.error.set(msg);
+    this.snackbar.error(msg);
   }
 
-  private normalizedDirectPerson(person: DirectPerson): DirectPerson {
-    return {
-      first_name: this.namePart(person.first_name),
-      last_name: this.namePart(person.last_name),
-      contact: person.contact,
-    };
+  private setModalError(e: unknown): void {
+    const msg = e instanceof Error ? e.message : "Operazione non riuscita";
+    this.modalError.set(msg);
+    this.snackbar.error(msg);
   }
 
-  namePart(value: string | null | undefined): string {
-    return (value ?? "")
-      .trim()
-      .toLocaleLowerCase("it-IT")
-      .replace(
-        /(^|[\s'-])(\p{L})/gu,
-        (_match, prefix: string, letter: string) =>
-          `${prefix}${letter.toLocaleUpperCase("it-IT")}`,
-      );
+  eur(value: number): string {
+    return new Intl.NumberFormat("it-IT", {
+      style: "currency",
+      currency: "EUR",
+    }).format(value);
   }
-
-  private message(error: unknown): string {
-    return error instanceof Error ? error.message : "Operazione non riuscita.";
-  }
-
-  private setError(message: string): void {
-    this.error.set(message);
-    this.snackbar.error(message);
-  }
-
-  protected readonly String = String;
 }

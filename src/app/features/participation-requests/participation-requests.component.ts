@@ -54,7 +54,7 @@ const DIRECT_CODES = [...SOLO_CODES, ...DUO_CODES];
     ConfirmModalComponent,
   ],
   template: `
-    <section class="space-y-4">
+    <section class="space-y-5">
       <div class="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p class="text-xs font-bold uppercase tracking-[0.18em] text-muted">
