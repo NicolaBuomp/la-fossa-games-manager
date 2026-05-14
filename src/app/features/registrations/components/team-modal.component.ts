@@ -1,6 +1,6 @@
 import { Component, EventEmitter, Input, Output, signal } from "@angular/core";
 import { FormsModule } from "@angular/forms";
-import { InsertTournamentTeam, Profile } from "../../../core/types/models";
+import { InsertTournamentTeam } from "../../../core/types/models";
 import { ModalComponent } from "../../../shared/components/ui.component";
 
 @Component({
@@ -28,35 +28,23 @@ import { ModalComponent } from "../../../shared/components/ui.component";
 
           <label class="grid gap-1 text-sm font-bold">
             Capitano <span class="text-red-500">*</span>
-            <select
+            <input
+              type="text"
               required
               name="captain_name"
               [(ngModel)]="form.captain_name"
               class="rounded-lg border border-soft bg-surface-muted px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"
-            >
-              <option value="">Seleziona capitano...</option>
-              @for (profile of profiles(); track profile.id) {
-                <option [value]="profileDisplayName(profile)">
-                  {{ profileDisplayName(profile) }}
-                </option>
-              }
-            </select>
+            />
           </label>
 
           <label class="grid gap-1 text-sm font-bold">
             Vice capitano
-            <select
+            <input
+              type="text"
               name="vice_captain_name"
               [(ngModel)]="form.vice_captain_name"
               class="rounded-lg border border-soft bg-surface-muted px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"
-            >
-              <option value="">Nessuno</option>
-              @for (profile of profiles(); track profile.id) {
-                <option [value]="profileDisplayName(profile)">
-                  {{ profileDisplayName(profile) }}
-                </option>
-              }
-            </select>
+            />
           </label>
 
           <label
@@ -102,7 +90,6 @@ import { ModalComponent } from "../../../shared/components/ui.component";
 })
 export class TeamModalComponent {
   @Input({ required: true }) open!: () => boolean;
-  @Input({ required: true }) profiles!: () => Profile[];
   @Input() formValue: InsertTournamentTeam | null = null;
   @Input() editing = false;
   @Input() loading = signal(false);
@@ -118,10 +105,6 @@ export class TeamModalComponent {
 
   submit(): void {
     this.save.emit({ ...this.form });
-  }
-
-  profileDisplayName(profile: Profile): string {
-    return profile.full_name?.trim() || profile.email?.trim() || profile.id;
   }
 
   private emptyForm(): InsertTournamentTeam {

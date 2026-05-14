@@ -1,7 +1,6 @@
 import { Component, OnInit, computed, inject, signal } from "@angular/core";
 import { AuthService } from "../../core/services/auth.service";
 import { ExportService } from "../../core/services/export.service";
-import { ProfileService } from "../../core/services/profile.service";
 import { RegistrationsService } from "../../core/services/registrations.service";
 import { SnackbarService } from "../../core/services/snackbar.service";
 import {
@@ -164,7 +163,6 @@ const DIRECT_CODES = [...SOLO_CODES, ...DUO_CODES];
     <!-- Team Modal -->
     <lfg-team-modal
       [open]="() => modalMode() === 'team'"
-      [profiles]="() => profiles()"
       [formValue]="teamForm"
       [editing]="!!editingTeam()"
       [loading]="saving"
@@ -211,12 +209,10 @@ export class RegistrationsComponent implements OnInit {
   readonly auth = inject(AuthService);
   private readonly service = inject(RegistrationsService);
   private readonly exporter = inject(ExportService);
-  private readonly profilesService = inject(ProfileService);
   private readonly snackbar = inject(SnackbarService);
 
   // State
   tournaments = signal<TournamentWithTeams[]>([]);
-  profiles = signal<any[]>([]);
   selectedTournamentId = signal<string | null>(null);
   paymentFilter = signal<PaymentFilter>("all");
   modalMode = signal<ModalMode>(null);
@@ -359,12 +355,8 @@ export class RegistrationsComponent implements OnInit {
   async load(): Promise<void> {
     this.error.set("");
     try {
-      const [tournaments, profiles] = await Promise.all([
-        this.service.listTournaments(),
-        this.profilesService.list(),
-      ]);
+      const tournaments = await this.service.listTournaments();
       this.tournaments.set(tournaments);
-      this.profiles.set(profiles);
       if (!this.selectedTournamentId() && tournaments.length) {
         this.selectedTournamentId.set(tournaments[0].id);
       }
