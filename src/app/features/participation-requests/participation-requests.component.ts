@@ -1,6 +1,9 @@
 import { Component, OnInit, inject, signal } from "@angular/core";
 import { FormsModule } from "@angular/forms";
-import { ParticipationRequestsService } from "../../core/services/participation-requests.service";
+import {
+  ParticipationRequestTransferPayload,
+  ParticipationRequestsService,
+} from "../../core/services/participation-requests.service";
 import { RequestBadgesService } from "../../core/services/request-badges.service";
 import { SnackbarService } from "../../core/services/snackbar.service";
 import {
@@ -12,11 +15,32 @@ import {
   ConfirmModalComponent,
   EmptyStateComponent,
   KpiPanelComponent,
+  ModalComponent,
   StatusBadgeComponent,
   SummaryCardComponent,
 } from "../../shared/components/ui.component";
 
 type RequestStatus = ParticipationRequest["status"];
+type TransferPerson = {
+  first_name: string;
+  last_name: string;
+  contact: string;
+};
+type TransferForm = {
+  team_name: string;
+  paid: boolean;
+  captain_name: string;
+  captain_contact: string;
+  vice_captain_name: string;
+  vice_captain_contact: string;
+  participant_registered: boolean;
+  person2: TransferPerson;
+  notes: string;
+};
+
+const SOLO_CODES = ["fifa", "ping-pong"];
+const DUO_CODES = ["briscola", "calcio-balilla"];
+const DIRECT_CODES = [...SOLO_CODES, ...DUO_CODES];
 
 @Component({
   standalone: true,
@@ -26,6 +50,7 @@ type RequestStatus = ParticipationRequest["status"];
     KpiPanelComponent,
     StatusBadgeComponent,
     SummaryCardComponent,
+    ModalComponent,
     ConfirmModalComponent,
   ],
   template: `
@@ -128,15 +153,13 @@ type RequestStatus = ParticipationRequest["status"];
               </div>
 
               <div class="mt-4 flex flex-wrap gap-2 border-t border-soft pt-4">
-                @if (request.status === "nuova") {
-                  <button
-                    [disabled]="updatingRequestId() === request.id"
-                    class="rounded-lg bg-ink px-4 py-2 text-xs font-bold uppercase text-white disabled:cursor-not-allowed disabled:opacity-60"
-                    (click)="setStatus(request, 'in_gestione')"
-                  >
-                    Accetta
-                  </button>
-                }
+                <button
+                  [disabled]="updatingRequestId() === request.id"
+                  class="rounded-lg bg-ink px-4 py-2 text-xs font-bold uppercase text-white disabled:cursor-not-allowed disabled:opacity-60"
+                  (click)="openTransferModal(request)"
+                >
+                  {{ request.status === "nuova" ? "Accetta" : "Trasferisci" }}
+                </button>
                 @if (request.status !== "contattata") {
                   <button
                     [disabled]="updatingRequestId() === request.id"
@@ -238,6 +261,161 @@ type RequestStatus = ParticipationRequest["status"];
       }
     </section>
 
+    <lfg-modal
+      [open]="!!transferRequest()"
+      [title]="transferModalTitle()"
+      (close)="closeTransferModal()"
+    >
+      @if (transferRequest(); as request) {
+        <form class="grid gap-4" (ngSubmit)="transferRequestToTournament()">
+          <fieldset
+            [disabled]="!!updatingRequestId()"
+            class="grid gap-4 disabled:opacity-70"
+          >
+            <div class="rounded-lg border border-soft bg-surface-muted p-3">
+              <p
+                class="text-[10px] font-bold uppercase tracking-wide text-muted"
+              >
+                Torneo
+              </p>
+              <p class="text-sm font-black">
+                {{ request.tournaments?.name || "Torneo non disponibile" }}
+              </p>
+            </div>
+
+            @if (requiresTeamName(request)) {
+              <label class="grid gap-1 text-sm font-bold"
+                >Squadra
+                <input
+                  required
+                  name="transferTeamName"
+                  [(ngModel)]="transferForm.team_name"
+                  class="rounded-lg border border-soft bg-surface-muted px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"
+              /></label>
+            }
+
+            @if (isFootballRequest(request)) {
+              <div class="grid gap-3 sm:grid-cols-2">
+                <label class="grid gap-1 text-sm font-bold"
+                  >Capitano
+                  <input
+                    required
+                    name="transferCaptainName"
+                    [(ngModel)]="transferForm.captain_name"
+                    class="rounded-lg border border-soft bg-surface-muted px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"
+                /></label>
+                <label class="grid gap-1 text-sm font-bold"
+                  >Contatto capitano
+                  <input
+                    name="transferCaptainContact"
+                    [(ngModel)]="transferForm.captain_contact"
+                    class="rounded-lg border border-soft bg-surface-muted px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"
+                /></label>
+              </div>
+              <div class="grid gap-3 sm:grid-cols-2">
+                <label class="grid gap-1 text-sm font-bold"
+                  >Vicecapitano
+                  <input
+                    required
+                    name="transferViceCaptainName"
+                    [(ngModel)]="transferForm.vice_captain_name"
+                    class="rounded-lg border border-soft bg-surface-muted px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"
+                /></label>
+                <label class="grid gap-1 text-sm font-bold"
+                  >Contatto vicecapitano
+                  <input
+                    name="transferViceCaptainContact"
+                    [(ngModel)]="transferForm.vice_captain_contact"
+                    class="rounded-lg border border-soft bg-surface-muted px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"
+                /></label>
+              </div>
+            }
+
+            @if (isDuoRequest(request)) {
+              <fieldset class="grid gap-3 rounded-lg border border-soft p-4">
+                <legend
+                  class="px-1 text-xs font-black uppercase tracking-[0.16em] text-muted"
+                >
+                  Seconda persona
+                </legend>
+                <div class="grid gap-3 sm:grid-cols-2">
+                  <label class="grid gap-1 text-sm font-bold"
+                    >Nome
+                    <input
+                      required
+                      name="transferPerson2FirstName"
+                      [(ngModel)]="transferForm.person2.first_name"
+                      class="rounded-lg border border-soft bg-surface-muted px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"
+                  /></label>
+                  <label class="grid gap-1 text-sm font-bold"
+                    >Cognome
+                    <input
+                      required
+                      name="transferPerson2LastName"
+                      [(ngModel)]="transferForm.person2.last_name"
+                      class="rounded-lg border border-soft bg-surface-muted px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"
+                  /></label>
+                </div>
+                <label class="grid gap-1 text-sm font-bold"
+                  >Contatto
+                  <input
+                    name="transferPerson2Contact"
+                    [(ngModel)]="transferForm.person2.contact"
+                    class="rounded-lg border border-soft bg-surface-muted px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"
+                /></label>
+              </fieldset>
+            }
+
+            @if (isVolleyballRequest(request)) {
+              <label
+                class="flex items-center gap-3 rounded-lg bg-surface-muted p-3 text-sm font-bold"
+              >
+                <input
+                  type="checkbox"
+                  name="transferParticipantRegistered"
+                  [(ngModel)]="transferForm.participant_registered"
+                  class="h-5 w-5 accent-emerald-600 disabled:cursor-not-allowed disabled:opacity-70"
+                />
+                Richiedente tesserato FIPAV
+              </label>
+            }
+
+            <label
+              class="flex items-center gap-3 rounded-lg bg-surface-muted p-3 text-sm font-bold"
+            >
+              <input
+                type="checkbox"
+                name="transferPaid"
+                [(ngModel)]="transferForm.paid"
+                class="h-5 w-5 accent-emerald-600 disabled:cursor-not-allowed disabled:opacity-70"
+              />
+              Iscrizione pagata
+            </label>
+
+            <label class="grid gap-1 text-sm font-bold"
+              >Note iscrizione
+              <textarea
+                rows="3"
+                name="transferNotes"
+                [(ngModel)]="transferForm.notes"
+                class="rounded-lg border border-soft bg-surface-muted px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"
+              ></textarea>
+            </label>
+
+            <button
+              class="rounded-lg bg-ink px-4 py-3 text-sm font-bold uppercase text-white disabled:opacity-60"
+            >
+              {{
+                updatingRequestId() === request.id
+                  ? "Trasferimento…"
+                  : "Trasferisci nel torneo"
+              }}
+            </button>
+          </fieldset>
+        </form>
+      }
+    </lfg-modal>
+
     <lfg-confirm
       [open]="!!confirmPending()"
       [message]="confirmMessage()"
@@ -253,9 +431,11 @@ export class ParticipationRequestsComponent implements OnInit {
   error = signal("");
   savingNoteId = signal<string | null>(null);
   updatingRequestId = signal<string | null>(null);
+  transferRequest = signal<ParticipationRequestWithTournament | null>(null);
   confirmPending = signal<(() => Promise<void>) | null>(null);
   confirmMessage = signal("");
   private readonly snackbar = inject(SnackbarService);
+  transferForm: TransferForm = this.emptyTransferForm();
 
   constructor(
     private readonly service: ParticipationRequestsService,
@@ -299,6 +479,43 @@ export class ParticipationRequestsComponent implements OnInit {
         ),
       );
       await this.badges.refresh();
+    } catch (error) {
+      this.setError(this.message(error));
+    } finally {
+      this.updatingRequestId.set(null);
+    }
+  }
+
+  openTransferModal(request: ParticipationRequestWithTournament): void {
+    this.transferRequest.set(request);
+    const fullName = this.personName(request.first_name, request.last_name);
+    this.transferForm = {
+      ...this.emptyTransferForm(),
+      team_name: this.defaultTeamName(request),
+      captain_name: fullName,
+      captain_contact: this.normalizePhone(request.phone),
+      person2: { first_name: "", last_name: "", contact: "" },
+      notes: `Richiesta del ${this.formatDateTime(request.created_at)}`,
+    };
+  }
+
+  closeTransferModal(): void {
+    if (this.updatingRequestId()) return;
+    this.transferRequest.set(null);
+  }
+
+  async transferRequestToTournament(): Promise<void> {
+    const request = this.transferRequest();
+    if (!request || this.updatingRequestId()) return;
+    this.updatingRequestId.set(request.id);
+    try {
+      await this.service.transferToTournament(
+        request,
+        this.transferPayload(request),
+      );
+      this.transferRequest.set(null);
+      await this.load();
+      this.snackbar.success("Richiesta trasferita nel torneo.");
     } catch (error) {
       this.setError(this.message(error));
     } finally {
@@ -367,6 +584,7 @@ export class ParticipationRequestsComponent implements OnInit {
       in_gestione: "In gestione",
       contattata: "Contattata",
       archiviata: "Archiviata",
+      trasferita: "Trasferita",
     }[status];
   }
 
@@ -376,6 +594,7 @@ export class ParticipationRequestsComponent implements OnInit {
       in_gestione: "state-info",
       contattata: "state-success",
       archiviata: "state-neutral",
+      trasferita: "state-success",
     }[status];
   }
 
@@ -401,6 +620,143 @@ export class ParticipationRequestsComponent implements OnInit {
 
   noteAuthor(note: ParticipationRequestNoteWithProfile): string {
     return note.profiles?.full_name || note.profiles?.email || "Admin";
+  }
+
+  transferModalTitle(): string {
+    const request = this.transferRequest();
+    return request?.tournaments?.name
+      ? `Trasferisci in ${request.tournaments.name}`
+      : "Trasferisci nel torneo";
+  }
+
+  requiresTeamName(request: ParticipationRequestWithTournament): boolean {
+    return !this.isDirectRequest(request);
+  }
+
+  isFootballRequest(request: ParticipationRequestWithTournament): boolean {
+    return request.tournaments?.sport === "calcio";
+  }
+
+  isVolleyballRequest(request: ParticipationRequestWithTournament): boolean {
+    return request.tournaments?.sport === "pallavolo";
+  }
+
+  isDirectRequest(request: ParticipationRequestWithTournament): boolean {
+    return DIRECT_CODES.includes(request.tournaments?.code ?? "");
+  }
+
+  isDuoRequest(request: ParticipationRequestWithTournament): boolean {
+    return DUO_CODES.includes(request.tournaments?.code ?? "");
+  }
+
+  private transferPayload(
+    request: ParticipationRequestWithTournament,
+  ): ParticipationRequestTransferPayload {
+    const requester = {
+      first_name: this.namePart(request.first_name),
+      last_name: this.namePart(request.last_name),
+      contact: this.normalizePhone(request.phone) || null,
+      gender: "uomo" as const,
+      registered: this.isVolleyballRequest(request)
+        ? this.transferForm.participant_registered
+        : false,
+    };
+    const person2 = this.normalizedTransferPerson(this.transferForm.person2);
+    const participants = this.isFootballRequest(request)
+      ? []
+      : [
+          requester,
+          ...(this.isDuoRequest(request)
+            ? [
+                {
+                  ...person2,
+                  contact: person2.contact || null,
+                  gender: "uomo" as const,
+                  registered: false,
+                },
+              ]
+            : []),
+        ];
+
+    return {
+      team_name: this.normalizedTeamName(request),
+      captain_name: this.isFootballRequest(request)
+        ? this.namePart(this.transferForm.captain_name) || null
+        : null,
+      captain_contact: this.isFootballRequest(request)
+        ? this.transferForm.captain_contact.trim() || null
+        : null,
+      vice_captain_name: this.isFootballRequest(request)
+        ? this.namePart(this.transferForm.vice_captain_name) || null
+        : null,
+      vice_captain_contact: this.isFootballRequest(request)
+        ? this.transferForm.vice_captain_contact.trim() || null
+        : null,
+      paid: this.transferForm.paid,
+      notes: this.transferForm.notes.trim() || null,
+      participants,
+    };
+  }
+
+  private normalizedTeamName(
+    request: ParticipationRequestWithTournament,
+  ): string {
+    if (!this.isDirectRequest(request)) {
+      return this.namePart(this.transferForm.team_name);
+    }
+
+    if (this.isDuoRequest(request)) {
+      const person2 = this.normalizedTransferPerson(this.transferForm.person2);
+      return `${this.namePart(request.first_name)} / ${person2.first_name}`;
+    }
+
+    return this.personName(request.first_name, request.last_name);
+  }
+
+  private defaultTeamName(request: ParticipationRequestWithTournament): string {
+    if (this.isDirectRequest(request)) {
+      return this.personName(request.first_name, request.last_name);
+    }
+    return `Squadra ${this.personName(request.first_name, request.last_name)}`;
+  }
+
+  private normalizedTransferPerson(person: TransferPerson): TransferPerson {
+    return {
+      first_name: this.namePart(person.first_name),
+      last_name: this.namePart(person.last_name),
+      contact: person.contact.trim(),
+    };
+  }
+
+  private personName(firstName: string, lastName: string): string {
+    return [this.namePart(firstName), this.namePart(lastName)]
+      .filter(Boolean)
+      .join(" ");
+  }
+
+  private namePart(value: string | null | undefined): string {
+    return (value ?? "")
+      .trim()
+      .toLocaleLowerCase("it-IT")
+      .replace(
+        /(^|[\s'-])(\p{L})/gu,
+        (_match, prefix: string, letter: string) =>
+          `${prefix}${letter.toLocaleUpperCase("it-IT")}`,
+      );
+  }
+
+  private emptyTransferForm(): TransferForm {
+    return {
+      team_name: "",
+      paid: false,
+      captain_name: "",
+      captain_contact: "",
+      vice_captain_name: "",
+      vice_captain_contact: "",
+      participant_registered: false,
+      person2: { first_name: "", last_name: "", contact: "" },
+      notes: "",
+    };
   }
 
   private message(error: unknown): string {

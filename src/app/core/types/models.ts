@@ -161,11 +161,12 @@ export interface ParticipationRequest {
   tournament_id: string;
   first_name: string;
   last_name: string;
+  email: string | null;
   phone: string;
   privacy_accepted: boolean;
   whatsapp_accepted: boolean;
   rules_accepted: boolean;
-  status: 'nuova' | 'in_gestione' | 'contattata' | 'archiviata';
+  status: 'nuova' | 'in_gestione' | 'contattata' | 'archiviata' | 'trasferita';
   updated_by: string | null;
   created_at: string;
   updated_at: string;
@@ -184,7 +185,7 @@ export interface ParticipationRequestNoteWithProfile extends ParticipationReques
 }
 
 export interface ParticipationRequestWithTournament extends ParticipationRequest {
-  tournaments: Pick<Tournament, 'name'> | null;
+  tournaments: Pick<Tournament, 'name' | 'code' | 'sport' | 'fee'> | null;
   participation_request_notes: ParticipationRequestNoteWithProfile[];
 }
 
@@ -207,4 +208,6 @@ export type InsertRegistration = Omit<Registration, 'id' | 'created_by' | 'updat
 export type InsertTournament = Omit<Tournament, 'id' | 'code' | 'created_by' | 'updated_by' | 'created_at' | 'updated_at'> & { code?: string | null };
 export type InsertTournamentTeam = Omit<TournamentTeam, 'id' | 'created_by' | 'updated_by' | 'created_at' | 'updated_at'>;
 export type InsertTeamParticipant = Omit<TeamParticipant, 'id' | 'created_by' | 'updated_by' | 'created_at' | 'updated_at'>;
-export type InsertParticipationRequest = Omit<ParticipationRequest, 'id' | 'status' | 'updated_by' | 'created_at' | 'updated_at'>;
+export type InsertParticipationRequest = Omit<ParticipationRequest, 'id' | 'email' | 'status' | 'updated_by' | 'created_at' | 'updated_at'> & {
+  email?: string | null;
+};
