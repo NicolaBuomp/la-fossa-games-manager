@@ -8,24 +8,7 @@ const outputPath = path.join(
   "environments",
   "environment.generated.ts",
 );
-const mode = (process.argv[2] || "development").toLowerCase();
-
-const modeEnvFiles = {
-  development: [
-    ".env.development.local",
-    ".env.development",
-    ".env.local",
-    ".env",
-  ],
-  production: [
-    ".env.production.local",
-    ".env.production",
-    ".env.local",
-    ".env",
-  ],
-};
-
-const envFiles = modeEnvFiles[mode] || [".env.local", ".env"];
+const envFiles = [".env.local", ".env"];
 
 function parseEnv(content) {
   return content
@@ -65,30 +48,15 @@ const fileValues = envFiles.reduce((values, fileName) => {
   };
 }, {});
 
-const keyByMode = {
-  development: {
-    url: ["SUPABASE_URL_DEV", "SUPABASE_URL"],
-    anon: ["SUPABASE_ANON_KEY_DEV", "SUPABASE_ANON_KEY"],
-  },
-  production: {
-    url: ["SUPABASE_URL_PROD", "SUPABASE_URL"],
-    anon: ["SUPABASE_ANON_KEY_PROD", "SUPABASE_ANON_KEY"],
-  },
-};
+const pickValue = (key) => fileValues[key] || process.env[key];
 
-const selectedKeys = keyByMode[mode] || keyByMode.development;
-const pickFirst = (candidates) =>
-  candidates
-    .map((key) => process.env[key] || fileValues[key])
-    .find((value) => Boolean(value));
-
-const supabaseUrl = pickFirst(selectedKeys.url);
-const supabaseAnonKey = pickFirst(selectedKeys.anon);
+const supabaseUrl = pickValue("SUPABASE_URL");
+const supabaseAnonKey = pickValue("SUPABASE_ANON_KEY");
 
 if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error(
-    `Missing Supabase keys for mode '${mode}'. ` +
-      `Accepted keys: ${selectedKeys.url.join("/")} and ${selectedKeys.anon.join("/")}. ` +
+    "Missing Supabase keys. " +
+      "Required keys: SUPABASE_URL and SUPABASE_ANON_KEY. " +
       `Add them to one of: ${envFiles.join(", ")} or process env.`,
   );
 }
@@ -101,4 +69,4 @@ export const supabaseConfig = {
 `;
 
 fs.writeFileSync(outputPath, generated);
-console.log(`Generated ${path.relative(root, outputPath)} for mode '${mode}'`);
+console.log(`Generated ${path.relative(root, outputPath)}`);

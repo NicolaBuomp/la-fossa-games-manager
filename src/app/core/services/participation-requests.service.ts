@@ -29,8 +29,24 @@ export class ParticipationRequestsService {
       .select("*, tournaments(name), participation_request_notes(*)")
       .order("created_at", { ascending: false });
 
-    if (fallback.error) throw error;
-    return this.mapRequests(fallback.data);
+    if (!fallback.error) {
+      return this.mapRequests(fallback.data);
+    }
+
+    // Last fallback: if notes are blocked by RLS, keep the base requests visible.
+    const baseOnly = await this.supabase.client
+      .from("participation_requests")
+      .select("*, tournaments(name)")
+      .order("created_at", { ascending: false });
+
+    if (baseOnly.error) throw error;
+    const rows = (baseOnly.data ??
+      []) as Array<ParticipationRequestWithTournament>;
+
+    return rows.map((request) => ({
+      ...request,
+      participation_request_notes: [],
+    }));
   }
 
   async pendingCount(): Promise<number> {

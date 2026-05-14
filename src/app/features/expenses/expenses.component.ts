@@ -33,7 +33,7 @@ import {
       <div class="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p
-            class="text-xs font-bold uppercase tracking-[0.18em] text-neutral-500"
+            class="text-xs font-bold uppercase tracking-[0.18em] text-muted"
           >
             Modulo spese
           </p>
@@ -41,7 +41,7 @@ import {
         </div>
         <div class="flex gap-2">
           <button
-            class="rounded-lg bg-white px-4 py-2 text-sm font-bold ring-1 ring-black/10"
+            class="rounded-lg bg-surface px-4 py-2 text-sm font-bold ring-1 ring-black/15 transition hover:bg-surface-muted"
             (click)="export()"
           >
             CSV
@@ -72,7 +72,7 @@ import {
         </section>
       </lfg-kpi-panel>
       @if (error()) {
-        <p class="rounded-lg bg-red-50 p-3 text-sm text-red-700">
+        <p class="state-danger rounded-lg border p-3 text-sm">
           {{ error() }}
         </p>
       }
@@ -87,23 +87,23 @@ import {
       } @else {
         <div class="grid gap-3">
           @for (item of items(); track item.id) {
-            <article class="rounded-lg border border-black/10 bg-white p-4">
+            <article class="rounded-lg border border-soft bg-surface p-4 shadow-sm">
               <div class="flex flex-wrap justify-between gap-3">
                 <div class="min-w-0">
                   <h2 class="truncate text-base font-bold">
                     {{ item.description }}
                   </h2>
-                  <p class="mt-1 text-xs text-neutral-500">
+                  <p class="mt-1 text-xs text-muted">
                     {{ formatDate(item.date) }} · {{ item.category }}
                     @if (item.paid_by) {
                       · da {{ item.paid_by }}
                     }
                   </p>
-                  <p class="mt-1 text-xs font-semibold text-neutral-500">
+                  <p class="mt-1 text-xs font-semibold text-muted">
                     {{ insertMeta(item) }}
                   </p>
                   @if (item.notes) {
-                    <p class="mt-2 text-sm text-neutral-600">
+                    <p class="mt-2 text-sm text-muted">
                       {{ item.notes }}
                     </p>
                   }
@@ -111,17 +111,17 @@ import {
                 <p class="font-black text-expense">-{{ eur(item.amount) }}</p>
               </div>
               <div
-                class="mt-4 flex justify-end gap-2 border-t border-black/5 pt-3"
+                class="mt-4 flex justify-end gap-2 border-t border-soft pt-3"
               >
                 <button
-                  class="rounded-md bg-neutral-100 px-3 py-1.5 text-xs font-bold uppercase"
+                  class="rounded-md bg-surface-muted px-3 py-1.5 text-xs font-bold uppercase"
                   (click)="edit(item)"
                 >
                   Modifica
                 </button>
                 @if (auth.isAdmin()) {
                   <button
-                    class="rounded-md bg-red-50 px-3 py-1.5 text-xs font-bold uppercase text-red-700"
+                    class="state-danger rounded-md border px-3 py-1.5 text-xs font-bold uppercase"
                     (click)="askRemove(item)"
                   >
                     Elimina
@@ -147,7 +147,7 @@ import {
               required
               name="description"
               [(ngModel)]="form.description"
-              class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"
+              class="rounded-lg border border-soft bg-surface-muted px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"
           /></label>
           <div class="grid gap-3 sm:grid-cols-2">
             <label class="grid gap-1 text-sm font-bold"
@@ -159,7 +159,7 @@ import {
                 step="0.01"
                 name="amount"
                 [(ngModel)]="form.amount"
-                class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"
+                class="rounded-lg border border-soft bg-surface-muted px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"
             /></label>
             <label class="grid gap-1 text-sm font-bold"
               >Data
@@ -168,7 +168,7 @@ import {
                 type="date"
                 name="date"
                 [(ngModel)]="form.date"
-                class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"
+                class="rounded-lg border border-soft bg-surface-muted px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"
             /></label>
           </div>
           <div class="grid gap-3 sm:grid-cols-2">
@@ -177,7 +177,7 @@ import {
               <select
                 name="category"
                 [(ngModel)]="form.category"
-                class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"
+                class="rounded-lg border border-soft bg-surface-muted px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"
               >
                 @for (c of categories; track c) {
                   <option [value]="c">{{ c }}</option>
@@ -189,7 +189,7 @@ import {
               <select
                 name="payment_method"
                 [(ngModel)]="form.payment_method"
-                class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"
+                class="rounded-lg border border-soft bg-surface-muted px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"
               >
                 @for (m of methods; track m) {
                   <option [value]="m">{{ m }}</option>
@@ -202,7 +202,7 @@ import {
             <select
               name="paid_by"
               [(ngModel)]="form.paid_by"
-              class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"
+              class="rounded-lg border border-soft bg-surface-muted px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"
             >
               <option value="">Non indicato</option>
               @for (profile of profilesList(); track profile.id) {
@@ -218,7 +218,7 @@ import {
               name="notes"
               [(ngModel)]="form.notes"
               rows="3"
-              class="rounded-lg border border-black/10 bg-neutral-50 px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"
+              class="rounded-lg border border-soft bg-surface-muted px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"
             ></textarea>
           </label>
           <button

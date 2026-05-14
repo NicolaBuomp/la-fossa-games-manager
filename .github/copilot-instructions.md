@@ -27,8 +27,8 @@ All UI text is in **Italian**. Dates use `it-IT` locale, currency uses EUR forma
 ## Commands
 
 ```bash
-npm start            # dev server :4200 (runs sync:env:dev pre-hook)
-npm run build        # production build (runs sync:env:prod pre-hook)
+npm start            # dev server :4200 (runs sync:env pre-hook)
+npm run build        # production build (runs sync:env pre-hook)
 npm test             # Karma tests
 npm run sync:env     # regenerate src/environments/environment.generated.ts from .env
 npm run deploy:vercel

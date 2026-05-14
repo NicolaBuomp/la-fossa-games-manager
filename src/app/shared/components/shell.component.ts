@@ -49,7 +49,7 @@ interface NavItem {
           @for (item of visibleNav(); track item.path) {
             <a
               [routerLink]="item.path"
-              routerLinkActive="bg-ink text-white"
+              routerLinkActive="bg-fossa !text-ink"
               class="flex items-center justify-between gap-3 rounded-lg px-4 py-3 text-sm font-bold uppercase tracking-wide text-muted transition hover:bg-surface-muted hover:text-primary"
             >
               <span>{{ item.label }}</span>
@@ -64,7 +64,7 @@ interface NavItem {
           }
         </nav>
         <div class="border-t border-soft p-4">
-          <div class="mb-3 rounded-lg border border-soft bg-surface p-2">
+          <div class="mb-3 rounded-lg border border-soft bg-surface-muted p-2">
             <p
               class="text-[10px] font-bold uppercase tracking-[0.16em] text-muted"
             >
@@ -75,9 +75,9 @@ interface NavItem {
                 <button
                   type="button"
                   class="rounded-md px-2 py-1.5 text-[10px] font-bold uppercase tracking-wide transition"
-                  [class.bg-ink]="theme.mode() === mode.id"
-                  [class.text-white]="theme.mode() === mode.id"
-                  [class.bg-surface-muted]="theme.mode() !== mode.id"
+                  [class.bg-fossa]="theme.mode() === mode.id"
+                  [class.text-ink]="theme.mode() === mode.id"
+                  [class.bg-surface]="theme.mode() !== mode.id"
                   [class.text-primary]="theme.mode() !== mode.id"
                   (click)="setTheme(mode.id)"
                 >
@@ -157,7 +157,7 @@ interface NavItem {
                 </svg>
               </a>
               <button
-                class="rounded-full bg-ink px-4 py-2 text-xs font-bold uppercase tracking-wide text-white"
+                class="rounded-full bg-surface-muted px-4 py-2 text-xs font-bold uppercase tracking-wide text-primary ring-1 ring-black/15 transition hover:bg-fossa hover:text-ink"
                 (click)="auth.signOut()"
               >
                 Esci
@@ -209,7 +209,7 @@ interface NavItem {
               @for (item of visibleNav(); track item.path) {
                 <a
                   [routerLink]="item.path"
-                  routerLinkActive="bg-ink text-white"
+                  routerLinkActive="bg-fossa !text-ink"
                   class="flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-bold uppercase tracking-wide text-muted transition hover:bg-surface-muted hover:text-primary"
                   (click)="closeMobileMenu()"
                 >
@@ -230,7 +230,7 @@ interface NavItem {
             </nav>
 
             <div class="border-t border-soft p-4">
-              <div class="mb-3 rounded-lg border border-soft bg-surface p-2">
+              <div class="mb-3 rounded-lg border border-soft bg-surface-muted p-2">
                 <p
                   class="text-[10px] font-bold uppercase tracking-[0.16em] text-muted"
                 >
@@ -241,9 +241,9 @@ interface NavItem {
                     <button
                       type="button"
                       class="rounded-md px-2 py-1.5 text-[10px] font-bold uppercase tracking-wide transition"
-                      [class.bg-ink]="theme.mode() === mode.id"
-                      [class.text-white]="theme.mode() === mode.id"
-                      [class.bg-surface-muted]="theme.mode() !== mode.id"
+                      [class.bg-fossa]="theme.mode() === mode.id"
+                      [class.text-ink]="theme.mode() === mode.id"
+                      [class.bg-surface]="theme.mode() !== mode.id"
                       [class.text-primary]="theme.mode() !== mode.id"
                       (click)="setTheme(mode.id)"
                     >
