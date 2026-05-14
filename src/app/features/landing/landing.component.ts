@@ -9,10 +9,10 @@ import {
   signal,
 } from "@angular/core";
 import { FormsModule } from "@angular/forms";
+import { SPONSOR_ASSETS } from "../../core/generated/sponsor-assets";
 import { PublicParticipationService } from "../../core/services/public-participation.service";
 import { SnackbarService } from "../../core/services/snackbar.service";
 import { PublicTournament } from "../../core/types/models";
-import { SPONSOR_ASSETS } from "../../core/generated/sponsor-assets";
 import { ModalComponent } from "../../shared/components/ui.component";
 
 type ContactReason = "participation" | "sponsor";
@@ -128,11 +128,53 @@ type Countdown = {
         animation-delay: 320ms;
       }
       .sponsor-marquee {
-        animation: sponsorMarquee 28s linear infinite;
-        width: max-content;
+        animation: sponsorMarquee 16s linear infinite;
+        display: flex;
+        flex-wrap: nowrap;
+        min-width: max-content;
+        user-select: none;
+        will-change: transform;
       }
-      .sponsor-marquee:hover {
+      .sponsor-marquee-viewport {
+        cursor: grab;
+        overflow-x: auto !important;
+        overflow-y: hidden;
+        overscroll-behavior-x: contain;
+        scrollbar-width: none;
+        touch-action: pan-x;
+      }
+      .sponsor-marquee-viewport::-webkit-scrollbar {
+        display: none;
+      }
+      .sponsor-marquee-viewport:active {
+        cursor: grabbing;
+      }
+      .sponsor-marquee-viewport:active .sponsor-marquee,
+      .sponsor-marquee-viewport.is-dragging .sponsor-marquee {
         animation-play-state: paused;
+      }
+      .sponsor-logo-card {
+        aspect-ratio: 1 / 1;
+        transition:
+          transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
+          box-shadow 220ms ease,
+          border-color 220ms ease;
+      }
+      .sponsor-logo-card img {
+        max-height: 100%;
+        max-width: 100%;
+        pointer-events: none;
+        transition: transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
+      }
+      .sponsor-logo-card:hover,
+      .sponsor-logo-card:focus-within {
+        border-color: rgba(255, 212, 0, 0.45);
+        box-shadow: 0 18px 42px rgba(0, 0, 0, 0.35);
+        transform: translateY(-2px);
+      }
+      .sponsor-logo-card:hover img,
+      .sponsor-logo-card:focus-within img {
+        transform: scale(1.08);
       }
       @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
         .hero-parallax-glow,
@@ -141,6 +183,10 @@ type Countdown = {
         }
       }
       @media (hover: hover) and (pointer: fine) {
+        .sponsor-marquee-viewport:hover .sponsor-marquee,
+        .sponsor-marquee:hover {
+          animation-play-state: paused;
+        }
         .card-lift {
           transition:
             transform 260ms cubic-bezier(0.22, 1, 0.36, 1),
@@ -811,7 +857,7 @@ type Countdown = {
 
           @if (sponsorLogos.length) {
             <div
-              class="mt-10 overflow-hidden rounded-lg border border-white/10 bg-white/[0.04] py-5"
+              class="sponsor-marquee-shell mt-10 overflow-hidden rounded-lg border border-white/10 bg-white/[0.04] py-5"
               aria-label="Sponsor La Fossa Games"
             >
               <div
@@ -836,24 +882,33 @@ type Countdown = {
                 </p>
               </div>
               <div
-                [class]="
-                  sponsorLogos.length > 1
-                    ? 'sponsor-marquee flex items-center gap-4 px-4'
-                    : 'flex items-center justify-center px-5'
-                "
+                class="sponsor-marquee-viewport"
+                (pointerdown)="startSponsorDrag($event)"
+                (pointermove)="moveSponsorDrag($event)"
+                (pointerup)="endSponsorDrag($event)"
+                (pointercancel)="endSponsorDrag($event)"
+                (pointerleave)="endSponsorDrag($event)"
               >
-                @for (logo of visibleSponsorLogos; track logo.src + $index) {
-                  <div
-                    class="flex h-24 w-44 shrink-0 items-center justify-center rounded-md border border-white/10 bg-white px-4 py-3 shadow-2xl sm:h-28 sm:w-56"
-                  >
-                    <img
-                      [src]="logo.src"
-                      [alt]="logo.name"
-                      class="max-h-full max-w-full object-contain"
-                      loading="lazy"
-                    />
-                  </div>
-                }
+                <div
+                  [class]="
+                    sponsorLogos.length > 1
+                      ? 'sponsor-marquee flex items-center gap-4 px-4'
+                      : 'flex items-center justify-center px-5'
+                  "
+                >
+                  @for (logo of visibleSponsorLogos; track logo.src + $index) {
+                    <div
+                      class="sponsor-logo-card flex h-28 w-28 shrink-0 items-center justify-center rounded-md border border-white/10 bg-white p-1.5 shadow-2xl sm:h-32 sm:w-32 sm:p-2 lg:h-36 lg:w-36"
+                    >
+                      <img
+                        [src]="logo.src"
+                        [alt]="logo.name"
+                        class="object-contain"
+                        loading="lazy"
+                      />
+                    </div>
+                  }
+                </div>
               </div>
             </div>
           }
@@ -1364,6 +1419,9 @@ export class LandingComponent implements OnInit, OnDestroy, AfterViewInit {
   private revealObserver: IntersectionObserver | null = null;
   private parallaxEnabled = false;
   private parallaxTicking = false;
+  private sponsorDragPointerId: number | null = null;
+  private sponsorDragStartX = 0;
+  private sponsorDragStartScrollLeft = 0;
 
   private readonly onScrollParallax = () => {
     if (!this.parallaxEnabled || this.parallaxTicking) {
@@ -1485,7 +1543,8 @@ export class LandingComponent implements OnInit, OnDestroy, AfterViewInit {
       name: "Green Volley",
       description: "Torneo 3 vs 3 su campo in erba sintetica.",
       image: "/assets/icone/icona-pallavolo.svg",
-      details: "Area Mercato, Santa Maria la Fossa. Iscrizioni aperte fino al 19 giugno.",
+      details:
+        "Area Mercato, Santa Maria la Fossa. Iscrizioni aperte fino al 19 giugno.",
       format: "3 vs 3",
       audience: "Open",
       highlights: [
@@ -1745,6 +1804,43 @@ export class LandingComponent implements OnInit, OnDestroy, AfterViewInit {
     this.participationForm.reason = "sponsor";
     this.onReasonChange();
     this.scrollToSection(event, "partecipa");
+  }
+
+  startSponsorDrag(event: PointerEvent): void {
+    if (this.sponsorLogos.length <= 1 || event.button !== 0) {
+      return;
+    }
+
+    const shell = event.currentTarget as HTMLElement;
+    this.sponsorDragPointerId = event.pointerId;
+    this.sponsorDragStartX = event.clientX;
+    this.sponsorDragStartScrollLeft = shell.scrollLeft;
+    shell.classList.add("is-dragging");
+    shell.setPointerCapture(event.pointerId);
+  }
+
+  moveSponsorDrag(event: PointerEvent): void {
+    if (this.sponsorDragPointerId !== event.pointerId) {
+      return;
+    }
+
+    const shell = event.currentTarget as HTMLElement;
+    const dragOffset = event.clientX - this.sponsorDragStartX;
+    shell.scrollLeft = this.sponsorDragStartScrollLeft - dragOffset;
+    event.preventDefault();
+  }
+
+  endSponsorDrag(event: PointerEvent): void {
+    if (this.sponsorDragPointerId !== event.pointerId) {
+      return;
+    }
+
+    const shell = event.currentTarget as HTMLElement;
+    this.sponsorDragPointerId = null;
+    shell.classList.remove("is-dragging");
+    if (shell.hasPointerCapture(event.pointerId)) {
+      shell.releasePointerCapture(event.pointerId);
+    }
   }
 
   openGameDetails(game: Game): void {
