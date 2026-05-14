@@ -1482,16 +1482,30 @@ export class LandingComponent implements OnInit, OnDestroy, AfterViewInit {
       ],
     },
     {
-      name: "Pallavolo",
-      description: "Battute, muri e scambi di squadra sotto rete.",
+      name: "Green Volley",
+      description: "Torneo 3 vs 3 su campo in erba sintetica.",
       image: "/assets/icone/icona-pallavolo.svg",
-      details: "Torneo dinamico con rotazioni e ritmo continuo.",
-      format: "A squadre",
+      details: "Area Mercato, Santa Maria la Fossa. Iscrizioni aperte fino al 19 giugno.",
+      format: "3 vs 3",
       audience: "Open",
       highlights: [
-        "Match brevi con alta intensità.",
-        "Turni progressivi fino alla finale.",
-        "Contesto competitivo ma inclusivo.",
+        "Squadre da 3 giocatori, con massimo 5 giocatori in rosa.",
+        "Massimo 1 tesserato FIPAV per squadra.",
+        "Quota iscrizione: 50 euro a squadra.",
+        "Campo in erba sintetica.",
+        "I capitani saranno aggiunti a un gruppo WhatsApp con regolamento ufficiale e comunicazioni.",
+      ],
+      rules: [
+        "Formula con gironi più fase a eliminazione diretta.",
+        "Partite al meglio dei 3 set: primi due set ai 21 punti, eventuale terzo set ai 15.",
+        "Classifica gironi: vittoria 3 punti, sconfitta 0 punti.",
+        "In caso di parità valgono, nell'ordine: scontri diretti, differenza set, differenza punti e sorteggio.",
+        "Si applicano le regole ufficiali del green volley.",
+        "Cambi illimitati, battuta libera anche dall'alto e rotazione obbligatoria.",
+        "Punto per l'avversario in caso di tocco di rete, tocco della linea in battuta o più di 3 tocchi escluso il muro.",
+        "Ritardo massimo consentito: 10 minuti. Oltre il limite, partita persa a tavolino.",
+        "Rispetto obbligatorio per arbitri, avversari e organizzazione. Bestemmie, risse o atti antisportivi possono portare ad ammonizione, espulsione o esclusione.",
+        "Info e iscrizioni in DM o al 335 5653748, Gaetano.",
       ],
     },
     {
@@ -1744,7 +1758,7 @@ export class LandingComponent implements OnInit, OnDestroy, AfterViewInit {
   requestGameInfo(game: Game): void {
     this.participationForm.reason = "participation";
     const matchingTournament = this.tournaments().find((tournament) =>
-      this.sameTournamentName(tournament.name, game.name),
+      this.isTournamentForGame(tournament, game),
     );
     if (matchingTournament) {
       this.participationForm.tournament_id = matchingTournament.id;
@@ -1799,7 +1813,7 @@ export class LandingComponent implements OnInit, OnDestroy, AfterViewInit {
   protected tournamentForGame(game: Game): PublicTournament | null {
     return (
       this.tournaments().find((tournament) =>
-        this.sameTournamentName(tournament.name, game.name),
+        this.isTournamentForGame(tournament, game),
       ) ?? null
     );
   }
@@ -1833,6 +1847,16 @@ export class LandingComponent implements OnInit, OnDestroy, AfterViewInit {
         .replace(/[^a-z0-9]/g, "");
 
     return normalize(tournamentName).includes(normalize(gameName));
+  }
+
+  private isTournamentForGame(
+    tournament: PublicTournament,
+    game: Game,
+  ): boolean {
+    return (
+      this.sameTournamentName(tournament.name, game.name) ||
+      (game.name === "Green Volley" && tournament.sport === "pallavolo")
+    );
   }
 
   private normalizePhone(phone: string): string {

@@ -18,10 +18,11 @@ const DEFAULT_TOURNAMENTS: {
   code: string;
   name: string;
   sport: TournamentSport;
+  fee?: number;
 }[] = [
   { code: "calcio-a-5", name: "Calcio a 5", sport: "calcio" },
   { code: "calcio-a-5-under-15", name: "Calcio a 5 Under 15", sport: "calcio" },
-  { code: "pallavolo", name: "Pallavolo", sport: "pallavolo" },
+  { code: "pallavolo", name: "Green Volley", sport: "pallavolo", fee: 50 },
   { code: "briscola", name: "Briscola", sport: "altro" },
   { code: "fifa", name: "Fifa", sport: "altro" },
   { code: "ping-pong", name: "Ping Pong", sport: "altro" },
@@ -100,6 +101,7 @@ export class RegistrationsService extends CrudService<
         code: tournament.code,
         name: tournament.name,
         sport: tournament.sport,
+        fee: tournament.fee ?? 0,
       })),
       { onConflict: "code", ignoreDuplicates: true },
     );

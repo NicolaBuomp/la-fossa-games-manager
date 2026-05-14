@@ -301,7 +301,7 @@ const DIRECT_CODES = [...SOLO_CODES, ...DUO_CODES];
               </div>
             }
           } @else {
-            <!-- Tornei a squadre: calcio e pallavolo -->
+            <!-- Tornei a squadre: calcio e green volley -->
             @if (!tournament.tournament_teams.length) {
               <lfg-empty-state
                 title="Nessuna squadra"
@@ -518,7 +518,7 @@ const DIRECT_CODES = [...SOLO_CODES, ...DUO_CODES];
       </form>
     </lfg-modal>
 
-    <!-- Modal: nuova/modifica squadra (calcio/pallavolo) -->
+    <!-- Modal: nuova/modifica squadra (calcio/green volley) -->
     <lfg-modal
       [open]="modalMode() === 'team'"
       [title]="editingTeam() ? 'Modifica squadra' : 'Nuova squadra'"
@@ -598,7 +598,7 @@ const DIRECT_CODES = [...SOLO_CODES, ...DUO_CODES];
       </form>
     </lfg-modal>
 
-    <!-- Modal: nuovo/modifica partecipante (pallavolo) -->
+    <!-- Modal: nuovo/modifica partecipante (green volley) -->
     <lfg-modal
       [open]="modalMode() === 'participant'"
       [title]="
@@ -643,7 +643,7 @@ const DIRECT_CODES = [...SOLO_CODES, ...DUO_CODES];
                 [(ngModel)]="participantForm.registered"
                 class="h-5 w-5 accent-emerald-600 disabled:cursor-not-allowed disabled:opacity-70"
               />
-              Tesserato
+              Tesserato FIPAV
             </label>
           }
           <button
@@ -1012,7 +1012,7 @@ export class RegistrationsComponent implements OnInit {
     });
   }
 
-  // ─── Team CRUD (calcio/pallavolo) ───────────────────────────────────────────
+  // ─── Team CRUD (calcio/green volley) ────────────────────────────────────────
 
   newTeam(tournamentId: string): void {
     this.editingTeam.set(null);
@@ -1093,7 +1093,7 @@ export class RegistrationsComponent implements OnInit {
     });
   }
 
-  // ─── Participant CRUD (pallavolo) ────────────────────────────────────────────
+  // ─── Participant CRUD (green volley) ─────────────────────────────────────────
 
   newParticipant(teamId: string): void {
     const team = this.findTeam(teamId);
@@ -1141,6 +1141,23 @@ export class RegistrationsComponent implements OnInit {
         this.closeModal();
         return;
       }
+      const wantsRegistered = Boolean(this.participantForm.registered);
+      const registeredCount =
+        team?.team_participants.filter(
+          (participant) =>
+            participant.registered && participant.id !== current?.id,
+        ).length ?? 0;
+      if (
+        tournament?.sport === "pallavolo" &&
+        wantsRegistered &&
+        registeredCount >= 1
+      ) {
+        const message =
+          "Per il Green Volley è consentito massimo 1 tesserato FIPAV per squadra.";
+        this.error.set(message);
+        this.snackbar.warning(message);
+        return;
+      }
       const payload = {
         ...this.participantForm,
         first_name: this.namePart(this.participantForm.first_name),
@@ -1149,7 +1166,7 @@ export class RegistrationsComponent implements OnInit {
         gender: "uomo" as const,
         registered:
           tournament?.sport === "pallavolo"
-            ? Boolean(this.participantForm.registered)
+            ? wantsRegistered
             : false,
       };
       await (current
@@ -1299,7 +1316,7 @@ export class RegistrationsComponent implements OnInit {
   }
 
   sportLabel(sport: string): string {
-    if (sport === "pallavolo") return "Pallavolo";
+    if (sport === "pallavolo") return "Green Volley";
     if (sport === "calcio") return "Calcio";
     return "Altro";
   }
@@ -1324,7 +1341,7 @@ export class RegistrationsComponent implements OnInit {
     return (
       (
         {
-          pallavolo: 6,
+          pallavolo: 5,
           briscola: 2,
           fifa: 1,
           "ping-pong": 1,
@@ -1432,7 +1449,7 @@ export class RegistrationsComponent implements OnInit {
       nome: this.namePart(participant?.first_name ?? ""),
       cognome: this.namePart(participant?.last_name ?? ""),
       contatto: participant?.contact ?? "",
-      tesserato:
+      tesserato_fipav:
         participant && tournament.sport === "pallavolo"
           ? participant.registered
             ? "si"
