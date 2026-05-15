@@ -27,7 +27,7 @@ interface NavItem {
   template: `
     @if (globalLoading.active()) {
       <div
-        class="fixed inset-x-0 top-0 z-[100] h-0.5 animate-pulse bg-fossa"
+        class="bg-accent fixed inset-x-0 top-0 z-[100] h-0.5 animate-pulse"
       ></div>
     }
     <div class="min-h-screen bg-app text-primary lg:flex">
@@ -36,7 +36,7 @@ interface NavItem {
       >
         <div class="px-6 py-7">
           <p class="font-display text-2xl uppercase leading-none">
-            La Fossa<br /><span class="text-fossa">Games</span>
+            La Fossa<br /><span class="text-accent">Games</span>
           </p>
           <p
             class="mt-3 text-xs font-semibold uppercase tracking-[0.18em] text-muted"
@@ -48,13 +48,13 @@ interface NavItem {
           @for (item of visibleNav(); track item.path) {
             <a
               [routerLink]="item.path"
-              routerLinkActive="bg-fossa !text-ink"
+              routerLinkActive="bg-accent text-on-accent"
               class="flex items-center justify-between gap-3 rounded-lg px-4 py-3 text-sm font-bold uppercase tracking-wide text-muted transition hover:bg-surface-muted hover:text-primary"
             >
               <span>{{ item.label }}</span>
               @if (badgeCount(item) > 0) {
                 <span
-                  class="grid min-h-6 min-w-6 place-items-center rounded-full border border-soft bg-fossa px-2 text-[11px] font-black leading-none text-ink"
+                  class="bg-accent text-on-accent grid min-h-6 min-w-6 place-items-center rounded-full border border-soft px-2 text-[11px] font-black leading-none"
                 >
                   {{ badgeCount(item) }}
                 </span>
@@ -74,9 +74,9 @@ interface NavItem {
                 <button
                   type="button"
                   class="rounded-md border px-2 py-1.5 text-[10px] font-bold uppercase tracking-wide transition"
-                  [class.bg-fossa]="theme.mode() === mode.id"
-                  [class.text-ink]="theme.mode() === mode.id"
-                  [class.border-fossa]="theme.mode() === mode.id"
+                  [class.bg-accent]="theme.mode() === mode.id"
+                  [class.text-on-accent]="theme.mode() === mode.id"
+                  [class.border-accent]="theme.mode() === mode.id"
                   [class.bg-surface]="theme.mode() !== mode.id"
                   [class.text-primary]="theme.mode() !== mode.id"
                   [class.border-soft]="theme.mode() !== mode.id"
@@ -94,7 +94,7 @@ interface NavItem {
             {{ auth.profile()?.role }}
           </p>
           <button
-            class="w-full rounded-lg border border-soft bg-surface-muted px-4 py-2 text-sm font-bold uppercase tracking-wide text-primary transition hover:border-fossa"
+            class="hover-border-accent w-full rounded-lg border border-soft bg-surface-muted px-4 py-2 text-sm font-bold uppercase tracking-wide text-primary transition"
             (click)="auth.signOut()"
           >
             Esci
@@ -130,7 +130,7 @@ interface NavItem {
               </button>
               <div class="min-w-0">
                 <p class="truncate font-display text-xl uppercase">
-                  La Fossa <span class="text-fossa">Games</span>
+                  La Fossa <span class="text-accent">Games</span>
                 </p>
                 <p
                   class="truncate text-[10px] font-bold uppercase tracking-[0.18em] text-muted"
@@ -158,7 +158,7 @@ interface NavItem {
                 </svg>
               </a>
               <button
-                class="rounded-full border border-soft bg-surface-muted px-4 py-2 text-xs font-bold uppercase tracking-wide text-primary transition hover:border-fossa hover:bg-fossa hover:text-ink"
+                class="hover-accent rounded-full border border-soft bg-surface-muted px-4 py-2 text-xs font-bold uppercase tracking-wide text-primary transition"
                 (click)="auth.signOut()"
               >
                 Esci
@@ -178,7 +178,7 @@ interface NavItem {
             <div class="flex items-start justify-between gap-4 px-5 py-5">
               <div>
                 <p class="font-display text-2xl uppercase leading-none">
-                  La Fossa<br /><span class="text-fossa">Games</span>
+                  La Fossa<br /><span class="text-accent">Games</span>
                 </p>
                 <p
                   class="mt-3 text-xs font-semibold uppercase tracking-[0.18em] text-muted"
@@ -188,7 +188,7 @@ interface NavItem {
               </div>
               <button
                 type="button"
-                class="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-soft bg-surface-muted text-primary transition hover:border-fossa"
+                class="hover-border-accent grid h-10 w-10 shrink-0 place-items-center rounded-full border border-soft bg-surface-muted text-primary transition"
                 aria-label="Chiudi menu"
                 (click)="closeMobileMenu()"
               >
@@ -210,14 +210,14 @@ interface NavItem {
               @for (item of visibleNav(); track item.path) {
                 <a
                   [routerLink]="item.path"
-                  routerLinkActive="bg-fossa !text-ink"
+                  routerLinkActive="bg-accent text-on-accent"
                   class="flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-bold uppercase tracking-wide text-muted transition hover:bg-surface-muted hover:text-primary"
                   (click)="closeMobileMenu()"
                 >
                   <span class="min-w-0 flex-1">{{ item.label }}</span>
                   @if (badgeCount(item) > 0) {
                     <span
-                      class="grid min-h-6 min-w-6 place-items-center rounded-full border border-soft bg-fossa px-2 text-[11px] font-black leading-none text-ink"
+                      class="bg-accent text-on-accent grid min-h-6 min-w-6 place-items-center rounded-full border border-soft px-2 text-[11px] font-black leading-none"
                     >
                       {{ badgeCount(item) }}
                     </span>
@@ -227,7 +227,9 @@ interface NavItem {
             </nav>
 
             <div class="border-t border-soft p-4">
-              <div class="mb-3 rounded-lg border border-soft bg-surface-muted p-2">
+              <div
+                class="mb-3 rounded-lg border border-soft bg-surface-muted p-2"
+              >
                 <p
                   class="text-[10px] font-bold uppercase tracking-[0.16em] text-muted"
                 >
@@ -238,9 +240,9 @@ interface NavItem {
                     <button
                       type="button"
                       class="rounded-md border px-2 py-1.5 text-[10px] font-bold uppercase tracking-wide transition"
-                      [class.bg-fossa]="theme.mode() === mode.id"
-                      [class.text-ink]="theme.mode() === mode.id"
-                      [class.border-fossa]="theme.mode() === mode.id"
+                      [class.bg-accent]="theme.mode() === mode.id"
+                      [class.text-on-accent]="theme.mode() === mode.id"
+                      [class.border-accent]="theme.mode() === mode.id"
                       [class.bg-surface]="theme.mode() !== mode.id"
                       [class.text-primary]="theme.mode() !== mode.id"
                       [class.border-soft]="theme.mode() !== mode.id"
@@ -258,7 +260,7 @@ interface NavItem {
                 {{ auth.profile()?.role }}
               </p>
               <button
-                class="w-full rounded-lg border border-soft bg-surface-muted px-4 py-2 text-sm font-bold uppercase tracking-wide text-primary transition hover:border-fossa"
+                class="hover-border-accent w-full rounded-lg border border-soft bg-surface-muted px-4 py-2 text-sm font-bold uppercase tracking-wide text-primary transition"
                 (click)="auth.signOut()"
               >
                 Esci

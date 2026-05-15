@@ -7,15 +7,15 @@ import { SnackbarService } from "../../core/services/snackbar.service";
 import { INCOME_CATEGORIES, PAYMENT_METHODS } from "../../core/types/constants";
 import { Income, InsertIncome, Profile } from "../../core/types/models";
 import {
+  CrudFormField,
+  CrudFormModalComponent,
+} from "../../shared/components/crud-form-modal.component";
+import {
   ConfirmModalComponent,
   EmptyStateComponent,
   KpiPanelComponent,
   SummaryCardComponent,
 } from "../../shared/components/ui.component";
-import {
-  CrudFormField,
-  CrudFormModalComponent,
-} from "../../shared/components/crud-form-modal.component";
 
 @Component({
   standalone: true,
@@ -30,9 +30,7 @@ import {
     <section class="space-y-5">
       <div class="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p
-            class="text-xs font-bold uppercase tracking-[0.18em] text-muted"
-          >
+          <p class="text-xs font-bold uppercase tracking-[0.18em] text-muted">
             Modulo entrate
           </p>
           <h1 class="font-display text-3xl uppercase">Entrate</h1>
@@ -45,7 +43,7 @@ import {
             CSV
           </button>
           <button
-            class="rounded-lg bg-ink px-4 py-2 text-sm font-bold text-white"
+            class="bg-strong text-on-strong rounded-lg px-4 py-2 text-sm font-bold"
             (click)="newItem()"
           >
             Nuova
@@ -108,9 +106,7 @@ import {
                     </p>
                   }
                 </div>
-                <p class="font-black text-emerald-600">
-                  +{{ eur(item.amount) }}
-                </p>
+                <p class="text-positive font-black">+{{ eur(item.amount) }}</p>
               </div>
               <div
                 class="mt-4 flex justify-end gap-2 border-t border-soft pt-3"

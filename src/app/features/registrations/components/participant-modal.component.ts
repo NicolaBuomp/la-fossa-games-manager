@@ -69,7 +69,7 @@ import { ModalComponent } from "../../../shared/components/ui.component";
                 type="checkbox"
                 name="registered"
                 [(ngModel)]="form.registered"
-                class="h-5 w-5 accent-emerald-600 disabled:cursor-not-allowed disabled:opacity-70"
+                class="h-5 w-5 disabled:cursor-not-allowed disabled:opacity-70"
               />
               Tesserato FIPAV
             </label>
@@ -85,7 +85,7 @@ import { ModalComponent } from "../../../shared/components/ui.component";
 
           <button
             type="submit"
-            class="rounded-lg bg-ink px-4 py-3 text-sm font-bold uppercase text-white disabled:opacity-60"
+            class="bg-strong text-on-strong rounded-lg px-4 py-3 text-sm font-bold uppercase disabled:opacity-60"
           >
             {{ loading() ? "Salvataggio…" : "Salva partecipante" }}
           </button>

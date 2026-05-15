@@ -3,13 +3,15 @@ import {
   Component,
   ElementRef,
   EventEmitter,
+  inject,
   Input,
   OnInit,
   Output,
+  signal,
   SimpleChanges,
   ViewChild,
-  signal,
 } from "@angular/core";
+import { ColorTokensService } from "../../core/services/color-tokens.service";
 
 let globalScrollLockCount = 0;
 let previousHtmlOverflow = "";
@@ -87,18 +89,15 @@ function unlockGlobalScroll(): void {
   `,
 })
 export class SummaryCardComponent {
+  private readonly colorTokens = inject(ColorTokensService);
+
   @Input({ required: true }) label = "";
   @Input({ required: true }) value = "";
   @Input() hint = "";
   @Input() tone: "default" | "income" | "expense" | "warning" = "default";
 
   get toneClass(): string {
-    return {
-      default: "text-primary",
-      income: "text-emerald-600",
-      expense: "text-expense",
-      warning: "text-amber-700",
-    }[this.tone];
+    return this.colorTokens.getClass(this.tone, "text");
   }
 }
 
@@ -172,7 +171,7 @@ export class KpiPanelComponent implements OnInit {
       @if (actionLabel) {
         <button
           type="button"
-          class="mt-4 rounded-lg bg-ink px-4 py-2 text-sm font-bold uppercase text-white transition hover:opacity-80"
+          class="bg-accent text-on-accent mt-4 rounded-lg px-4 py-2 text-sm font-bold uppercase transition hover:opacity-80"
           (click)="action.emit()"
         >
           {{ actionLabel }}
@@ -237,7 +236,7 @@ export class EmptyStateComponent {
             <button
               type="button"
               aria-label="Chiudi finestra"
-              class="shrink-0 rounded-md border border-soft bg-surface-muted px-3 py-2 text-xs font-black uppercase tracking-[0.12em] text-primary transition hover:border-fossa hover:text-ink focus-visible:ring-fossa/30"
+              class="hover-border-accent hover-text-accent focus-ring-accent shrink-0 rounded-md border border-soft bg-surface-muted px-3 py-2 text-xs font-black uppercase tracking-[0.12em] text-primary transition"
               (click)="requestClose()"
             >
               Chiudi
@@ -366,9 +365,7 @@ export class StatusBadgeComponent {
       (cancel)="onCancel($event)"
       (click)="onBackdropClick($event)"
     >
-      <div
-        class="flex min-h-full items-center justify-center p-4"
-      >
+      <div class="flex min-h-full items-center justify-center p-4">
         <section
           class="w-full max-w-sm rounded-2xl bg-surface p-6 text-primary shadow-2xl"
           (click)="$event.stopPropagation()"
@@ -382,7 +379,7 @@ export class StatusBadgeComponent {
           <div class="mt-6 flex justify-end gap-3">
             <button
               type="button"
-              class="rounded-md border border-soft bg-surface-muted px-4 py-2.5 text-sm font-black uppercase text-primary transition hover:border-fossa"
+              class="hover-border-accent rounded-md border border-soft bg-surface-muted px-4 py-2.5 text-sm font-black uppercase text-primary transition"
               (click)="requestCancel()"
             >
               Annulla

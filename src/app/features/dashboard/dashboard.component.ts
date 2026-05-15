@@ -15,14 +15,14 @@ import {
   Registration,
   Sponsor,
 } from "../../core/types/models";
-import { AuditActivityListComponent } from "../audit/components/audit-activity-list.component";
-import { buildAuditActivities } from "../audit/components/audit-activity-builder";
-import { AuditActivityItem } from "../audit/components/audit-activity.model";
-import { AuditDetailModalComponent } from "../audit/components/audit-detail-modal.component";
 import {
   KpiPanelComponent,
   SummaryCardComponent,
 } from "../../shared/components/ui.component";
+import { buildAuditActivities } from "../audit/components/audit-activity-builder";
+import { AuditActivityListComponent } from "../audit/components/audit-activity-list.component";
+import { AuditActivityItem } from "../audit/components/audit-activity.model";
+import { AuditDetailModalComponent } from "../audit/components/audit-detail-modal.component";
 
 @Component({
   standalone: true,
@@ -35,196 +35,206 @@ import {
   ],
   template: `
     @if (auth.isAdmin()) {
-    <section class="space-y-5">
-      <div class="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <p class="text-xs font-bold uppercase tracking-[0.18em] text-muted">
-            Dashboard interna
-          </p>
-          <h1 class="font-display text-3xl uppercase sm:text-5xl">
-            Riepilogo evento
-          </h1>
+      <section class="space-y-5">
+        <div class="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <p class="text-xs font-bold uppercase tracking-[0.18em] text-muted">
+              Dashboard interna
+            </p>
+            <h1 class="font-display text-3xl uppercase sm:text-5xl">
+              Riepilogo evento
+            </h1>
+          </div>
+          <button
+            [disabled]="loading()"
+            class="rounded-lg bg-surface px-4 py-2 text-sm font-bold uppercase tracking-wide shadow-sm ring-1 ring-black/15 transition hover:bg-surface-muted disabled:opacity-60"
+            (click)="load()"
+          >
+            {{ loading() ? "Aggiornamento…" : "Aggiorna" }}
+          </button>
         </div>
-        <button
-          [disabled]="loading()"
-          class="rounded-lg bg-surface px-4 py-2 text-sm font-bold uppercase tracking-wide shadow-sm ring-1 ring-black/15 transition hover:bg-surface-muted disabled:opacity-60"
-          (click)="load()"
-        >
-          {{ loading() ? "Aggiornamento…" : "Aggiorna" }}
-        </button>
-      </div>
 
-      @if (hasPendingRequests()) {
-        <section
-          class="rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-950 shadow-sm"
-        >
+        @if (hasPendingRequests()) {
+          <section
+            class="rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-950 shadow-sm"
+          >
+            <div
+              class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between"
+            >
+              <div>
+                <p
+                  class="text-xs font-black uppercase tracking-[0.18em] text-amber-700"
+                >
+                  Richieste da gestire
+                </p>
+                <h2 class="mt-1 text-xl font-black leading-tight">
+                  Ci sono richieste arrivate dal sito non ancora gestite.
+                </h2>
+                <p
+                  class="mt-2 text-sm font-semibold leading-6 text-amber-900/75"
+                >
+                  Controlla le nuove richieste torneo e i lead sponsor prima di
+                  aggiornare il resto del gestionale.
+                </p>
+              </div>
+              <div class="grid gap-2 sm:grid-cols-2 lg:min-w-[22rem]">
+                @if (pendingTournamentRequests() > 0) {
+                  <a
+                    routerLink="/app/participation-requests"
+                    class="hover-bg-strong hover-text-on-strong flex items-center justify-between gap-3 rounded-lg bg-surface px-4 py-3 text-sm font-black uppercase tracking-wide text-primary ring-1 ring-amber-200 transition"
+                  >
+                    <span>Richieste torneo</span>
+                    <span
+                      class="bg-accent text-on-accent grid min-h-7 min-w-7 place-items-center rounded-full px-2 text-xs"
+                    >
+                      {{ pendingTournamentRequests() }}
+                    </span>
+                  </a>
+                }
+                @if (pendingSponsorRequests() > 0) {
+                  <a
+                    routerLink="/app/sponsors"
+                    class="hover-bg-strong hover-text-on-strong flex items-center justify-between gap-3 rounded-lg bg-surface px-4 py-3 text-sm font-black uppercase tracking-wide text-primary ring-1 ring-amber-200 transition"
+                  >
+                    <span>Richieste sponsor</span>
+                    <span
+                      class="bg-accent text-on-accent grid min-h-7 min-w-7 place-items-center rounded-full px-2 text-xs"
+                    >
+                      {{ pendingSponsorRequests() }}
+                    </span>
+                  </a>
+                }
+              </div>
+            </div>
+          </section>
+        }
+
+        <section class="bg-strong text-on-strong rounded-lg p-6">
+          <p class="text-xs font-bold uppercase tracking-[0.2em] text-white/50">
+            Saldo attuale
+          </p>
+          <p
+            class="mt-3 text-4xl font-black"
+            [class.text-emerald-300]="balance() >= 0"
+            [class.text-red-300]="balance() < 0"
+          >
+            {{ eur(balance()) }}
+          </p>
           <div
-            class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between"
+            class="mt-6 grid gap-3 border-t border-white/10 pt-5 sm:grid-cols-3"
           >
             <div>
               <p
-                class="text-xs font-black uppercase tracking-[0.18em] text-amber-700"
+                class="text-xs font-bold uppercase tracking-wide text-white/50"
               >
-                Richieste da gestire
+                Entrate
               </p>
-              <h2 class="mt-1 text-xl font-black leading-tight">
-                Ci sono richieste arrivate dal sito non ancora gestite.
-              </h2>
-              <p class="mt-2 text-sm font-semibold leading-6 text-amber-900/75">
-                Controlla le nuove richieste torneo e i lead sponsor prima di
-                aggiornare il resto del gestionale.
-              </p>
+              <p class="mt-1 text-xl font-bold">{{ eur(totalIncome()) }}</p>
             </div>
-            <div class="grid gap-2 sm:grid-cols-2 lg:min-w-[22rem]">
-              @if (pendingTournamentRequests() > 0) {
-                <a
-                  routerLink="/app/participation-requests"
-                  class="flex items-center justify-between gap-3 rounded-lg bg-surface px-4 py-3 text-sm font-black uppercase tracking-wide text-primary ring-1 ring-amber-200 transition hover:bg-ink hover:text-white"
-                >
-                  <span>Richieste torneo</span>
-                  <span
-                    class="grid min-h-7 min-w-7 place-items-center rounded-full bg-fossa px-2 text-xs text-ink"
-                  >
-                    {{ pendingTournamentRequests() }}
-                  </span>
-                </a>
-              }
-              @if (pendingSponsorRequests() > 0) {
-                <a
-                  routerLink="/app/sponsors"
-                  class="flex items-center justify-between gap-3 rounded-lg bg-surface px-4 py-3 text-sm font-black uppercase tracking-wide text-primary ring-1 ring-amber-200 transition hover:bg-ink hover:text-white"
-                >
-                  <span>Richieste sponsor</span>
-                  <span
-                    class="grid min-h-7 min-w-7 place-items-center rounded-full bg-fossa px-2 text-xs text-ink"
-                  >
-                    {{ pendingSponsorRequests() }}
-                  </span>
-                </a>
-              }
+            <div>
+              <p
+                class="text-xs font-bold uppercase tracking-wide text-white/50"
+              >
+                Spese
+              </p>
+              <p class="mt-1 text-xl font-bold">{{ eur(totalExpenses()) }}</p>
+            </div>
+            <div>
+              <p
+                class="text-xs font-bold uppercase tracking-wide text-white/50"
+              >
+                Saldo potenziale
+              </p>
+              <p class="text-accent mt-1 text-xl font-bold">
+                {{ eur(probableBalance()) }}
+              </p>
+              <p class="mt-0.5 text-[10px] text-white/40">
+                incl. sponsor e quote non ancora pagati
+              </p>
             </div>
           </div>
         </section>
-      }
 
-      <section class="rounded-lg bg-ink p-6 text-white">
-        <p class="text-xs font-bold uppercase tracking-[0.2em] text-white/50">
-          Saldo attuale
-        </p>
-        <p
-          class="mt-3 text-4xl font-black"
-          [class.text-emerald-300]="balance() >= 0"
-          [class.text-red-300]="balance() < 0"
-        >
-          {{ eur(balance()) }}
-        </p>
-        <div
-          class="mt-6 grid gap-3 border-t border-white/10 pt-5 sm:grid-cols-3"
-        >
-          <div>
-            <p class="text-xs font-bold uppercase tracking-wide text-white/50">
-              Entrate
-            </p>
-            <p class="mt-1 text-xl font-bold">{{ eur(totalIncome()) }}</p>
-          </div>
-          <div>
-            <p class="text-xs font-bold uppercase tracking-wide text-white/50">
-              Spese
-            </p>
-            <p class="mt-1 text-xl font-bold">{{ eur(totalExpenses()) }}</p>
-          </div>
-          <div>
-            <p class="text-xs font-bold uppercase tracking-wide text-white/50">
-              Saldo potenziale
-            </p>
-            <p class="mt-1 text-xl font-bold text-fossa">
-              {{ eur(probableBalance()) }}
-            </p>
-            <p class="mt-0.5 text-[10px] text-white/40">
-              incl. sponsor e quote non ancora pagati
-            </p>
-          </div>
-        </div>
-      </section>
+        <lfg-kpi-panel title="KPI evento" storageKey="dashboard">
+          <section class="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+            <lfg-summary-card
+              label="Sponsor pagati"
+              [value]="eur(sponsorPaid())"
+              [hint]="sponsorPaidCount() + ' sponsor'"
+              tone="income"
+            />
+            <lfg-summary-card
+              label="Sponsor confermati"
+              [value]="eur(sponsorConfirmed())"
+              hint="Confermati, non ancora pagati"
+              tone="warning"
+            />
+            <lfg-summary-card
+              label="Iscrizioni pagate"
+              [value]="eur(regPaidAmount())"
+              [hint]="regPaidCount() + ' pagate'"
+              tone="income"
+            />
+            <lfg-summary-card
+              label="Da incassare"
+              [value]="eur(regPendingAmount())"
+              [hint]="regPendingCount() + ' aperte'"
+              tone="warning"
+            />
+            <lfg-summary-card
+              label="Tasso pagamento"
+              [value]="regPaymentRate() + '%'"
+              [hint]="regPaidCount() + '/' + regTotalCount() + ' iscrizioni'"
+              [tone]="
+                regPaymentRate() === 100
+                  ? 'income'
+                  : regTotalCount() === 0
+                    ? 'default'
+                    : 'warning'
+              "
+            />
+          </section>
+        </lfg-kpi-panel>
 
-      <lfg-kpi-panel title="KPI evento" storageKey="dashboard">
-        <section class="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-          <lfg-summary-card
-            label="Sponsor pagati"
-            [value]="eur(sponsorPaid())"
-            [hint]="sponsorPaidCount() + ' sponsor'"
-            tone="income"
-          />
-          <lfg-summary-card
-            label="Sponsor confermati"
-            [value]="eur(sponsorConfirmed())"
-            hint="Confermati, non ancora pagati"
-            tone="warning"
-          />
-          <lfg-summary-card
-            label="Iscrizioni pagate"
-            [value]="eur(regPaidAmount())"
-            [hint]="regPaidCount() + ' pagate'"
-            tone="income"
-          />
-          <lfg-summary-card
-            label="Da incassare"
-            [value]="eur(regPendingAmount())"
-            [hint]="regPendingCount() + ' aperte'"
-            tone="warning"
-          />
-          <lfg-summary-card
-            label="Tasso pagamento"
-            [value]="regPaymentRate() + '%'"
-            [hint]="regPaidCount() + '/' + regTotalCount() + ' iscrizioni'"
-            [tone]="
-              regPaymentRate() === 100
-                ? 'income'
-                : regTotalCount() === 0
-                  ? 'default'
-                  : 'warning'
-            "
-          />
-        </section>
-      </lfg-kpi-panel>
-
-      @if (error()) {
-        <p
-          class="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700"
-        >
-          {{ error() }}
-        </p>
-      }
-
-      <section class="rounded-lg border border-soft bg-surface p-4 shadow-sm">
-        <div class="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <p class="text-xs font-bold uppercase tracking-[0.18em] text-muted">
-              Registro modifiche
-            </p>
-            <h2 class="font-display text-2xl uppercase">Ultime attività</h2>
-          </div>
-          <a
-            routerLink="/app/audit"
-            class="rounded-lg bg-surface-muted px-3 py-2 text-xs font-black uppercase tracking-wide transition hover:bg-fossa hover:text-ink"
+        @if (error()) {
+          <p
+            class="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700"
           >
-            Vedi tutto
-          </a>
-        </div>
-
-        @if (!auditLogs().length) {
-          <p class="mt-4 rounded-lg bg-surface-muted p-4 text-sm text-muted">
-            Nessuna modifica registrata.
+            {{ error() }}
           </p>
-        } @else {
-          <lfg-audit-activity-list
-            class="mt-4 block"
-            [activities]="activityItems()"
-            (select)="selectedActivity.set($event)"
-          />
         }
+
+        <section class="rounded-lg border border-soft bg-surface p-4 shadow-sm">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p
+                class="text-xs font-bold uppercase tracking-[0.18em] text-muted"
+              >
+                Registro modifiche
+              </p>
+              <h2 class="font-display text-2xl uppercase">Ultime attività</h2>
+            </div>
+            <a
+              routerLink="/app/audit"
+              class="hover-accent rounded-lg bg-surface-muted px-3 py-2 text-xs font-black uppercase tracking-wide transition"
+            >
+              Vedi tutto
+            </a>
+          </div>
+
+          @if (!auditLogs().length) {
+            <p class="mt-4 rounded-lg bg-surface-muted p-4 text-sm text-muted">
+              Nessuna modifica registrata.
+            </p>
+          } @else {
+            <lfg-audit-activity-list
+              class="mt-4 block"
+              [activities]="activityItems()"
+              (select)="selectedActivity.set($event)"
+            />
+          }
+        </section>
       </section>
-    </section>
     } @else {
       <section class="space-y-5">
         <div class="flex flex-wrap items-end justify-between gap-4">
@@ -235,7 +245,9 @@ import {
             <h1 class="font-display text-3xl uppercase sm:text-5xl">
               Ciao {{ staffName() }}
             </h1>
-            <p class="mt-2 max-w-2xl text-sm font-semibold leading-6 text-muted">
+            <p
+              class="mt-2 max-w-2xl text-sm font-semibold leading-6 text-muted"
+            >
               Qui trovi un resoconto rapido delle attività che hai registrato o
               aggiornato nel gestionale.
             </p>
@@ -257,31 +269,41 @@ import {
           </p>
         }
 
-        <section class="rounded-lg bg-ink p-5 text-white">
+        <section class="bg-strong text-on-strong rounded-lg p-5">
           <p class="text-xs font-bold uppercase tracking-[0.2em] text-white/50">
             Operatività personale
           </p>
           <p class="mt-3 text-3xl font-black">
             {{ totalStaffActions() }} attività tracciate
           </p>
-          <div class="mt-5 grid gap-3 border-t border-white/10 pt-5 sm:grid-cols-3">
+          <div
+            class="mt-5 grid gap-3 border-t border-white/10 pt-5 sm:grid-cols-3"
+          >
             <div>
-              <p class="text-xs font-bold uppercase tracking-wide text-white/50">
+              <p
+                class="text-xs font-bold uppercase tracking-wide text-white/50"
+              >
                 Inserimenti
               </p>
               <p class="mt-1 text-xl font-bold">{{ staffInsertCount() }}</p>
             </div>
             <div>
-              <p class="text-xs font-bold uppercase tracking-wide text-white/50">
+              <p
+                class="text-xs font-bold uppercase tracking-wide text-white/50"
+              >
                 Aggiornamenti
               </p>
               <p class="mt-1 text-xl font-bold">{{ staffUpdateCount() }}</p>
             </div>
             <div>
-              <p class="text-xs font-bold uppercase tracking-wide text-white/50">
+              <p
+                class="text-xs font-bold uppercase tracking-wide text-white/50"
+              >
                 Ultima attività
               </p>
-              <p class="mt-1 text-xl font-bold">{{ lastStaffActivityLabel() }}</p>
+              <p class="mt-1 text-xl font-bold">
+                {{ lastStaffActivityLabel() }}
+              </p>
             </div>
           </div>
         </section>
@@ -318,7 +340,7 @@ import {
         <section class="grid gap-3 md:grid-cols-3">
           <a
             routerLink="/app/registrations"
-            class="rounded-lg border border-soft bg-surface p-4 shadow-sm transition hover:border-fossa"
+            class="hover-border-accent rounded-lg border border-soft bg-surface p-4 shadow-sm transition"
           >
             <p class="text-xs font-bold uppercase tracking-[0.18em] text-muted">
               Iscritti
@@ -327,28 +349,34 @@ import {
           </a>
           <a
             routerLink="/app/participation-requests"
-            class="rounded-lg border border-soft bg-surface p-4 shadow-sm transition hover:border-fossa"
+            class="hover-border-accent rounded-lg border border-soft bg-surface p-4 shadow-sm transition"
           >
             <p class="text-xs font-bold uppercase tracking-[0.18em] text-muted">
               Richieste
             </p>
-            <p class="mt-2 text-lg font-black">Gestisci le richieste dal sito</p>
+            <p class="mt-2 text-lg font-black">
+              Gestisci le richieste dal sito
+            </p>
           </a>
           <a
             routerLink="/app/sponsors"
-            class="rounded-lg border border-soft bg-surface p-4 shadow-sm transition hover:border-fossa"
+            class="hover-border-accent rounded-lg border border-soft bg-surface p-4 shadow-sm transition"
           >
             <p class="text-xs font-bold uppercase tracking-[0.18em] text-muted">
               Sponsor
             </p>
-            <p class="mt-2 text-lg font-black">Segui contatti e stato sponsor</p>
+            <p class="mt-2 text-lg font-black">
+              Segui contatti e stato sponsor
+            </p>
           </a>
         </section>
 
         <section class="rounded-lg border border-soft bg-surface p-4 shadow-sm">
           <div class="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <p class="text-xs font-bold uppercase tracking-[0.18em] text-muted">
+              <p
+                class="text-xs font-bold uppercase tracking-[0.18em] text-muted"
+              >
                 Il tuo registro
               </p>
               <h2 class="font-display text-2xl uppercase">Ultime attività</h2>
@@ -494,13 +522,19 @@ export class DashboardComponent implements OnInit {
   sponsorConfirmed(): number {
     return this.sponsors()
       .filter((item) => item.status === "confermato")
-      .reduce((sum, item) => sum + Number(item.promised_amount ?? item.value ?? 0), 0);
+      .reduce(
+        (sum, item) => sum + Number(item.promised_amount ?? item.value ?? 0),
+        0,
+      );
   }
 
   sponsorNegotiating(): number {
     return this.sponsors()
       .filter((item) => item.status === "in_trattativa")
-      .reduce((sum, item) => sum + Number(item.promised_amount ?? item.value ?? 0), 0);
+      .reduce(
+        (sum, item) => sum + Number(item.promised_amount ?? item.value ?? 0),
+        0,
+      );
   }
 
   probableBalance(): number {

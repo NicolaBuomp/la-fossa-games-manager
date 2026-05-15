@@ -192,7 +192,7 @@ type Countdown = {
           [style.transform]="heroGlowTransform()"
         ></div>
         <div
-          class="absolute left-0 top-0 h-52 w-72 -skew-x-[24deg] border-r border-fossa/35 bg-fossa/5"
+          class="absolute left-0 top-0 h-52 w-72 -skew-x-[24deg] border-r border-accent-35 bg-accent-5"
         ></div>
 
         <div
@@ -209,10 +209,10 @@ type Countdown = {
               <img
                 src="/assets/brand/logo-social.png"
                 alt="Logo La Fossa Games"
-                class="h-12 w-12 rounded-full object-cover ring-1 ring-fossa/50 sm:h-14 sm:w-14"
+                class="h-12 w-12 rounded-full object-cover ring-1 ring-accent-50 sm:h-14 sm:w-14"
               />
               <span
-                class="hidden text-sm font-black uppercase tracking-[0.28em] text-fossa sm:block"
+                class="hidden text-sm font-black uppercase tracking-[0.28em] text-accent sm:block"
                 >La Fossa Games</span
               >
             </a>
@@ -221,19 +221,19 @@ type Countdown = {
             >
               <a
                 href="#sport"
-                class="hidden text-white/70 transition hover:text-fossa sm:inline"
+                class="hidden text-white/70 transition hover:text-accent sm:inline"
                 (click)="scrollToSection($event, 'sport')"
                 >Sport</a
               >
               <a
                 href="#sponsor"
-                class="hidden text-white/70 transition hover:text-fossa sm:inline"
+                class="hidden text-white/70 transition hover:text-accent sm:inline"
                 (click)="scrollToSection($event, 'sponsor')"
                 >Sponsor</a
               >
               <a
                 href="#partecipa"
-                class="hidden text-white/70 transition hover:text-fossa sm:inline"
+                class="hidden text-white/70 transition hover:text-accent sm:inline"
                 (click)="scrollToSection($event, 'partecipa')"
                 >Contatti</a
               >
@@ -242,7 +242,7 @@ type Countdown = {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Instagram"
-                class="hidden h-8 w-8 items-center justify-center rounded-md border border-white/15 text-white/50 transition hover:border-fossa/50 hover:text-fossa sm:flex"
+                class="hidden h-8 w-8 items-center justify-center rounded-md border border-white/15 text-white/50 transition hover-border-accent-50 hover:text-accent sm:flex"
               >
                 <svg
                   width="14"
@@ -260,7 +260,7 @@ type Countdown = {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Facebook"
-                class="hidden h-8 w-8 items-center justify-center rounded-md border border-white/15 text-white/50 transition hover:border-fossa/50 hover:text-fossa sm:flex"
+                class="hidden h-8 w-8 items-center justify-center rounded-md border border-white/15 text-white/50 transition hover-border-accent-50 hover:text-accent sm:flex"
               >
                 <svg
                   width="14"
@@ -275,7 +275,7 @@ type Countdown = {
               </a>
               <button
                 type="button"
-                class="flex h-9 w-9 items-center justify-center rounded-md border border-white/15 text-white/70 transition hover:border-fossa/50 hover:text-fossa sm:hidden"
+                class="flex h-9 w-9 items-center justify-center rounded-md border border-white/15 text-white/70 transition hover-border-accent-50 hover:text-accent sm:hidden"
                 [attr.aria-label]="
                   mobileMenuOpen() ? 'Chiudi menu' : 'Apri menu'
                 "
@@ -320,7 +320,7 @@ type Countdown = {
             >
               <a
                 href="#sport"
-                class="block px-5 py-3 text-xs font-black uppercase tracking-[0.2em] text-white/70 transition hover:bg-white/5 hover:text-fossa"
+                class="block px-5 py-3 text-xs font-black uppercase tracking-[0.2em] text-white/70 transition hover:bg-white/5 hover:text-accent"
                 (click)="
                   mobileMenuOpen.set(false); scrollToSection($event, 'sport')
                 "
@@ -328,7 +328,7 @@ type Countdown = {
               >
               <a
                 href="#sponsor"
-                class="block px-5 py-3 text-xs font-black uppercase tracking-[0.2em] text-white/70 transition hover:bg-white/5 hover:text-fossa"
+                class="block px-5 py-3 text-xs font-black uppercase tracking-[0.2em] text-white/70 transition hover:bg-white/5 hover:text-accent"
                 (click)="
                   mobileMenuOpen.set(false); scrollToSection($event, 'sponsor')
                 "
@@ -336,7 +336,7 @@ type Countdown = {
               >
               <a
                 href="#partecipa"
-                class="block px-5 py-3 text-xs font-black uppercase tracking-[0.2em] text-white/70 transition hover:bg-white/5 hover:text-fossa"
+                class="block px-5 py-3 text-xs font-black uppercase tracking-[0.2em] text-white/70 transition hover:bg-white/5 hover:text-accent"
                 (click)="
                   mobileMenuOpen.set(false);
                   scrollToSection($event, 'partecipa')
@@ -352,9 +352,9 @@ type Countdown = {
               [style.transform]="heroContentTransform()"
             >
               <p
-                class="reveal-up mb-5 flex items-center gap-3 text-xs font-black uppercase tracking-[0.32em] text-fossa"
+                class="reveal-up mb-5 flex items-center gap-3 text-xs font-black uppercase tracking-[0.32em] text-accent"
               >
-                <span class="h-px w-10 bg-fossa"></span>
+                <span class="h-px w-10 bg-accent"></span>
                 Santa Maria La Fossa
               </p>
               <h1
@@ -372,32 +372,32 @@ type Countdown = {
               <div class="reveal-up delay-2 mt-5 flex flex-wrap gap-3">
                 <a
                   href="#partecipa"
-                  class="rounded-md bg-fossa px-5 py-3 text-sm font-black uppercase tracking-[0.14em] text-ink shadow-[0_0_34px_rgba(255,212,0,0.25)] transition hover:bg-white"
+                  class="rounded-md bg-accent px-5 py-3 text-sm font-black uppercase tracking-[0.14em] text-on-accent shadow-[0_0_34px_rgba(255,212,0,0.25)] transition hover:bg-white"
                   (click)="scrollToSection($event, 'partecipa')"
                 >
                   Iscriviti
                 </a>
                 <a
                   href="#sport"
-                  class="rounded-md border border-white/20 px-5 py-3 text-sm font-black uppercase tracking-[0.14em] text-white transition hover:border-fossa hover:text-fossa"
+                  class="rounded-md border border-white/20 px-5 py-3 text-sm font-black uppercase tracking-[0.14em] text-white transition hover-border-accent hover:text-accent"
                   (click)="scrollToSection($event, 'sport')"
                 >
                   Scopri i tornei
                 </a>
               </div>
               <div
-                class="reveal-up delay-3 mt-5 grid max-w-2xl grid-cols-3 overflow-hidden rounded-md border border-fossa/25 bg-black/70 text-center shadow-2xl backdrop-blur"
+                class="reveal-up delay-3 mt-5 grid max-w-2xl grid-cols-3 overflow-hidden rounded-md border border-accent-25 bg-black/70 text-center shadow-2xl backdrop-blur"
               >
-                <div class="border-r border-fossa/20 px-3 py-3">
-                  <p class="text-2xl font-black text-fossa">22-26</p>
+                <div class="border-r border-accent-20 px-3 py-3">
+                  <p class="text-2xl font-black text-accent">22-26</p>
                   <p
                     class="mt-1 text-[0.65rem] font-bold uppercase tracking-[0.18em] text-white/52"
                   >
                     Giugno 2026
                   </p>
                 </div>
-                <div class="border-r border-fossa/20 px-3 py-3">
-                  <p class="text-2xl font-black text-fossa">6</p>
+                <div class="border-r border-accent-20 px-3 py-3">
+                  <p class="text-2xl font-black text-accent">6</p>
                   <p
                     class="mt-1 text-[0.65rem] font-bold uppercase tracking-[0.18em] text-white/52"
                   >
@@ -406,7 +406,7 @@ type Countdown = {
                 </div>
                 <div class="px-3 py-3">
                   <p
-                    class="text-[clamp(1rem,4vw,1.5rem)] font-black text-fossa"
+                    class="text-[clamp(1rem,4vw,1.5rem)] font-black text-accent"
                   >
                     Iscrizioni
                   </p>
@@ -428,7 +428,7 @@ type Countdown = {
                     Al via tra
                   </p>
                   <p
-                    class="text-sm font-black uppercase tracking-[0.14em] text-fossa"
+                    class="text-sm font-black uppercase tracking-[0.14em] text-accent"
                   >
                     22-26 giugno 2026
                   </p>
@@ -436,10 +436,10 @@ type Countdown = {
                 <div class="mt-3 grid grid-cols-4 gap-2 text-center">
                   @for (item of countdownItems(); track item.label) {
                     <div
-                      class="rounded-md bg-black/70 px-2 py-2.5 ring-1 ring-fossa/20"
+                      class="rounded-md bg-black/70 px-2 py-2.5 ring-1 ring-accent-20"
                     >
                       <p
-                        class="text-[clamp(1.25rem,4vw,1.85rem)] font-black leading-none text-fossa"
+                        class="text-[clamp(1.25rem,4vw,1.85rem)] font-black leading-none text-accent"
                       >
                         {{ item.value }}
                       </p>
@@ -456,7 +456,7 @@ type Countdown = {
           </div>
           <a
             href="#sport"
-            class="absolute bottom-6 left-1/2 -translate-x-1/2 hidden flex-col items-center gap-1.5 text-[0.6rem] font-black uppercase tracking-[0.22em] text-white/30 transition hover:text-fossa sm:flex"
+            class="absolute bottom-6 left-1/2 -translate-x-1/2 hidden flex-col items-center gap-1.5 text-[0.6rem] font-black uppercase tracking-[0.22em] text-white/30 transition hover:text-accent sm:flex"
             (click)="scrollToSection($event, 'sport')"
             aria-label="Scorri verso i tornei"
           >
@@ -506,12 +506,12 @@ type Countdown = {
             @for (game of games; track game.name) {
               <button
                 type="button"
-                class="card-lift group flex min-h-[17.5rem] w-full touch-manipulation flex-col overflow-hidden rounded-lg border border-soft bg-surface text-left shadow-sm transition hover:border-fossa hover:shadow-[0_18px_44px_rgba(10,10,10,0.12)] focus:outline-none focus:ring-4 focus:ring-fossa/45 sm:min-h-[19rem]"
+                class="card-lift group flex min-h-[17.5rem] w-full touch-manipulation flex-col overflow-hidden rounded-lg border border-soft bg-surface text-left shadow-sm transition hover-border-accent hover:shadow-[0_18px_44px_rgba(10,10,10,0.12)] focus:outline-none focus:ring-4 focus-ring-accent-45 sm:min-h-[19rem]"
                 [attr.aria-label]="'Apri dettagli ' + game.name"
                 (click)="openGameDetails(game)"
               >
                 <div
-                  class="flex aspect-square w-full items-center justify-center border-b border-soft bg-ink p-2 sm:p-3"
+                  class="flex aspect-square w-full items-center justify-center border-b border-soft bg-strong p-2 sm:p-3"
                 >
                   <img
                     [src]="game.image"
@@ -536,12 +536,12 @@ type Countdown = {
                     {{ game.description }}
                   </p>
                   <span
-                    class="mt-auto inline-flex items-center gap-2 pt-4 text-xs font-black uppercase tracking-[0.16em] text-primary transition group-hover:text-ink"
+                    class="mt-auto inline-flex items-center gap-2 pt-4 text-xs font-black uppercase tracking-[0.16em] text-primary transition group-hover:text-on-accent"
                   >
                     Dettagli
                     <span
                       aria-hidden="true"
-                      class="h-1.5 w-1.5 rounded-full bg-fossa transition group-hover:ring-4 group-hover:ring-fossa/25"
+                      class="h-1.5 w-1.5 rounded-full bg-accent transition group-hover:ring-4 group-hover-ring-accent-25"
                     ></span>
                   </span>
                 </div>
@@ -557,11 +557,11 @@ type Countdown = {
             >
               <div class="text-primary">
                 <div
-                  class="rounded-lg border border-fossa/30 bg-surface-muted p-4 sm:p-5"
+                  class="rounded-lg border border-accent-30 bg-surface-muted p-4 sm:p-5"
                 >
                   <div class="flex items-start gap-4 sm:items-center">
                     <div
-                      class="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-fossa/25 bg-ink p-2 shadow-[0_14px_30px_rgba(10,10,10,0.24)] ring-1 ring-white/10 sm:h-24 sm:w-24 sm:p-2.5"
+                      class="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-accent-25 bg-strong p-2 shadow-[0_14px_30px_rgba(10,10,10,0.24)] ring-1 ring-white/10 sm:h-24 sm:w-24 sm:p-2.5"
                     >
                       <img
                         [src]="game.image"
@@ -657,7 +657,7 @@ type Countdown = {
                         class="grid grid-cols-[auto_1fr] items-start gap-2 text-sm font-semibold leading-6 text-primary"
                       >
                         <span
-                          class="mt-2 h-1.5 w-1.5 rounded-full bg-fossa ring-2 ring-fossa/30"
+                          class="mt-2 h-1.5 w-1.5 rounded-full bg-accent ring-2 ring-accent-30"
                         ></span>
                         <span>{{ highlight }}</span>
                       </li>
@@ -686,7 +686,7 @@ type Countdown = {
                             class="grid grid-cols-[auto_1fr] items-start gap-2 text-sm font-semibold leading-6 text-primary"
                           >
                             <span
-                              class="mt-2 h-1.5 w-1.5 rounded-full bg-fossa ring-2 ring-fossa/30"
+                              class="mt-2 h-1.5 w-1.5 rounded-full bg-accent ring-2 ring-accent-30"
                             ></span>
                             <span>{{ rule }}</span>
                           </li>
@@ -700,7 +700,7 @@ type Countdown = {
                   </div>
                   <button
                     type="button"
-                    class="mt-5 w-full rounded-md bg-fossa px-5 py-3 text-sm font-black uppercase tracking-[0.12em] text-ink transition hover:bg-ink hover:text-fossa sm:w-auto"
+                    class="mt-5 w-full rounded-md bg-accent px-5 py-3 text-sm font-black uppercase tracking-[0.12em] text-on-accent transition hover:bg-strong hover:text-accent sm:w-auto"
                     (click)="requestGameInfo(game)"
                   >
                     Chiedi informazioni
@@ -712,7 +712,7 @@ type Countdown = {
         </div>
       </section>
 
-      <section class="bg-fossa px-5 py-16 text-ink sm:px-8 lg:px-10">
+      <section class="bg-accent px-5 py-16 text-on-accent sm:px-8 lg:px-10">
         <div
           class="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[1fr_0.8fr] lg:items-end reveal-up"
         >
@@ -785,12 +785,12 @@ type Countdown = {
           >
             <div>
               <p
-                class="text-xs font-black uppercase tracking-[0.28em] text-fossa"
+                class="text-xs font-black uppercase tracking-[0.28em] text-accent"
               >
                 Scegli la tua visibilità
               </p>
               <h2
-                class="mt-3 max-w-4xl font-display text-4xl uppercase leading-none text-fossa sm:text-6xl"
+                class="mt-3 max-w-4xl font-display text-4xl uppercase leading-none text-accent sm:text-6xl"
               >
                 Tipologie sponsor disponibili.
               </h2>
@@ -803,7 +803,7 @@ type Countdown = {
               </p>
               <a
                 href="#partecipa"
-                class="mt-5 inline-flex rounded-md bg-fossa px-5 py-3 text-sm font-black uppercase tracking-[0.14em] text-ink transition hover:bg-white"
+                class="mt-5 inline-flex rounded-md bg-accent px-5 py-3 text-sm font-black uppercase tracking-[0.14em] text-on-accent transition hover:bg-white"
                 (click)="selectSponsorContact($event)"
               >
                 Richiedi informazioni sponsor
@@ -821,7 +821,7 @@ type Countdown = {
               >
                 <div>
                   <p
-                    class="text-xs font-black uppercase tracking-[0.28em] text-fossa"
+                    class="text-xs font-black uppercase tracking-[0.28em] text-accent"
                   >
                     I nostri sponsor
                   </p>
@@ -884,7 +884,7 @@ type Countdown = {
                 [class]="
                   tier.name === 'Gold'
                     ? 'border-[#ffd400]/50 bg-[#ffd400]/[0.06] ring-1 ring-[#ffd400]/20 shadow-[0_0_48px_rgba(255,212,0,0.10)]'
-                    : 'border-white/10 bg-white/[0.04] hover:border-fossa/70'
+                    : 'border-white/10 bg-white/[0.04] hover-border-accent-70'
                 "
               >
                 @if (tier.name === "Gold") {
@@ -951,12 +951,12 @@ type Countdown = {
         >
           <div>
             <p
-              class="text-xs font-black uppercase tracking-[0.28em] text-fossa"
+              class="text-xs font-black uppercase tracking-[0.28em] text-accent"
             >
               Iscrizioni e sponsor
             </p>
             <h2
-              class="mt-3 max-w-4xl font-display text-4xl uppercase leading-none text-fossa sm:text-6xl"
+              class="mt-3 max-w-4xl font-display text-4xl uppercase leading-none text-accent sm:text-6xl"
             >
               Partecipa o diventa sponsor.
             </h2>
@@ -1014,7 +1014,7 @@ type Countdown = {
       </section>
 
       <footer
-        class="border-t border-fossa/20 bg-[#050505] px-5 py-10 text-white sm:px-8 lg:px-10"
+        class="border-t border-accent-20 bg-[#050505] px-5 py-10 text-white sm:px-8 lg:px-10"
       >
         <div
           class="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-end"
@@ -1028,10 +1028,10 @@ type Countdown = {
               <img
                 src="/assets/brand/logo-social.png"
                 alt="Logo La Fossa Games"
-                class="h-12 w-12 rounded-full object-cover ring-1 ring-fossa/50"
+                class="h-12 w-12 rounded-full object-cover ring-1 ring-accent-50"
               />
               <span
-                class="text-sm font-black uppercase tracking-[0.24em] text-fossa"
+                class="text-sm font-black uppercase tracking-[0.24em] text-accent"
                 >La Fossa Games</span
               >
             </a>
@@ -1055,28 +1055,28 @@ type Countdown = {
               >
                 <a
                   href="#top"
-                  class="text-white/72 transition hover:text-fossa"
+                  class="text-white/72 transition hover:text-accent"
                   (click)="scrollToSection($event, 'top')"
                 >
                   Home
                 </a>
                 <a
                   href="#sport"
-                  class="text-white/72 transition hover:text-fossa"
+                  class="text-white/72 transition hover:text-accent"
                   (click)="scrollToSection($event, 'sport')"
                 >
                   Sport
                 </a>
                 <a
                   href="#sponsor"
-                  class="text-white/72 transition hover:text-fossa"
+                  class="text-white/72 transition hover:text-accent"
                   (click)="scrollToSection($event, 'sponsor')"
                 >
                   Sponsor
                 </a>
                 <a
                   href="#partecipa"
-                  class="text-white/72 transition hover:text-fossa"
+                  class="text-white/72 transition hover:text-accent"
                   (click)="scrollToSection($event, 'partecipa')"
                 >
                   Contatti
@@ -1093,7 +1093,7 @@ type Countdown = {
               <div class="mt-4 grid gap-3 text-sm font-semibold text-white/64">
                 <span>{{ eventAddress }}</span>
                 <span>{{ eventDateRange }}</span>
-                <span class="font-black uppercase tracking-[0.14em] text-fossa">
+                <span class="font-black uppercase tracking-[0.14em] text-accent">
                   Richieste aperte
                 </span>
               </div>
@@ -1108,7 +1108,7 @@ type Countdown = {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="Instagram La Fossa Games"
-                  class="flex h-9 w-9 items-center justify-center rounded-md border border-white/10 text-white/50 transition hover:border-fossa/50 hover:text-fossa"
+                  class="flex h-9 w-9 items-center justify-center rounded-md border border-white/10 text-white/50 transition hover-border-accent-50 hover:text-accent"
                 >
                   <svg
                     width="16"
@@ -1126,7 +1126,7 @@ type Countdown = {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="Facebook La Fossa Games"
-                  class="flex h-9 w-9 items-center justify-center rounded-md border border-white/10 text-white/50 transition hover:border-fossa/50 hover:text-fossa"
+                  class="flex h-9 w-9 items-center justify-center rounded-md border border-white/10 text-white/50 transition hover-border-accent-50 hover:text-accent"
                 >
                   <svg
                     width="16"
@@ -1149,12 +1149,12 @@ type Countdown = {
         >
           <span>&copy; 2026 La Fossa Games</span>
           <div class="flex flex-wrap items-center gap-x-5 gap-y-2">
-            <a href="/login" class="text-white/30 transition hover:text-fossa">
+            <a href="/login" class="text-white/30 transition hover:text-accent">
               Area manager
             </a>
             <a
               href="#top"
-              class="transition hover:text-fossa"
+              class="transition hover:text-accent"
               (click)="scrollToSection($event, 'top')"
               >Torna su</a
             >

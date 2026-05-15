@@ -4,17 +4,17 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        ink: "#0A0A0A",
-        fossa: "#FFD400",
+        ink: "var(--color-brand-contrast)",
+        fossa: "var(--color-brand-primary)",
         paper: "#FAF7F2",
-        income: "#10B981",
-        expense: "#FF3D00"
+        income: "var(--color-semantic-income)",
+        expense: "var(--color-semantic-expense)",
       },
       fontFamily: {
         body: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"],
-        display: ["Archivo Black", "Inter", "ui-sans-serif", "system-ui"]
-      }
-    }
+        display: ["Archivo Black", "Inter", "ui-sans-serif", "system-ui"],
+      },
+    },
   },
-  plugins: []
+  plugins: [],
 };

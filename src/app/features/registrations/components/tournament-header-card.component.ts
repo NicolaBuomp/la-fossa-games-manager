@@ -6,7 +6,9 @@ import { TournamentWithTeams } from "../../../core/types/models";
   standalone: true,
   host: { class: "mb-5 block" },
   template: `
-    <article class="rounded-lg border border-soft bg-surface p-3 shadow-sm sm:p-4">
+    <article
+      class="rounded-lg border border-soft bg-surface p-3 shadow-sm sm:p-4"
+    >
       <div class="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
         @if (tournament(); as currentTournament) {
           <div class="min-w-0">
@@ -33,7 +35,7 @@ import { TournamentWithTeams } from "../../../core/types/models";
             </button>
             <button
               type="button"
-              class="min-h-10 rounded-md bg-ink px-3 py-2 text-xs font-bold uppercase text-white transition hover:bg-ink/90 sm:min-h-0 sm:py-1.5"
+              class="bg-strong text-on-strong min-h-10 rounded-md px-3 py-2 text-xs font-bold uppercase transition hover:opacity-90 sm:min-h-0 sm:py-1.5"
               (click)="addTeamOrParticipant.emit()"
             >
               {{

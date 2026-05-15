@@ -10,10 +10,10 @@ import { Tournament } from "../../../core/types/models";
       @for (tournament of tournaments(); track tournament.id) {
         <button
           type="button"
-          class="min-h-9 shrink-0 rounded-full border px-4 py-2 text-sm font-black transition hover:border-fossa hover:bg-fossa hover:text-ink"
-          [class.border-fossa]="selectedTournamentId() === tournament.id"
-          [class.bg-fossa]="selectedTournamentId() === tournament.id"
-          [class.text-ink]="selectedTournamentId() === tournament.id"
+          class="hover-accent min-h-9 shrink-0 rounded-full border px-4 py-2 text-sm font-black transition"
+          [class.border-accent]="selectedTournamentId() === tournament.id"
+          [class.bg-accent]="selectedTournamentId() === tournament.id"
+          [class.text-on-accent]="selectedTournamentId() === tournament.id"
           [class.border-soft]="selectedTournamentId() !== tournament.id"
           [class.bg-surface-muted]="selectedTournamentId() !== tournament.id"
           [class.text-primary]="selectedTournamentId() !== tournament.id"

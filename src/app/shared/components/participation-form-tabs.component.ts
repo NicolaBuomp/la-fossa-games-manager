@@ -23,15 +23,17 @@ export interface ParticipationFormValue {
   host: { class: "block" },
   template: `
     <form
-      class="rounded-lg border border-fossa/20 bg-black p-5 shadow-2xl sm:p-6"
+      class="rounded-lg border border-white/15 bg-black p-5 shadow-2xl sm:p-6"
       (ngSubmit)="submit.emit()"
     >
       <div class="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p class="text-xs font-black uppercase tracking-[0.24em] text-fossa">
+          <p class="text-accent text-xs font-black uppercase tracking-[0.24em]">
             Richiesta contatto
           </p>
-          <h3 class="mt-2 font-display text-2xl uppercase leading-none sm:text-3xl">
+          <h3
+            class="mt-2 font-display text-2xl uppercase leading-none sm:text-3xl"
+          >
             {{ title() }}
           </h3>
         </div>
@@ -44,13 +46,17 @@ export interface ParticipationFormValue {
       </div>
 
       @if (success()) {
-        <p class="state-success mt-5 rounded-md border p-3 text-sm font-semibold">
+        <p
+          class="state-success mt-5 rounded-md border p-3 text-sm font-semibold"
+        >
           {{ successMessage() }}
         </p>
       }
 
       @if (error()) {
-        <p class="state-danger mt-5 rounded-md border p-3 text-sm font-semibold">
+        <p
+          class="state-danger mt-5 rounded-md border p-3 text-sm font-semibold"
+        >
           {{ error() }}
         </p>
       }
@@ -68,8 +74,8 @@ export interface ParticipationFormValue {
           <button
             type="button"
             class="rounded px-3 py-2 text-xs font-black uppercase tracking-[0.12em] transition"
-            [class.bg-fossa]="form.reason === 'participation'"
-            [class.text-ink]="form.reason === 'participation'"
+            [class.bg-accent]="form.reason === 'participation'"
+            [class.text-on-accent]="form.reason === 'participation'"
             [class.text-white]="form.reason !== 'participation'"
             (click)="setReason('participation')"
           >
@@ -78,8 +84,8 @@ export interface ParticipationFormValue {
           <button
             type="button"
             class="rounded px-3 py-2 text-xs font-black uppercase tracking-[0.12em] transition"
-            [class.bg-fossa]="form.reason === 'sponsor'"
-            [class.text-ink]="form.reason === 'sponsor'"
+            [class.bg-accent]="form.reason === 'sponsor'"
+            [class.text-on-accent]="form.reason === 'sponsor'"
             [class.text-white]="form.reason !== 'sponsor'"
             (click)="setReason('sponsor')"
           >
@@ -96,7 +102,7 @@ export interface ParticipationFormValue {
               required
               name="tournament"
               [(ngModel)]="form.tournament_id"
-              class="rounded-md border border-white/20 bg-[#101010] px-3 py-3 text-base font-semibold normal-case tracking-normal text-white outline-none transition focus:border-fossa focus:ring-2 focus:ring-fossa/20"
+              class="focus-border-accent focus-ring-accent rounded-md border border-white/20 bg-[#101010] px-3 py-3 text-base font-semibold normal-case tracking-normal text-white outline-none transition"
             >
               <option value="" disabled>Seleziona un torneo</option>
               @for (tournament of tournaments(); track tournament.id) {
@@ -116,7 +122,7 @@ export interface ParticipationFormValue {
               name="companyName"
               [(ngModel)]="form.company_name"
               autocomplete="organization"
-              class="rounded-md border border-white/20 bg-[#101010] px-3 py-3 text-base font-semibold normal-case tracking-normal text-white outline-none transition focus:border-fossa focus:ring-2 focus:ring-fossa/20"
+              class="focus-border-accent focus-ring-accent rounded-md border border-white/20 bg-[#101010] px-3 py-3 text-base font-semibold normal-case tracking-normal text-white outline-none transition"
             />
           </label>
         }
@@ -131,7 +137,7 @@ export interface ParticipationFormValue {
               name="firstName"
               [(ngModel)]="form.first_name"
               autocomplete="given-name"
-              class="rounded-md border border-white/20 bg-[#101010] px-3 py-3 text-base font-semibold normal-case tracking-normal text-white outline-none transition focus:border-fossa focus:ring-2 focus:ring-fossa/20"
+              class="focus-border-accent focus-ring-accent rounded-md border border-white/20 bg-[#101010] px-3 py-3 text-base font-semibold normal-case tracking-normal text-white outline-none transition"
             />
           </label>
           <label
@@ -143,7 +149,7 @@ export interface ParticipationFormValue {
               name="lastName"
               [(ngModel)]="form.last_name"
               autocomplete="family-name"
-              class="rounded-md border border-white/20 bg-[#101010] px-3 py-3 text-base font-semibold normal-case tracking-normal text-white outline-none transition focus:border-fossa focus:ring-2 focus:ring-fossa/20"
+              class="focus-border-accent focus-ring-accent rounded-md border border-white/20 bg-[#101010] px-3 py-3 text-base font-semibold normal-case tracking-normal text-white outline-none transition"
             />
           </label>
         </div>
@@ -158,31 +164,37 @@ export interface ParticipationFormValue {
             name="phone"
             [(ngModel)]="form.phone"
             autocomplete="tel"
-            class="rounded-md border border-white/20 bg-[#101010] px-3 py-3 text-base font-semibold normal-case tracking-normal text-white outline-none transition focus:border-fossa focus:ring-2 focus:ring-fossa/20"
+            class="focus-border-accent focus-ring-accent rounded-md border border-white/20 bg-[#101010] px-3 py-3 text-base font-semibold normal-case tracking-normal text-white outline-none transition"
           />
         </label>
 
-        <div class="grid gap-3 rounded-md border border-white/10 bg-white/[0.03] p-4">
-          <label class="flex gap-3 text-sm font-semibold leading-6 text-white/74">
+        <div
+          class="grid gap-3 rounded-md border border-white/10 bg-white/[0.03] p-4"
+        >
+          <label
+            class="flex gap-3 text-sm font-semibold leading-6 text-white/74"
+          >
             <input
               required
               type="checkbox"
               name="privacy"
               [(ngModel)]="form.privacy_accepted"
-              class="mt-1 h-4 w-4 shrink-0 accent-fossa"
+              class="mt-1 h-4 w-4 shrink-0"
             />
             <span>
               Accetto il trattamento dei dati personali per la gestione della
               richiesta di contatto.
             </span>
           </label>
-          <label class="flex gap-3 text-sm font-semibold leading-6 text-white/74">
+          <label
+            class="flex gap-3 text-sm font-semibold leading-6 text-white/74"
+          >
             <input
               required
               type="checkbox"
               name="whatsapp"
               [(ngModel)]="form.whatsapp_accepted"
-              class="mt-1 h-4 w-4 shrink-0 accent-fossa"
+              class="mt-1 h-4 w-4 shrink-0"
             />
             <span>
               Autorizzo il contatto via WhatsApp per conferme, dettagli
@@ -198,7 +210,7 @@ export interface ParticipationFormValue {
                 type="checkbox"
                 name="rules"
                 [(ngModel)]="form.rules_accepted"
-                class="mt-1 h-4 w-4 shrink-0 accent-fossa"
+                class="mt-1 h-4 w-4 shrink-0"
               />
               <span>
                 Dichiaro di accettare regolamento, comunicazioni operative e
@@ -214,7 +226,7 @@ export interface ParticipationFormValue {
             submitting() ||
             (form.reason === 'participation' && loadingTournaments())
           "
-          class="rounded-md bg-fossa px-5 py-3 text-sm font-black uppercase tracking-[0.14em] text-ink transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-60"
+          class="bg-accent text-on-accent rounded-md px-5 py-3 text-sm font-black uppercase tracking-[0.14em] transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-60"
         >
           {{ submitting() ? "Invio in corso" : submitLabel() }}
         </button>
@@ -232,7 +244,9 @@ export class ParticipationFormTabsComponent {
   @Input({ required: true }) title!: () => string;
   @Input({ required: true }) submitLabel!: () => string;
   @Input({ required: true }) successMessage!: () => string;
-  @Input({ required: true }) tournamentLabel!: (tournament: PublicTournament) => string;
+  @Input({ required: true }) tournamentLabel!: (
+    tournament: PublicTournament,
+  ) => string;
   @Output() reasonChange = new EventEmitter<ParticipationFormReason>();
   @Output() submit = new EventEmitter<void>();
 

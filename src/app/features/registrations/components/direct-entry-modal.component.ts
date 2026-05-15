@@ -31,7 +31,7 @@ export interface DirectEntryForm {
                 type="checkbox"
                 name="paid"
                 [(ngModel)]="form.paid"
-                class="h-5 w-5 accent-emerald-600 disabled:cursor-not-allowed disabled:opacity-70"
+                class="h-5 w-5 disabled:cursor-not-allowed disabled:opacity-70"
               />
               {{ isDuo() ? "Coppia pagata" : "Iscrizione pagata" }}
             </label>
@@ -129,7 +129,7 @@ export interface DirectEntryForm {
 
           <button
             type="submit"
-            class="rounded-lg bg-ink px-4 py-3 text-sm font-bold uppercase text-white disabled:opacity-60"
+            class="bg-strong text-on-strong rounded-lg px-4 py-3 text-sm font-bold uppercase disabled:opacity-60"
           >
             {{ loading() ? "Salvataggio…" : "Salva iscrizione" }}
           </button>

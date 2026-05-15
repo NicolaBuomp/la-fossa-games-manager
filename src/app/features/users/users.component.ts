@@ -159,7 +159,7 @@ import {
           </div>
           <div class="mt-4 flex justify-end">
             <button
-              class="min-h-11 rounded-lg bg-ink px-4 text-sm font-bold uppercase tracking-wide text-white disabled:opacity-60"
+              class="bg-strong text-on-strong min-h-11 rounded-lg px-4 text-sm font-bold uppercase tracking-wide disabled:opacity-60"
             >
               {{ creating() ? "Creazione..." : "Crea utente" }}
             </button>
@@ -190,7 +190,7 @@ import {
                     [label]="item.role"
                     [className]="
                       item.role === 'admin'
-                        ? 'border-fossa bg-fossa text-ink'
+                        ? 'border-accent bg-accent text-on-accent'
                         : 'state-neutral'
                     "
                   />

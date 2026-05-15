@@ -73,7 +73,9 @@ import { StatusBadgeComponent } from "../../../shared/components/ui.component";
                   type="button"
                   class="min-h-10 rounded-md bg-surface-muted px-3 py-2 text-xs font-bold uppercase transition hover:bg-surface-muted/80 sm:min-h-0 sm:py-1.5"
                   (click)="
-                    isDirect() ? editDirectEntry.emit(team) : editTeam.emit(team)
+                    isDirect()
+                      ? editDirectEntry.emit(team)
+                      : editTeam.emit(team)
                   "
                 >
                   Modifica
@@ -103,7 +105,7 @@ import { StatusBadgeComponent } from "../../../shared/components/ui.component";
                   <div class="flex justify-end gap-2">
                     <button
                       type="button"
-                      class="min-h-9 rounded-md bg-surface px-3 text-muted hover:text-ink sm:min-h-0 sm:bg-transparent sm:px-0"
+                      class="min-h-9 rounded-md bg-surface px-3 text-muted hover:text-primary sm:min-h-0 sm:bg-transparent sm:px-0"
                       (click)="editParticipant.emit(p)"
                     >
                       Modifica
@@ -147,7 +149,8 @@ export class RegistrationsTableComponent {
   @Input() auth: any; // AuthService
 
   @Output() editTeam = new EventEmitter<TournamentTeamWithParticipants>();
-  @Output() editDirectEntry = new EventEmitter<TournamentTeamWithParticipants>();
+  @Output() editDirectEntry =
+    new EventEmitter<TournamentTeamWithParticipants>();
   @Output() togglePaid = new EventEmitter<TournamentTeamWithParticipants>();
   @Output() addParticipant = new EventEmitter<string>();
   @Output() deleteTeam = new EventEmitter<string>();

@@ -18,10 +18,14 @@ const ONE_YEAR_SECONDS = 60 * 60 * 24 * 365;
           class="rounded-lg border border-white/10 bg-[#050505]/95 p-4 shadow-2xl backdrop-blur"
         >
           <div>
-            <p class="text-xs font-black uppercase tracking-[0.18em] text-fossa">
+            <p
+              class="text-accent text-xs font-black uppercase tracking-[0.18em]"
+            >
               Cookie
             </p>
-            <p class="mt-2 text-xs font-semibold leading-5 text-white/72 sm:text-sm">
+            <p
+              class="mt-2 text-xs font-semibold leading-5 text-white/72 sm:text-sm"
+            >
               Usiamo cookie tecnici necessari. Al momento non carichiamo
               strumenti di tracciamento esterni.
             </p>
@@ -30,14 +34,14 @@ const ONE_YEAR_SECONDS = 60 * 60 * 24 * 365;
           <div class="mt-3 grid grid-cols-2 gap-2">
             <button
               type="button"
-              class="rounded-md border border-white/20 px-4 py-2.5 text-xs font-black uppercase tracking-[0.14em] text-white transition hover:border-fossa hover:text-fossa"
+              class="rounded-md border border-white/20 px-4 py-2.5 text-xs font-black uppercase tracking-[0.14em] text-white transition hover-border-accent hover-text-accent"
               (click)="reject()"
             >
               Rifiuta
             </button>
             <button
               type="button"
-              class="rounded-md bg-fossa px-4 py-2.5 text-xs font-black uppercase tracking-[0.14em] text-ink transition hover:bg-white"
+              class="bg-accent text-on-accent rounded-md px-4 py-2.5 text-xs font-black uppercase tracking-[0.14em] transition hover:bg-white"
               (click)="accept()"
             >
               Accetta

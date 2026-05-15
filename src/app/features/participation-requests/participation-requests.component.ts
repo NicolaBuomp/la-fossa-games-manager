@@ -173,7 +173,7 @@ const DIRECT_CODES = [...SOLO_CODES, ...DUO_CODES];
               <div class="mt-4 flex flex-wrap gap-2 border-t border-soft pt-4">
                 <button
                   [disabled]="updatingRequestId() === request.id"
-                  class="rounded-lg bg-ink px-4 py-2 text-xs font-bold uppercase text-white disabled:cursor-not-allowed disabled:opacity-60"
+                  class="bg-strong text-on-strong rounded-lg px-4 py-2 text-xs font-bold uppercase disabled:cursor-not-allowed disabled:opacity-60"
                   (click)="openTransferModal(request)"
                 >
                   {{ request.status === "nuova" ? "Accetta" : "Trasferisci" }}
@@ -221,7 +221,7 @@ const DIRECT_CODES = [...SOLO_CODES, ...DUO_CODES];
                 </label>
                 <button
                   [disabled]="savingNoteId() === request.id"
-                  class="rounded-lg bg-ink px-4 py-3 text-sm font-bold uppercase text-white disabled:opacity-60"
+                  class="bg-strong text-on-strong rounded-lg px-4 py-3 text-sm font-bold uppercase disabled:opacity-60"
                   (click)="addNote(request)"
                 >
                   {{
@@ -392,7 +392,7 @@ const DIRECT_CODES = [...SOLO_CODES, ...DUO_CODES];
                   type="checkbox"
                   name="transferParticipantRegistered"
                   [(ngModel)]="transferForm.participant_registered"
-                  class="h-5 w-5 accent-emerald-600 disabled:cursor-not-allowed disabled:opacity-70"
+                  class="h-5 w-5 disabled:cursor-not-allowed disabled:opacity-70"
                 />
                 Richiedente tesserato FIPAV
               </label>
@@ -405,7 +405,7 @@ const DIRECT_CODES = [...SOLO_CODES, ...DUO_CODES];
                 type="checkbox"
                 name="transferPaid"
                 [(ngModel)]="transferForm.paid"
-                class="h-5 w-5 accent-emerald-600 disabled:cursor-not-allowed disabled:opacity-70"
+                class="h-5 w-5 disabled:cursor-not-allowed disabled:opacity-70"
               />
               Iscrizione pagata
             </label>
@@ -421,7 +421,7 @@ const DIRECT_CODES = [...SOLO_CODES, ...DUO_CODES];
             </label>
 
             <button
-              class="rounded-lg bg-ink px-4 py-3 text-sm font-bold uppercase text-white disabled:opacity-60"
+              class="bg-strong text-on-strong rounded-lg px-4 py-3 text-sm font-bold uppercase disabled:opacity-60"
             >
               {{
                 updatingRequestId() === request.id

@@ -5,14 +5,22 @@
 :root {
   color-scheme: light;
   background: #faf7f2;
+  --color-brand-primary: #ffd400;
+  --color-brand-contrast: #0a0a0a;
+  --color-brand-ring: rgba(255, 212, 0, 0.35);
+  --color-semantic-income: #10b981;
+  --color-semantic-expense: #ff3d00;
+  --color-semantic-warning: #b45309;
+  --color-surface-strong: #0a0a0a;
+  --color-text-on-strong: #ffffff;
   --bg-app: #faf7f2;
   --bg-surface: #ffffff;
   --bg-surface-muted: #f5f5f5;
   --text-primary: #0a0a0a;
   --text-muted: #6b7280;
   --border-soft: rgba(10, 10, 10, 0.12);
-  --focus-border: #ffd400;
-  --focus-ring: rgba(255, 212, 0, 0.35);
+  --focus-border: var(--color-brand-primary);
+  --focus-ring: var(--color-brand-ring);
   --control-disabled-opacity: 0.65;
   --state-neutral-bg: #f5f5f5;
   --state-neutral-border: #d4d4d4;
@@ -34,6 +42,14 @@
 
 :root[data-theme="dark"] {
   color-scheme: dark;
+  --color-brand-primary: #ffd84d;
+  --color-brand-contrast: #111111;
+  --color-brand-ring: rgba(255, 216, 77, 0.45);
+  --color-semantic-income: #34d399;
+  --color-semantic-expense: #fb923c;
+  --color-semantic-warning: #fcd34d;
+  --color-surface-strong: #050505;
+  --color-text-on-strong: #ffffff;
   --bg-app: #121212;
   --bg-surface: #1c1c1c;
   --bg-surface-muted: #262626;
@@ -92,6 +108,152 @@ body {
 
 .border-soft {
   border-color: var(--border-soft);
+}
+
+.bg-accent {
+  background: var(--color-brand-primary);
+}
+
+.text-accent {
+  color: var(--color-brand-primary);
+}
+
+.border-accent {
+  border-color: var(--color-brand-primary);
+}
+
+.border-accent-20 {
+  border-color: color-mix(in srgb, var(--color-brand-primary) 20%, transparent);
+}
+
+.border-accent-25 {
+  border-color: color-mix(in srgb, var(--color-brand-primary) 25%, transparent);
+}
+
+.border-accent-30 {
+  border-color: color-mix(in srgb, var(--color-brand-primary) 30%, transparent);
+}
+
+.border-accent-35 {
+  border-color: color-mix(in srgb, var(--color-brand-primary) 35%, transparent);
+}
+
+.bg-accent-5 {
+  background: color-mix(in srgb, var(--color-brand-primary) 5%, transparent);
+}
+
+.text-on-accent {
+  color: var(--color-brand-contrast);
+}
+
+.bg-strong {
+  background: var(--color-surface-strong);
+}
+
+.text-on-strong {
+  color: var(--color-text-on-strong);
+}
+
+.text-positive {
+  color: var(--color-semantic-income);
+}
+
+.text-negative {
+  color: var(--color-semantic-expense);
+}
+
+.text-warning {
+  color: var(--color-semantic-warning);
+}
+
+.hover-border-accent:hover {
+  border-color: var(--color-brand-primary);
+}
+
+.hover-border-accent-50:hover {
+  border-color: color-mix(in srgb, var(--color-brand-primary) 50%, transparent);
+}
+
+.hover-border-accent-70:hover {
+  border-color: color-mix(in srgb, var(--color-brand-primary) 70%, transparent);
+}
+
+.hover-accent:hover {
+  border-color: var(--color-brand-primary);
+  background: var(--color-brand-primary);
+  color: var(--color-brand-contrast);
+}
+
+.hover-text-accent:hover {
+  color: var(--color-brand-primary);
+}
+
+.hover-bg-strong:hover {
+  background: var(--color-surface-strong);
+}
+
+.hover-text-on-strong:hover {
+  color: var(--color-text-on-strong);
+}
+
+.focus-border-accent:focus {
+  border-color: var(--color-brand-primary);
+}
+
+.focus-ring-accent:focus {
+  box-shadow: 0 0 0 2px var(--color-brand-ring);
+}
+
+.focus-ring-accent:focus-visible {
+  box-shadow: 0 0 0 3px var(--color-brand-ring);
+}
+
+.focus-ring-accent-45:focus {
+  --tw-ring-color: color-mix(
+    in srgb,
+    var(--color-brand-primary) 45%,
+    transparent
+  );
+}
+
+.ring-accent-20 {
+  --tw-ring-color: color-mix(
+    in srgb,
+    var(--color-brand-primary) 20%,
+    transparent
+  );
+}
+
+.ring-accent-25 {
+  --tw-ring-color: color-mix(
+    in srgb,
+    var(--color-brand-primary) 25%,
+    transparent
+  );
+}
+
+.ring-accent-30 {
+  --tw-ring-color: color-mix(
+    in srgb,
+    var(--color-brand-primary) 30%,
+    transparent
+  );
+}
+
+.ring-accent-50 {
+  --tw-ring-color: color-mix(
+    in srgb,
+    var(--color-brand-primary) 50%,
+    transparent
+  );
+}
+
+.group:hover .group-hover-ring-accent-25 {
+  --tw-ring-color: color-mix(
+    in srgb,
+    var(--color-brand-primary) 25%,
+    transparent
+  );
 }
 
 .state-neutral {
@@ -163,7 +325,7 @@ textarea:focus-visible {
 
 input[type="checkbox"],
 input[type="radio"] {
-  accent-color: #ffd400;
+  accent-color: var(--color-brand-primary);
 }
 
 button:disabled,

@@ -20,13 +20,6 @@ import {
   SponsorType,
 } from "../../core/types/models";
 import {
-  ConfirmModalComponent,
-  EmptyStateComponent,
-  KpiPanelComponent,
-  StatusBadgeComponent,
-  SummaryCardComponent,
-} from "../../shared/components/ui.component";
-import {
   CrudFormField,
   CrudFormModalComponent,
 } from "../../shared/components/crud-form-modal.component";
@@ -34,6 +27,13 @@ import {
   FilterOption,
   StatusFilterPillsComponent,
 } from "../../shared/components/status-filter-pills.component";
+import {
+  ConfirmModalComponent,
+  EmptyStateComponent,
+  KpiPanelComponent,
+  StatusBadgeComponent,
+  SummaryCardComponent,
+} from "../../shared/components/ui.component";
 
 type SponsorForm = InsertSponsor & { withoutPromisedAmount: boolean };
 
@@ -58,7 +58,9 @@ type SponsorForm = InsertSponsor & { withoutPromisedAmount: boolean };
           </p>
           <h1 class="font-display text-3xl uppercase">Sponsor</h1>
           @if (!auth.isAdmin()) {
-            <p class="mt-2 max-w-2xl text-sm font-semibold leading-6 text-muted">
+            <p
+              class="mt-2 max-w-2xl text-sm font-semibold leading-6 text-muted"
+            >
               Vedi solo gli sponsor inseriti da te o assegnati a te.
             </p>
           }
@@ -77,7 +79,7 @@ type SponsorForm = InsertSponsor & { withoutPromisedAmount: boolean };
             Nuovo lead
           </button>
           <button
-            class="rounded-lg bg-ink px-4 py-2 text-sm font-bold text-white"
+            class="bg-strong text-on-strong rounded-lg px-4 py-2 text-sm font-bold"
             (click)="newItem()"
           >
             Nuovo
@@ -131,7 +133,7 @@ type SponsorForm = InsertSponsor & { withoutPromisedAmount: boolean };
             (ngModelChange)="compactView.set($event)"
           />
           <span
-            class="h-5 w-9 rounded-full bg-neutral-200 p-0.5 transition peer-checked:bg-ink"
+            class="h-5 w-9 rounded-full bg-neutral-200 p-0.5 transition peer-checked:[background:var(--color-surface-strong)]"
           >
             <span
               class="block h-4 w-4 rounded-full bg-white shadow-sm transition"
@@ -147,7 +149,9 @@ type SponsorForm = InsertSponsor & { withoutPromisedAmount: boolean };
       }
       @if (!items().length) {
         <lfg-empty-state
-          [title]="auth.isAdmin() ? 'Nessuno sponsor' : 'Nessuno sponsor assegnato'"
+          [title]="
+            auth.isAdmin() ? 'Nessuno sponsor' : 'Nessuno sponsor assegnato'
+          "
           [text]="
             auth.isAdmin()
               ? 'Aggiungi aziende, contatti e stato della trattativa anche senza importo.'
@@ -206,20 +210,28 @@ type SponsorForm = InsertSponsor & { withoutPromisedAmount: boolean };
                 <div class="text-right">
                   @if (!compactView()) {
                     <p class="text-[10px] font-bold uppercase text-muted">
-                      {{ item.promised_amount > 0 ? "Promesso" : "Importo assente" }}
+                      {{
+                        item.promised_amount > 0
+                          ? "Promesso"
+                          : "Importo assente"
+                      }}
                     </p>
                   }
                   <p class="font-black" [class.text-sm]="compactView()">
                     {{ promisedAmountLabel(item) }}
                   </p>
                   @if (!compactView() && item.received_amount > 0) {
-                    <p class="mt-1 text-xs font-bold text-income">
+                    <p class="text-positive mt-1 text-xs font-bold">
                       Incassato {{ eur(item.received_amount) }}
                     </p>
                   }
-                  @if (!compactView() && item.promised_amount > item.received_amount) {
+                  @if (
+                    !compactView() &&
+                    item.promised_amount > item.received_amount
+                  ) {
                     <p class="mt-1 text-xs font-semibold text-muted">
-                      Residuo {{ eur(item.promised_amount - item.received_amount) }}
+                      Residuo
+                      {{ eur(item.promised_amount - item.received_amount) }}
                     </p>
                   }
                 </div>
@@ -240,7 +252,9 @@ type SponsorForm = InsertSponsor & { withoutPromisedAmount: boolean };
                   >
                   <span
                     class="rounded-full bg-surface-muted px-2.5 py-1 text-[10px] font-bold uppercase"
-                    >{{ item.payment_method || sponsorTypeLabel(item.type) }}</span
+                    >{{
+                      item.payment_method || sponsorTypeLabel(item.type)
+                    }}</span
                   >
                 }
               </div>
@@ -442,15 +456,13 @@ export class SponsorsComponent implements OnInit {
       this.assignableProfiles.set(assignableProfiles);
       this.items.set(items);
       this.userNames.set(
-        await this.profiles.displayNames(
-          [
-            ...items.flatMap((item) => [
-              item.created_by,
-              item.responsible_user_id,
-            ]),
-            ...assignableProfiles.map((profile) => profile.id),
-          ],
-        ),
+        await this.profiles.displayNames([
+          ...items.flatMap((item) => [
+            item.created_by,
+            item.responsible_user_id,
+          ]),
+          ...assignableProfiles.map((profile) => profile.id),
+        ]),
       );
       if (this.auth.isAdmin()) {
         await this.badges.refresh();
@@ -500,7 +512,8 @@ export class SponsorsComponent implements OnInit {
       status: item.status,
       deliverables: item.deliverables,
       notes: item.notes,
-      withoutPromisedAmount: Number(item.promised_amount ?? item.value ?? 0) === 0,
+      withoutPromisedAmount:
+        Number(item.promised_amount ?? item.value ?? 0) === 0,
     };
     this.modalOpen.set(true);
   }
@@ -543,7 +556,9 @@ export class SponsorsComponent implements OnInit {
     try {
       const payload: Partial<InsertSponsor> = { status };
       if (status === "pagato" && Number(item.received_amount || 0) === 0) {
-        payload.received_amount = Number(item.promised_amount || item.value || 0);
+        payload.received_amount = Number(
+          item.promised_amount || item.value || 0,
+        );
       }
       await this.service.update(item.id, payload);
       await this.load();
@@ -591,10 +606,7 @@ export class SponsorsComponent implements OnInit {
       .reduce((s, i) => s + Number(i.promised_amount ?? i.value ?? 0), 0);
   }
   receivedTotal(): number {
-    return this.items().reduce(
-      (s, i) => s + Number(i.received_amount || 0),
-      0,
-    );
+    return this.items().reduce((s, i) => s + Number(i.received_amount || 0), 0);
   }
   confirmedPaidCount(): number {
     return this.items().filter(
@@ -627,13 +639,13 @@ export class SponsorsComponent implements OnInit {
     return method === "Bonifico" ? "bonifico" : "cash";
   }
   categoryLabel(category: SponsorCategory): string {
-    return SPONSOR_CATEGORIES.find((item) => item.id === category)?.label ?? category;
+    return (
+      SPONSOR_CATEGORIES.find((item) => item.id === category)?.label ?? category
+    );
   }
   promisedAmountLabel(item: Sponsor): string {
     const amount = Number(item.promised_amount ?? item.value ?? 0);
-    return amount > 0
-      ? this.eur(amount)
-      : "Nessun importo";
+    return amount > 0 ? this.eur(amount) : "Nessun importo";
   }
   eur(value: number): string {
     return new Intl.NumberFormat("it-IT", {
@@ -654,9 +666,7 @@ export class SponsorsComponent implements OnInit {
     const responsible = item.responsible_user_id
       ? this.userNames()[item.responsible_user_id]
       : "";
-    return responsible
-      ? `Assegnato a ${responsible}`
-      : "Non assegnato";
+    return responsible ? `Assegnato a ${responsible}` : "Non assegnato";
   }
   emptyForm(): SponsorForm {
     return {
@@ -689,8 +699,7 @@ export class SponsorsComponent implements OnInit {
     if (!userId) return [];
     return items.filter(
       (item) =>
-        item.responsible_user_id === userId ||
-        item.created_by === userId,
+        item.responsible_user_id === userId || item.created_by === userId,
     );
   }
 
@@ -701,7 +710,8 @@ export class SponsorsComponent implements OnInit {
   }
 
   private profileOptionLabel(profile: Profile): string {
-    const name = profile.full_name || profile.username || profile.email || profile.id;
+    const name =
+      profile.full_name || profile.username || profile.email || profile.id;
     return `${name} · ${profile.role}`;
   }
 

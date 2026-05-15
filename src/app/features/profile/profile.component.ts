@@ -89,7 +89,7 @@ import { SnackbarService } from "../../core/services/snackbar.service";
             </div>
 
             <button
-              class="mt-5 min-h-11 rounded-lg bg-fossa px-5 text-sm font-bold uppercase tracking-wide text-ink disabled:opacity-60"
+              class="bg-accent text-on-accent mt-5 min-h-11 rounded-lg px-5 text-sm font-bold uppercase tracking-wide disabled:opacity-60"
             >
               {{ savingPassword() ? "Aggiornamento..." : "Aggiorna password" }}
             </button>
