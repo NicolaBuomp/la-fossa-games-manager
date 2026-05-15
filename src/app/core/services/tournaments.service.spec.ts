@@ -39,8 +39,27 @@ describe("TournamentsService", () => {
     responses: Record<string, unknown>,
     calls: string[] = [],
   ): TournamentsService {
+    const channel = {
+      on: (event: string, config: unknown, callback: unknown) => {
+        calls.push(`channel.on:${event}:${JSON.stringify(config)}`);
+        calls.push(`channel.callback:${typeof callback}`);
+        return channel;
+      },
+      subscribe: () => {
+        calls.push("channel.subscribe");
+        return channel;
+      },
+    };
     const client = {
       from: (table: string) => new Query(table, responses, calls),
+      channel: (name: string) => {
+        calls.push(`channel:${name}`);
+        return channel;
+      },
+      removeChannel: (selectedChannel: unknown) => {
+        calls.push(`removeChannel:${selectedChannel === channel}`);
+        return Promise.resolve("ok");
+      },
       rpc: (fn: string, payload: unknown) => {
         calls.push(`${fn}:${JSON.stringify(payload)}`);
         return Promise.resolve(responses[`rpc.${fn}`]);
@@ -187,6 +206,17 @@ describe("TournamentsService", () => {
             },
           ],
         },
+        "rpc.reset_tournament_schedule": {
+          error: null,
+          data: [
+            {
+              groups_deleted: "2",
+              matches_deleted: "6",
+              standings_deleted: "8",
+              group_teams_deleted: "8",
+            },
+          ],
+        },
       },
       calls,
     );
@@ -196,6 +226,33 @@ describe("TournamentsService", () => {
     expect(result.matches_created).toBe(12);
     expect(calls[0]).toContain("generate_group_stage");
     expect(calls[0]).toContain('"p_group_count":2');
+  });
+
+  it("calls reset_tournament_schedule and normalizes counters", async () => {
+    const calls: string[] = [];
+    const service = serviceWith(
+      {
+        "rpc.reset_tournament_schedule": {
+          error: null,
+          data: [
+            {
+              groups_deleted: "2",
+              matches_deleted: "6",
+              standings_deleted: "8",
+              group_teams_deleted: "8",
+            },
+          ],
+        },
+      },
+      calls,
+    );
+
+    const result = await service.resetTournamentSchedule("tournament-1");
+
+    expect(result.groups_deleted).toBe(2);
+    expect(result.matches_deleted).toBe(6);
+    expect(calls[0]).toContain("reset_tournament_schedule");
+    expect(calls[0]).toContain('"p_tournament_id":"tournament-1"');
   });
 
   it("saves match results and recalculates group standings", async () => {
@@ -255,5 +312,22 @@ describe("TournamentsService", () => {
       }),
     ).toBeRejectedWithError("I punteggi non possono essere negativi.");
     expect(calls.length).toBe(0);
+  });
+
+  it("subscribes to public match changes with an optional tournament filter", async () => {
+    const calls: string[] = [];
+    const service = serviceWith({}, calls);
+
+    const channel = service.subscribeToPublicMatchChanges(
+      jasmine.createSpy(),
+      "tournament-1",
+    );
+    await service.unsubscribe(channel);
+
+    expect(calls[0]).toBe("channel:public-tournament-matches:tournament-1");
+    expect(calls[1]).toContain('"table":"tournament_matches"');
+    expect(calls[1]).toContain('"filter":"tournament_id=eq.tournament-1"');
+    expect(calls).toContain("channel.subscribe");
+    expect(calls).toContain("removeChannel:true");
   });
 });

@@ -62,6 +62,7 @@ describe("TournamentsComponent", () => {
       [
         "listOperational",
         "generateGroupStage",
+        "resetTournamentSchedule",
         "saveMatchResult",
         "updatePublication",
       ],
@@ -73,6 +74,12 @@ describe("TournamentsComponent", () => {
       matches_created: 12,
       seeded_used: 0,
       note: "ok",
+    });
+    service.resetTournamentSchedule.and.resolveTo({
+      groups_deleted: 2,
+      matches_deleted: 6,
+      standings_deleted: 8,
+      group_teams_deleted: 8,
     });
     service.saveMatchResult.and.resolveTo(match());
     service.updatePublication.and.resolveTo();
@@ -152,6 +159,33 @@ describe("TournamentsComponent", () => {
     expect(service.generateGroupStage).toHaveBeenCalledOnceWith(
       "tournament-1",
       3,
+    );
+  });
+
+  it("blocks schedule reset for staff users", async () => {
+    const { component, service } = createComponent(false);
+    const selected = tournament();
+
+    component.askResetSchedule(selected);
+    await component.confirmResetSchedule();
+
+    expect(component.pendingResetTournament()).toBeNull();
+    expect(service.resetTournamentSchedule).not.toHaveBeenCalled();
+  });
+
+  it("requires confirmation before resetting groups and schedule", async () => {
+    const { component, service } = createComponent(true);
+    const selected = tournament();
+
+    component.askResetSchedule(selected);
+
+    expect(component.pendingResetTournament()).toBe(selected);
+    expect(service.resetTournamentSchedule).not.toHaveBeenCalled();
+
+    await component.confirmResetSchedule();
+
+    expect(service.resetTournamentSchedule).toHaveBeenCalledOnceWith(
+      "tournament-1",
     );
   });
 });

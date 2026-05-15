@@ -4,6 +4,7 @@ import { AuthService } from "../../core/services/auth.service";
 import { SnackbarService } from "../../core/services/snackbar.service";
 import {
   GenerateGroupStageResult,
+  ResetTournamentScheduleResult,
   TournamentsService,
 } from "../../core/services/tournaments.service";
 import {
@@ -263,11 +264,31 @@ type TournamentTab =
                     >
                       Genera
                     </button>
+                    @if (auth.isAdmin()) {
+                      <button
+                        type="button"
+                        class="state-danger rounded-lg border px-4 py-3 text-sm font-black uppercase disabled:opacity-60 lg:self-end"
+                        [disabled]="
+                          generating() ||
+                          (!tournament.tournament_groups.length &&
+                            !tournament.tournament_matches.length &&
+                            !tournament.tournament_standings.length)
+                        "
+                        (click)="askResetSchedule(tournament)"
+                      >
+                        Reset
+                      </button>
+                    }
                   </div>
                 </div>
                 @if (lastGenerateResult()) {
                   <p class="mt-3 rounded-lg bg-surface-muted p-3 text-sm font-semibold">
                     {{ generateResultLabel(lastGenerateResult()!) }}
+                  </p>
+                }
+                @if (lastResetResult()) {
+                  <p class="mt-3 rounded-lg bg-surface-muted p-3 text-sm font-semibold">
+                    {{ resetResultLabel(lastResetResult()!) }}
                   </p>
                 }
               </div>
@@ -561,6 +582,14 @@ type TournamentTab =
       (confirm)="confirmGenerateGroups()"
       (cancel)="pendingGenerateTournament.set(null)"
     />
+
+    <lfg-confirm
+      [open]="!!pendingResetTournament()"
+      confirmLabel="Reset"
+      [message]="resetConfirmMessage()"
+      (confirm)="confirmResetSchedule()"
+      (cancel)="pendingResetTournament.set(null)"
+    />
   `,
 })
 export class TournamentsComponent implements OnInit {
@@ -608,7 +637,9 @@ export class TournamentsComponent implements OnInit {
   savingPublication = signal(false);
   savingMatchId = signal<string | null>(null);
   pendingGenerateTournament = signal<OperationalTournament | null>(null);
+  pendingResetTournament = signal<OperationalTournament | null>(null);
   lastGenerateResult = signal<GenerateGroupStageResult | null>(null);
+  lastResetResult = signal<ResetTournamentScheduleResult | null>(null);
   error = signal("");
   groupCount = 2;
 
@@ -646,10 +677,16 @@ export class TournamentsComponent implements OnInit {
   selectTournament(id: string): void {
     this.selectedTournamentId.set(id);
     this.lastGenerateResult.set(null);
+    this.lastResetResult.set(null);
   }
 
   askGenerateGroups(tournament: OperationalTournament): void {
     this.pendingGenerateTournament.set(tournament);
+  }
+
+  askResetSchedule(tournament: OperationalTournament): void {
+    if (!this.auth.isAdmin()) return;
+    this.pendingResetTournament.set(tournament);
   }
 
   async confirmGenerateGroups(): Promise<void> {
@@ -665,7 +702,29 @@ export class TournamentsComponent implements OnInit {
         this.groupCount,
       );
       this.lastGenerateResult.set(result);
+      this.lastResetResult.set(null);
       this.snackbar.success(this.generateResultLabel(result));
+      await this.load();
+      this.activeTab.set("groups");
+    } catch (error) {
+      this.setError(error);
+    } finally {
+      this.generating.set(false);
+    }
+  }
+
+  async confirmResetSchedule(): Promise<void> {
+    const tournament = this.pendingResetTournament();
+    this.pendingResetTournament.set(null);
+    if (!tournament || this.generating() || !this.auth.isAdmin()) return;
+
+    this.generating.set(true);
+    this.error.set("");
+    try {
+      const result = await this.service.resetTournamentSchedule(tournament.id);
+      this.lastResetResult.set(result);
+      this.lastGenerateResult.set(null);
+      this.snackbar.success(this.resetResultLabel(result));
       await this.load();
       this.activeTab.set("groups");
     } catch (error) {
@@ -745,8 +804,18 @@ export class TournamentsComponent implements OnInit {
     return `Generare ${this.groupCount} gironi per ${tournament.name}? Verranno sostituiti gironi, partite e classifiche esistenti.`;
   }
 
+  resetConfirmMessage(): string {
+    const tournament = this.pendingResetTournament();
+    if (!tournament) return "";
+    return `Resettare gironi, calendario, risultati e classifiche di ${tournament.name}? Le iscrizioni e le squadre resteranno intatte.`;
+  }
+
   generateResultLabel(result: GenerateGroupStageResult): string {
     return `${result.groups_created} gironi, ${result.teams_assigned} squadre assegnate, ${result.matches_created} partite create.`;
+  }
+
+  resetResultLabel(result: ResetTournamentScheduleResult): string {
+    return `${result.groups_deleted} gironi, ${result.matches_deleted} partite e ${result.standings_deleted} righe classifica rimosse.`;
   }
 
   teamCount(): number {

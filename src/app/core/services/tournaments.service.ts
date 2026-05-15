@@ -1,4 +1,5 @@
 import { Injectable } from "@angular/core";
+import { RealtimeChannel } from "@supabase/supabase-js";
 import {
   OperationalTournament,
   TournamentGroup,
@@ -19,6 +20,13 @@ export interface GenerateGroupStageResult {
   matches_created: number;
   seeded_used: number;
   note: string;
+}
+
+export interface ResetTournamentScheduleResult {
+  groups_deleted: number;
+  matches_deleted: number;
+  standings_deleted: number;
+  group_teams_deleted: number;
 }
 
 export interface SaveMatchResultInput {
@@ -113,6 +121,17 @@ export class TournamentsService {
     return this.normalizeGenerateResult((data ?? [])[0]);
   }
 
+  async resetTournamentSchedule(
+    tournamentId: string,
+  ): Promise<ResetTournamentScheduleResult> {
+    const { data, error } = await this.supabase.client.rpc(
+      "reset_tournament_schedule",
+      { p_tournament_id: tournamentId },
+    );
+    if (error) throw error;
+    return this.normalizeResetResult((data ?? [])[0]);
+  }
+
   async saveMatchResult(input: SaveMatchResultInput): Promise<TournamentMatch> {
     if (input.homeScore < 0 || input.awayScore < 0) {
       throw new Error("I punteggi non possono essere negativi.");
@@ -197,6 +216,34 @@ export class TournamentsService {
       points: Number(standing.points || 0),
       rank: Number(standing.rank || 0),
     })) as PublicTournamentStanding[];
+  }
+
+  subscribeToPublicMatchChanges(
+    onChange: () => void,
+    tournamentId?: string,
+  ): RealtimeChannel {
+    const channel = this.supabase.client.channel(
+      tournamentId
+        ? `public-tournament-matches:${tournamentId}`
+        : "public-tournament-matches",
+    );
+    channel
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "tournament_matches",
+          ...(tournamentId ? { filter: `tournament_id=eq.${tournamentId}` } : {}),
+        },
+        onChange,
+      )
+      .subscribe();
+    return channel;
+  }
+
+  async unsubscribe(channel: RealtimeChannel): Promise<void> {
+    await this.supabase.client.removeChannel(channel);
   }
 
   private normalizeTournament(
@@ -299,6 +346,16 @@ export class TournamentsService {
       matches_created: Number(row.matches_created || 0),
       seeded_used: Number(row.seeded_used || 0),
       note: row.note || "ok",
+    };
+  }
+
+  private normalizeResetResult(value: unknown): ResetTournamentScheduleResult {
+    const row = (value ?? {}) as Partial<ResetTournamentScheduleResult>;
+    return {
+      groups_deleted: Number(row.groups_deleted || 0),
+      matches_deleted: Number(row.matches_deleted || 0),
+      standings_deleted: Number(row.standings_deleted || 0),
+      group_teams_deleted: Number(row.group_teams_deleted || 0),
     };
   }
 

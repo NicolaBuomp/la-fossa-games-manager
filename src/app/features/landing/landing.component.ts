@@ -9,12 +9,17 @@ import {
   signal,
 } from "@angular/core";
 import { FormsModule } from "@angular/forms";
+import { RealtimeChannel } from "@supabase/supabase-js";
 import {
   SPONSOR_ASSETS,
   SponsorAsset,
 } from "../../core/generated/sponsor-assets";
 import { PublicParticipationService } from "../../core/services/public-participation.service";
 import { SnackbarService } from "../../core/services/snackbar.service";
+import {
+  PublicTournamentMatch,
+  TournamentsService,
+} from "../../core/services/tournaments.service";
 import { PublicTournament } from "../../core/types/models";
 import { ParticipationFormTabsComponent } from "../../shared/components/participation-form-tabs.component";
 import { ModalComponent } from "../../shared/components/ui.component";
@@ -44,6 +49,11 @@ type Countdown = {
   hours: number;
   minutes: number;
   seconds: number;
+};
+
+type PublicMatchGroup = {
+  tournamentName: string;
+  matches: PublicTournamentMatch[];
 };
 
 @Component({
@@ -715,6 +725,116 @@ type Countdown = {
         </div>
       </section>
 
+      @if (publicMatches().length || loadingPublicMatches()) {
+        <section
+          id="risultati"
+          class="scroll-mt-6 bg-[#07120e] px-5 py-16 text-white sm:px-8 lg:px-10"
+        >
+          <div class="mx-auto max-w-7xl reveal-up">
+            <div
+              class="flex flex-col justify-between gap-5 lg:flex-row lg:items-end"
+            >
+              <div>
+                <p
+                  class="text-xs font-black uppercase tracking-[0.28em] text-accent"
+                >
+                  Risultati live
+                </p>
+                <h2
+                  class="mt-3 max-w-4xl font-display text-4xl uppercase leading-none text-accent sm:text-6xl"
+                >
+                  Partite e punteggi in tempo reale.
+                </h2>
+              </div>
+              <div class="rounded-md border border-white/10 bg-white/[0.04] px-4 py-3">
+                <p class="text-xs font-black uppercase tracking-[0.18em] text-white/45">
+                  Aggiornamento
+                </p>
+                <p class="mt-1 text-sm font-black text-white">
+                  {{ publicResultsUpdatedAt() || "Connessione attiva" }}
+                </p>
+              </div>
+            </div>
+
+            @if (livePublicMatches().length) {
+              <div
+                class="mt-8 rounded-lg border border-accent-35 bg-accent px-4 py-3 text-on-accent"
+              >
+                <p class="text-sm font-black uppercase tracking-[0.14em]">
+                  {{ livePublicMatches().length }} partite live ora
+                </p>
+              </div>
+            }
+
+            @if (resultsError()) {
+              <p class="mt-5 rounded-lg border border-red-400/30 bg-red-500/10 p-3 text-sm font-semibold text-red-100">
+                {{ resultsError() }}
+              </p>
+            }
+
+            <div class="mt-8 grid gap-5">
+              @for (group of publicMatchGroups(); track group.tournamentName) {
+                <section class="rounded-lg border border-white/10 bg-black/35 p-4">
+                  <h3 class="font-display text-2xl uppercase text-accent">
+                    {{ group.tournamentName }}
+                  </h3>
+                  <div class="mt-4 grid gap-3 lg:grid-cols-2">
+                    @for (match of group.matches; track match.id) {
+                      <article
+                        class="rounded-lg border border-white/10 bg-white/[0.04] p-4"
+                        [class.border-accent]="match.status === 'live'"
+                      >
+                        <div class="flex flex-wrap items-center justify-between gap-2">
+                          <div>
+                            <p class="text-xs font-black uppercase tracking-[0.16em] text-white/42">
+                              {{ match.group_name || match.round_label || "Partita" }}
+                            </p>
+                            <p class="mt-1 text-xs font-semibold text-white/52">
+                              {{ publicMatchTimeLabel(match) }}
+                            </p>
+                          </div>
+                          <span
+                            class="rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-wide"
+                            [class]="publicMatchBadgeClass(match.status)"
+                          >
+                            {{ publicMatchStatusLabel(match.status) }}
+                          </span>
+                        </div>
+
+                        <div class="mt-4 grid gap-2">
+                          <div class="grid grid-cols-[1fr_auto] items-center gap-3 rounded-md bg-black/35 px-3 py-2">
+                            <p class="truncate text-base font-black">
+                              {{ match.home_team_name }}
+                            </p>
+                            <p class="text-3xl font-black text-accent">
+                              {{ match.home_score }}
+                            </p>
+                          </div>
+                          <div class="grid grid-cols-[1fr_auto] items-center gap-3 rounded-md bg-black/35 px-3 py-2">
+                            <p class="truncate text-base font-black">
+                              {{ match.away_team_name }}
+                            </p>
+                            <p class="text-3xl font-black text-accent">
+                              {{ match.away_score }}
+                            </p>
+                          </div>
+                        </div>
+
+                        @if (match.field_label) {
+                          <p class="mt-3 text-xs font-bold uppercase tracking-[0.14em] text-white/45">
+                            Campo: {{ match.field_label }}
+                          </p>
+                        }
+                      </article>
+                    }
+                  </div>
+                </section>
+              }
+            </div>
+          </div>
+        </section>
+      }
+
       <section class="bg-accent px-5 py-16 text-on-accent sm:px-8 lg:px-10">
         <div
           class="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[1fr_0.8fr] lg:items-end reveal-up"
@@ -1205,10 +1325,13 @@ type Countdown = {
 })
 export class LandingComponent implements OnInit, OnDestroy, AfterViewInit {
   tournaments = signal<PublicTournament[]>([]);
+  publicMatches = signal<PublicTournamentMatch[]>([]);
   loadingTournaments = signal(false);
+  loadingPublicMatches = signal(false);
   submitting = signal(false);
   success = signal(false);
   error = signal("");
+  resultsError = signal("");
   mobileMenuOpen = signal(false);
   participationForm = this.emptyParticipationForm();
   protected readonly eventDateRange = "22-26 giugno 2026";
@@ -1216,6 +1339,13 @@ export class LandingComponent implements OnInit, OnDestroy, AfterViewInit {
     "Via Vignale, 59, 81050 Santa Maria La Fossa CE";
   protected readonly countdown = signal<Countdown>(this.calculateCountdown());
   protected readonly selectedGame = signal<Game | null>(null);
+  protected readonly publicMatchGroups = computed(() =>
+    this.groupPublicMatches(this.publicMatches()),
+  );
+  protected readonly livePublicMatches = computed(() =>
+    this.publicMatches().filter((match) => match.status === "live"),
+  );
+  protected readonly publicResultsUpdatedAt = signal<string | null>(null);
   private readonly heroParallaxOffset = signal(0);
   protected readonly heroGlowTransform = computed(
     () =>
@@ -1226,9 +1356,12 @@ export class LandingComponent implements OnInit, OnDestroy, AfterViewInit {
   );
   private readonly host = inject(ElementRef<HTMLElement>);
   private readonly participation = inject(PublicParticipationService);
+  private readonly tournamentsService = inject(TournamentsService);
   private readonly snackbar = inject(SnackbarService);
   private countdownIntervalId: ReturnType<typeof setInterval> | null = null;
   private revealObserver: IntersectionObserver | null = null;
+  private matchRealtimeChannel: RealtimeChannel | null = null;
+  private matchRefreshTimeoutId: ReturnType<typeof setTimeout> | null = null;
   private parallaxEnabled = false;
   private parallaxTicking = false;
   private readonly onScrollParallax = () => {
@@ -1245,6 +1378,8 @@ export class LandingComponent implements OnInit, OnDestroy, AfterViewInit {
 
   ngOnInit(): void {
     void this.loadTournaments();
+    void this.loadPublicMatches();
+    this.subscribeToPublicMatchChanges();
     this.countdownIntervalId = setInterval(() => {
       this.countdown.set(this.calculateCountdown());
     }, 1000);
@@ -1261,6 +1396,15 @@ export class LandingComponent implements OnInit, OnDestroy, AfterViewInit {
   ngOnDestroy(): void {
     if (this.countdownIntervalId) {
       clearInterval(this.countdownIntervalId);
+    }
+
+    if (this.matchRefreshTimeoutId) {
+      clearTimeout(this.matchRefreshTimeoutId);
+    }
+
+    if (this.matchRealtimeChannel) {
+      void this.tournamentsService.unsubscribe(this.matchRealtimeChannel);
+      this.matchRealtimeChannel = null;
     }
 
     if (this.parallaxEnabled) {
@@ -1492,6 +1636,38 @@ export class LandingComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
+  async loadPublicMatches(): Promise<void> {
+    this.loadingPublicMatches.set(true);
+    this.resultsError.set("");
+    try {
+      const matches = await this.tournamentsService.listPublicMatches();
+      this.publicMatches.set(matches);
+      this.publicResultsUpdatedAt.set(this.nowTimeLabel());
+    } catch (error) {
+      const message = this.message(error);
+      this.resultsError.set(message);
+    } finally {
+      this.loadingPublicMatches.set(false);
+    }
+  }
+
+  private subscribeToPublicMatchChanges(): void {
+    this.matchRealtimeChannel =
+      this.tournamentsService.subscribeToPublicMatchChanges(() => {
+        this.schedulePublicMatchRefresh();
+      });
+  }
+
+  private schedulePublicMatchRefresh(): void {
+    if (this.matchRefreshTimeoutId) {
+      clearTimeout(this.matchRefreshTimeoutId);
+    }
+    this.matchRefreshTimeoutId = setTimeout(() => {
+      this.matchRefreshTimeoutId = null;
+      void this.loadPublicMatches();
+    }, 300);
+  }
+
   async submitParticipation(): Promise<void> {
     this.error.set("");
     this.success.set(false);
@@ -1556,6 +1732,42 @@ export class LandingComponent implements OnInit, OnDestroy, AfterViewInit {
       ? ` · ${new Intl.DateTimeFormat("it-IT").format(new Date(tournament.date))}`
       : "";
     return `${tournament.name}${date}${fee}`;
+  }
+
+  protected publicMatchStatusLabel(status: PublicTournamentMatch["status"]): string {
+    return (
+      {
+        scheduled: "Programmata",
+        live: "Live",
+        completed: "Finale",
+        cancelled: "Annullata",
+      } satisfies Record<PublicTournamentMatch["status"], string>
+    )[status];
+  }
+
+  protected publicMatchBadgeClass(status: PublicTournamentMatch["status"]): string {
+    if (status === "live") {
+      return "border-accent bg-accent text-on-accent";
+    }
+    if (status === "completed") {
+      return "border-emerald-400/35 bg-emerald-400/10 text-emerald-100";
+    }
+    if (status === "cancelled") {
+      return "border-red-400/35 bg-red-400/10 text-red-100";
+    }
+    return "border-white/15 text-white/70";
+  }
+
+  protected publicMatchTimeLabel(match: PublicTournamentMatch): string {
+    if (match.starts_at) {
+      return new Intl.DateTimeFormat("it-IT", {
+        day: "2-digit",
+        month: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+      }).format(new Date(match.starts_at));
+    }
+    return match.field_label ? `Campo ${match.field_label}` : "Orario da definire";
   }
 
   countdownItems(): { label: string; value: string }[] {
@@ -1669,6 +1881,27 @@ export class LandingComponent implements OnInit, OnDestroy, AfterViewInit {
       this.participationForm.tournament_id &&
       this.participationForm.rules_accepted,
     );
+  }
+
+  private groupPublicMatches(matches: PublicTournamentMatch[]): PublicMatchGroup[] {
+    const byTournament = new Map<string, PublicTournamentMatch[]>();
+    for (const match of matches) {
+      const current = byTournament.get(match.tournament_name) ?? [];
+      current.push(match);
+      byTournament.set(match.tournament_name, current);
+    }
+    return [...byTournament.entries()].map(([tournamentName, rows]) => ({
+      tournamentName,
+      matches: rows,
+    }));
+  }
+
+  private nowTimeLabel(): string {
+    return new Intl.DateTimeFormat("it-IT", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    }).format(new Date());
   }
 
   protected eur(value: number): string {
