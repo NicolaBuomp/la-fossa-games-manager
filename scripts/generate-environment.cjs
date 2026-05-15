@@ -8,7 +8,7 @@ const outputPath = path.join(
   "environments",
   "environment.generated.ts",
 );
-const envFiles = [".env.local", ".env"];
+const envFiles = [".env", ".env.local"];
 
 function parseEnv(content) {
   return content

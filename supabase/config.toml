@@ -3,3 +3,7 @@ verify_jwt = false
 
 [functions.admin-reset-password]
 verify_jwt = false
+
+[db.seed]
+enabled = true
+sql_paths = ["./seed/dev_seed.sql"]
