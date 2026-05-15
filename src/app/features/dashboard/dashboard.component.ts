@@ -1,6 +1,7 @@
 import { Component, OnInit, inject, signal } from "@angular/core";
 import { RouterLink } from "@angular/router";
 import { AuditLogService } from "../../core/services/audit-log.service";
+import { AuthService } from "../../core/services/auth.service";
 import { ExpensesService } from "../../core/services/expenses.service";
 import { IncomesService } from "../../core/services/incomes.service";
 import { RegistrationsService } from "../../core/services/registrations.service";
@@ -33,6 +34,7 @@ import {
     SummaryCardComponent,
   ],
   template: `
+    @if (auth.isAdmin()) {
     <section class="space-y-5">
       <div class="flex flex-wrap items-end justify-between gap-4">
         <div>
@@ -223,6 +225,150 @@ import {
         }
       </section>
     </section>
+    } @else {
+      <section class="space-y-5">
+        <div class="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <p class="text-xs font-bold uppercase tracking-[0.18em] text-muted">
+              Home staff
+            </p>
+            <h1 class="font-display text-3xl uppercase sm:text-5xl">
+              Ciao {{ staffName() }}
+            </h1>
+            <p class="mt-2 max-w-2xl text-sm font-semibold leading-6 text-muted">
+              Qui trovi un resoconto rapido delle attività che hai registrato o
+              aggiornato nel gestionale.
+            </p>
+          </div>
+          <button
+            [disabled]="loading()"
+            class="rounded-lg bg-surface px-4 py-2 text-sm font-bold uppercase tracking-wide shadow-sm ring-1 ring-black/15 transition hover:bg-surface-muted disabled:opacity-60"
+            (click)="load()"
+          >
+            {{ loading() ? "Aggiornamento…" : "Aggiorna" }}
+          </button>
+        </div>
+
+        @if (error()) {
+          <p
+            class="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700"
+          >
+            {{ error() }}
+          </p>
+        }
+
+        <section class="rounded-lg bg-ink p-5 text-white">
+          <p class="text-xs font-bold uppercase tracking-[0.2em] text-white/50">
+            Operatività personale
+          </p>
+          <p class="mt-3 text-3xl font-black">
+            {{ totalStaffActions() }} attività tracciate
+          </p>
+          <div class="mt-5 grid gap-3 border-t border-white/10 pt-5 sm:grid-cols-3">
+            <div>
+              <p class="text-xs font-bold uppercase tracking-wide text-white/50">
+                Inserimenti
+              </p>
+              <p class="mt-1 text-xl font-bold">{{ staffInsertCount() }}</p>
+            </div>
+            <div>
+              <p class="text-xs font-bold uppercase tracking-wide text-white/50">
+                Aggiornamenti
+              </p>
+              <p class="mt-1 text-xl font-bold">{{ staffUpdateCount() }}</p>
+            </div>
+            <div>
+              <p class="text-xs font-bold uppercase tracking-wide text-white/50">
+                Ultima attività
+              </p>
+              <p class="mt-1 text-xl font-bold">{{ lastStaffActivityLabel() }}</p>
+            </div>
+          </div>
+        </section>
+
+        <lfg-kpi-panel title="Il tuo lavoro" storageKey="staff-dashboard">
+          <section class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <lfg-summary-card
+              label="Iscrizioni seguite"
+              [value]="ownRegistrations().length.toString()"
+              [hint]="ownUnpaidRegistrations() + ' con pagamento aperto'"
+              tone="default"
+            />
+            <lfg-summary-card
+              label="Sponsor seguiti"
+              [value]="ownSponsors().length.toString()"
+              [hint]="ownConfirmedSponsors() + ' confermati o pagati'"
+              tone="income"
+            />
+            <lfg-summary-card
+              label="Spese inserite"
+              [value]="ownExpenses().length.toString()"
+              [hint]="ownExpensesToRefund() + ' da rimborsare'"
+              tone="warning"
+            />
+            <lfg-summary-card
+              label="Modifiche recenti"
+              [value]="auditLogs().length.toString()"
+              hint="dal registro attività"
+              tone="default"
+            />
+          </section>
+        </lfg-kpi-panel>
+
+        <section class="grid gap-3 md:grid-cols-3">
+          <a
+            routerLink="/app/registrations"
+            class="rounded-lg border border-soft bg-surface p-4 shadow-sm transition hover:border-fossa"
+          >
+            <p class="text-xs font-bold uppercase tracking-[0.18em] text-muted">
+              Iscritti
+            </p>
+            <p class="mt-2 text-lg font-black">Aggiorna squadre e pagamenti</p>
+          </a>
+          <a
+            routerLink="/app/participation-requests"
+            class="rounded-lg border border-soft bg-surface p-4 shadow-sm transition hover:border-fossa"
+          >
+            <p class="text-xs font-bold uppercase tracking-[0.18em] text-muted">
+              Richieste
+            </p>
+            <p class="mt-2 text-lg font-black">Gestisci le richieste dal sito</p>
+          </a>
+          <a
+            routerLink="/app/sponsors"
+            class="rounded-lg border border-soft bg-surface p-4 shadow-sm transition hover:border-fossa"
+          >
+            <p class="text-xs font-bold uppercase tracking-[0.18em] text-muted">
+              Sponsor
+            </p>
+            <p class="mt-2 text-lg font-black">Segui contatti e stato sponsor</p>
+          </a>
+        </section>
+
+        <section class="rounded-lg border border-soft bg-surface p-4 shadow-sm">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p class="text-xs font-bold uppercase tracking-[0.18em] text-muted">
+                Il tuo registro
+              </p>
+              <h2 class="font-display text-2xl uppercase">Ultime attività</h2>
+            </div>
+          </div>
+
+          @if (!auditLogs().length) {
+            <p class="mt-4 rounded-lg bg-surface-muted p-4 text-sm text-muted">
+              Non risultano ancora modifiche tracciate a tuo nome.
+            </p>
+          } @else {
+            <lfg-audit-activity-list
+              class="mt-4 block"
+              [activities]="activityItems()"
+              (select)="selectedActivity.set($event)"
+            />
+          }
+        </section>
+      </section>
+    }
 
     <lfg-audit-detail-modal
       [activity]="selectedActivity()"
@@ -242,6 +388,7 @@ export class DashboardComponent implements OnInit {
   private readonly snackbar = inject(SnackbarService);
 
   constructor(
+    readonly auth: AuthService,
     private readonly expensesService: ExpensesService,
     private readonly incomesService: IncomesService,
     private readonly sponsorsService: SponsorsService,
@@ -259,6 +406,11 @@ export class DashboardComponent implements OnInit {
     this.loading.set(true);
     this.error.set("");
     try {
+      if (!this.auth.isAdmin()) {
+        await this.loadStaffHome();
+        return;
+      }
+
       const [expenses, incomes, sponsors, registrations, auditLogs] =
         await Promise.all([
           this.expensesService.list(),
@@ -285,6 +437,36 @@ export class DashboardComponent implements OnInit {
   private setError(message: string): void {
     this.error.set(message);
     this.snackbar.error(message);
+  }
+
+  private async loadStaffHome(): Promise<void> {
+    this.incomes.set([]);
+    this.badges.clear();
+    const [expenses, sponsors, registrations] = await Promise.all([
+      this.expensesService.list(),
+      this.sponsorsService.list(),
+      this.registrationsService.list(),
+    ]);
+    this.expenses.set(expenses);
+    this.sponsors.set(sponsors);
+    this.registrations.set(registrations);
+
+    const currentUserId = this.currentUserId();
+    if (!currentUserId) {
+      this.auditLogs.set([]);
+      return;
+    }
+
+    try {
+      const page = await this.auditLogService.page({
+        page: 1,
+        pageSize: 30,
+        changedBy: currentUserId,
+      });
+      this.auditLogs.set(page.rows);
+    } catch {
+      this.auditLogs.set([]);
+    }
   }
 
   totalExpenses(): number {
@@ -384,6 +566,85 @@ export class DashboardComponent implements OnInit {
 
   activityItems(): AuditActivityItem[] {
     return buildAuditActivities(this.auditLogs(), this.registrations());
+  }
+
+  staffName(): string {
+    return (
+      this.auth.profile()?.full_name ||
+      this.auth.profile()?.username ||
+      this.auth.user()?.email ||
+      "staff"
+    );
+  }
+
+  ownRegistrations(): Registration[] {
+    const userId = this.currentUserId();
+    if (!userId) return [];
+    return this.registrations().filter((item) => this.touchedBy(item, userId));
+  }
+
+  ownUnpaidRegistrations(): number {
+    return this.ownRegistrations().filter((item) => !item.paid).length;
+  }
+
+  ownSponsors(): Sponsor[] {
+    const userId = this.currentUserId();
+    if (!userId) return [];
+    return this.sponsors().filter(
+      (item) =>
+        item.responsible_user_id === userId || item.created_by === userId,
+    );
+  }
+
+  ownConfirmedSponsors(): number {
+    return this.ownSponsors().filter(
+      (item) => item.status === "confermato" || item.status === "pagato",
+    ).length;
+  }
+
+  ownExpenses(): Expense[] {
+    const userId = this.currentUserId();
+    if (!userId) return [];
+    return this.expenses().filter((item) => this.touchedBy(item, userId));
+  }
+
+  ownExpensesToRefund(): number {
+    return this.ownExpenses().filter((item) => item.status === "da_rimborsare")
+      .length;
+  }
+
+  staffInsertCount(): number {
+    return this.auditLogs().filter((item) => item.action === "insert").length;
+  }
+
+  staffUpdateCount(): number {
+    return this.auditLogs().filter((item) => item.action === "update").length;
+  }
+
+  totalStaffActions(): number {
+    return this.auditLogs().length;
+  }
+
+  lastStaffActivityLabel(): string {
+    const lastActivity = this.auditLogs()[0];
+    if (!lastActivity) return "Nessuna";
+    return new Intl.DateTimeFormat("it-IT", {
+      day: "2-digit",
+      month: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    }).format(new Date(lastActivity.changed_at));
+  }
+
+  private currentUserId(): string | null {
+    return this.auth.profile()?.id ?? this.auth.user()?.id ?? null;
+  }
+
+  private touchedBy(
+    item: Pick<Registration | Sponsor | Expense, "created_by" | "updated_by">,
+    userId: string,
+  ): boolean {
+    return item.created_by === userId || item.updated_by === userId;
   }
 
   eur(value: number): string {

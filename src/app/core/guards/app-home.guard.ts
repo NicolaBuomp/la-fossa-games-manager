@@ -8,5 +8,5 @@ export const appHomeGuard: CanActivateFn = async () => {
 
   await auth.ensureReady();
 
-  return router.createUrlTree([auth.isAdmin() ? '/app/dashboard' : '/app/registrations']);
+  return router.createUrlTree(['/app/dashboard']);
 };

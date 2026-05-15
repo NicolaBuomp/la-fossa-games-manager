@@ -13,6 +13,7 @@ import {
 } from "../../core/types/constants";
 import {
   InsertSponsor,
+  Profile,
   Sponsor,
   SponsorCategory,
   SponsorStatus,
@@ -56,6 +57,11 @@ type SponsorForm = InsertSponsor & { withoutPromisedAmount: boolean };
             Modulo sponsor
           </p>
           <h1 class="font-display text-3xl uppercase">Sponsor</h1>
+          @if (!auth.isAdmin()) {
+            <p class="mt-2 max-w-2xl text-sm font-semibold leading-6 text-muted">
+              Vedi solo gli sponsor inseriti da te o assegnati a te.
+            </p>
+          }
         </div>
         <div class="flex gap-2">
           <button
@@ -82,7 +88,10 @@ type SponsorForm = InsertSponsor & { withoutPromisedAmount: boolean };
         [options]="statusFilterOptions"
         (filterChange)="setStatusFilter($event)"
       />
-      <lfg-kpi-panel title="KPI sponsor" storageKey="sponsors">
+      <lfg-kpi-panel
+        [title]="auth.isAdmin() ? 'KPI sponsor' : 'KPI sponsor personali'"
+        storageKey="sponsors"
+      >
         <section class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <lfg-summary-card
             label="Da contattare"
@@ -138,8 +147,12 @@ type SponsorForm = InsertSponsor & { withoutPromisedAmount: boolean };
       }
       @if (!items().length) {
         <lfg-empty-state
-          title="Nessuno sponsor"
-          text="Aggiungi aziende, contatti e stato della trattativa anche senza importo."
+          [title]="auth.isAdmin() ? 'Nessuno sponsor' : 'Nessuno sponsor assegnato'"
+          [text]="
+            auth.isAdmin()
+              ? 'Aggiungi aziende, contatti e stato della trattativa anche senza importo.'
+              : 'Aggiungi un nuovo sponsor o chiedi a un admin di assegnarti un contatto esistente.'
+          "
           actionLabel="Nuovo sponsor"
           (action)="newItem()"
         />
@@ -184,6 +197,9 @@ type SponsorForm = InsertSponsor & { withoutPromisedAmount: boolean };
                     </p>
                     <p class="mt-1 text-xs font-semibold text-muted">
                       {{ insertMeta(item) }}
+                    </p>
+                    <p class="mt-1 text-xs font-semibold text-muted">
+                      {{ assignmentMeta(item) }}
                     </p>
                   }
                 </div>
@@ -302,6 +318,7 @@ type SponsorForm = InsertSponsor & { withoutPromisedAmount: boolean };
 })
 export class SponsorsComponent implements OnInit {
   items = signal<Sponsor[]>([]);
+  assignableProfiles = signal<Profile[]>([]);
   userNames = signal<Record<string, string>>({});
   error = signal("");
   modalOpen = signal(false);
@@ -323,65 +340,85 @@ export class SponsorsComponent implements OnInit {
     })),
   ]);
   form: SponsorForm = this.emptyForm();
-  formFields = computed<CrudFormField[]>(() => [
-    {
-      name: "company_name",
-      label: "Nome azienda",
-      type: "text",
-      required: true,
-    },
-    { name: "contact_name", label: "Referente", type: "text" },
-    { name: "contact_info", label: "Contatto", type: "text" },
-    {
-      name: "category",
-      label: "Categoria",
-      type: "select",
-      options: SPONSOR_CATEGORIES.map((category) => ({
-        label: category.label,
-        value: category.id,
-      })),
-    },
-    {
-      name: "promised_amount",
-      label: "Importo promesso",
-      type: "number",
-      min: 0,
-      step: 0.01,
-      disabled: () => this.form.withoutPromisedAmount,
-    },
-    {
-      name: "received_amount",
-      label: "Importo ricevuto",
-      type: "number",
-      min: 0,
-      step: 0.01,
-    },
-    {
-      name: "payment_method",
-      label: "Metodo pagamento",
-      type: "select",
-      options: PAYMENT_METHODS.map((method) => ({
-        label: method,
-        value: method,
-      })),
-    },
-    {
-      name: "status",
-      label: "Stato",
-      type: "select",
-      options: this.statuses.map((status) => ({
-        label: status.label,
-        value: status.id,
-      })),
-    },
-    {
-      name: "withoutPromisedAmount",
-      label: "Sponsor senza importo per ora",
-      type: "checkbox",
-      help: "Usalo per contatti, lead e trattative da richiamare: resta tracciato ma non entra nei totali economici.",
-    },
-    { name: "notes", label: "Note", type: "textarea", rows: 3 },
-  ]);
+  formFields = computed<CrudFormField[]>(() => {
+    const fields: CrudFormField[] = [
+      {
+        name: "company_name",
+        label: "Nome azienda",
+        type: "text",
+        required: true,
+      },
+      { name: "contact_name", label: "Referente", type: "text" },
+      { name: "contact_info", label: "Contatto", type: "text" },
+    ];
+
+    if (this.auth.isAdmin()) {
+      fields.push({
+        name: "responsible_user_id",
+        label: "Assegnato a",
+        type: "select",
+        options: this.assignableProfiles().map((profile) => ({
+          label: this.profileOptionLabel(profile),
+          value: profile.id,
+        })),
+        help: "Lo sponsor sara visibile allo staff assegnato e comparira come suo contatto da seguire.",
+      });
+    }
+
+    fields.push(
+      {
+        name: "category",
+        label: "Categoria",
+        type: "select",
+        options: SPONSOR_CATEGORIES.map((category) => ({
+          label: category.label,
+          value: category.id,
+        })),
+      },
+      {
+        name: "promised_amount",
+        label: "Importo promesso",
+        type: "number",
+        min: 0,
+        step: 0.01,
+        disabled: () => this.form.withoutPromisedAmount,
+      },
+      {
+        name: "received_amount",
+        label: "Importo ricevuto",
+        type: "number",
+        min: 0,
+        step: 0.01,
+      },
+      {
+        name: "payment_method",
+        label: "Metodo pagamento",
+        type: "select",
+        options: PAYMENT_METHODS.map((method) => ({
+          label: method,
+          value: method,
+        })),
+      },
+      {
+        name: "status",
+        label: "Stato",
+        type: "select",
+        options: this.statuses.map((status) => ({
+          label: status.label,
+          value: status.id,
+        })),
+      },
+      {
+        name: "withoutPromisedAmount",
+        label: "Sponsor senza importo per ora",
+        type: "checkbox",
+        help: "Usalo per contatti, lead e trattative da richiamare: resta tracciato ma non entra nei totali economici.",
+      },
+      { name: "notes", label: "Note", type: "textarea", rows: 3 },
+    );
+
+    return fields;
+  });
 
   constructor(
     readonly auth: AuthService,
@@ -397,14 +434,29 @@ export class SponsorsComponent implements OnInit {
 
   async load(): Promise<void> {
     try {
-      const items = await this.service.list();
+      const [rawItems, assignableProfiles] = await Promise.all([
+        this.service.list(),
+        this.loadAssignableProfiles(),
+      ]);
+      const items = this.visibleSponsors(rawItems);
+      this.assignableProfiles.set(assignableProfiles);
       this.items.set(items);
       this.userNames.set(
         await this.profiles.displayNames(
-          items.flatMap((item) => [item.created_by, item.responsible_user_id]),
+          [
+            ...items.flatMap((item) => [
+              item.created_by,
+              item.responsible_user_id,
+            ]),
+            ...assignableProfiles.map((profile) => profile.id),
+          ],
         ),
       );
-      await this.badges.refresh();
+      if (this.auth.isAdmin()) {
+        await this.badges.refresh();
+      } else {
+        this.badges.clear();
+      }
     } catch (e) {
       this.setError(this.message(e));
     } finally {
@@ -469,8 +521,9 @@ export class SponsorsComponent implements OnInit {
         received_amount: receivedAmount,
         value: promisedAmount,
         type: this.sponsorTypeForMethod(form.payment_method),
-        responsible_user_id:
-          form.responsible_user_id || this.auth.profile()?.id || null,
+        responsible_user_id: this.auth.isAdmin()
+          ? form.responsible_user_id || null
+          : this.auth.profile()?.id || null,
       };
       const current = this.editing();
       if (current) await this.service.update(current.id, payload);
@@ -597,6 +650,14 @@ export class SponsorsComponent implements OnInit {
   insertMeta(item: Sponsor): string {
     return `Inserito da ${this.userNames()[item.created_by ?? ""] ?? "Utente non disponibile"} · ${this.formatDateTime(item.created_at)}`;
   }
+  assignmentMeta(item: Sponsor): string {
+    const responsible = item.responsible_user_id
+      ? this.userNames()[item.responsible_user_id]
+      : "";
+    return responsible
+      ? `Assegnato a ${responsible}`
+      : "Non assegnato";
+  }
   emptyForm(): SponsorForm {
     return {
       company_name: "",
@@ -621,6 +682,29 @@ export class SponsorsComponent implements OnInit {
       this.form.value = 0;
     }
   }
+
+  private visibleSponsors(items: Sponsor[]): Sponsor[] {
+    if (this.auth.isAdmin()) return items;
+    const userId = this.auth.profile()?.id ?? this.auth.user()?.id;
+    if (!userId) return [];
+    return items.filter(
+      (item) =>
+        item.responsible_user_id === userId ||
+        item.created_by === userId,
+    );
+  }
+
+  private async loadAssignableProfiles(): Promise<Profile[]> {
+    if (!this.auth.isAdmin()) return [];
+    const profiles = await this.profiles.list();
+    return profiles.filter((profile) => profile.active);
+  }
+
+  private profileOptionLabel(profile: Profile): string {
+    const name = profile.full_name || profile.username || profile.email || profile.id;
+    return `${name} · ${profile.role}`;
+  }
+
   private message(error: unknown): string {
     return error instanceof Error ? error.message : "Operazione non riuscita.";
   }

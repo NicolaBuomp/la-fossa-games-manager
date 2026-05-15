@@ -66,12 +66,12 @@ describe("route guards", () => {
     expect(result as unknown).toEqual({ commands: ["/app"], extras: undefined });
   });
 
-  it("sends staff and admins to the right app home", async () => {
+  it("sends staff and admins to the dashboard home", async () => {
     let result = await TestBed.runInInjectionContext(() =>
       appHomeGuard({} as never, {} as never),
     );
     expect(result as unknown).toEqual({
-      commands: ["/app/registrations"],
+      commands: ["/app/dashboard"],
       extras: undefined,
     });
 

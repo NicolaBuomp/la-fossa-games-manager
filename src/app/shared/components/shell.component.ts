@@ -289,7 +289,6 @@ export class ShellComponent implements OnInit {
       path: "/app/dashboard",
       label: "Home",
       short: "H",
-      adminOnly: true,
     },
     {
       path: "/app/expenses",

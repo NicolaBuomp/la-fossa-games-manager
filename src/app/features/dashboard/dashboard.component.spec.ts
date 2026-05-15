@@ -1,5 +1,6 @@
 import { TestBed } from "@angular/core/testing";
 import { AuditLogService } from "../../core/services/audit-log.service";
+import { AuthService } from "../../core/services/auth.service";
 import { ExpensesService } from "../../core/services/expenses.service";
 import { IncomesService } from "../../core/services/incomes.service";
 import { RegistrationsService } from "../../core/services/registrations.service";
@@ -86,6 +87,19 @@ describe("DashboardComponent", () => {
     component = TestBed.runInInjectionContext(
       () =>
         new DashboardComponent(
+          {
+            isAdmin: () => true,
+            profile: () => ({
+              id: "user-1",
+              email: "staff@example.com",
+              username: "staff",
+              full_name: "Staff User",
+              role: "admin",
+              active: true,
+              created_at: "2026-05-01T10:00:00Z",
+            }),
+            user: () => ({ id: "user-1", email: "staff@example.com" }),
+          } as unknown as AuthService,
           {} as ExpensesService,
           {} as IncomesService,
           {} as SponsorsService,
@@ -143,5 +157,54 @@ describe("DashboardComponent", () => {
     expect(component.pendingTournamentRequests()).toBe(2);
     expect(component.pendingSponsorRequests()).toBe(1);
     expect(component.hasPendingRequests()).toBeTrue();
+  });
+
+  it("computes staff home counters from records touched by the current user", () => {
+    component.registrations.set([
+      { ...registration(false, 50), created_by: "user-1" },
+      { ...registration(true, 20), created_by: "user-2" },
+    ]);
+    component.sponsors.set([
+      { ...sponsor("confermato", 100), responsible_user_id: "user-1" },
+      { ...sponsor("contattato", 100), created_by: "user-2" },
+    ]);
+    component.expenses.set([
+      { ...expense(20), updated_by: "user-1", status: "da_rimborsare" },
+      { ...expense(30), created_by: "user-2" },
+    ]);
+    component.auditLogs.set([
+      {
+        id: "audit-1",
+        table_name: "tournament_teams",
+        record_id: "team-1",
+        action: "insert",
+        changed_by: "user-1",
+        changed_by_name: "Staff User",
+        changed_at: "2026-05-02T10:00:00Z",
+        old_data: null,
+        new_data: null,
+      },
+      {
+        id: "audit-2",
+        table_name: "sponsors",
+        record_id: "sponsor-1",
+        action: "update",
+        changed_by: "user-1",
+        changed_by_name: "Staff User",
+        changed_at: "2026-05-01T10:00:00Z",
+        old_data: null,
+        new_data: null,
+      },
+    ]);
+
+    expect(component.ownRegistrations().length).toBe(1);
+    expect(component.ownUnpaidRegistrations()).toBe(1);
+    expect(component.ownSponsors().length).toBe(1);
+    expect(component.ownConfirmedSponsors()).toBe(1);
+    expect(component.ownExpenses().length).toBe(1);
+    expect(component.ownExpensesToRefund()).toBe(1);
+    expect(component.staffInsertCount()).toBe(1);
+    expect(component.staffUpdateCount()).toBe(1);
+    expect(component.totalStaffActions()).toBe(2);
   });
 });
