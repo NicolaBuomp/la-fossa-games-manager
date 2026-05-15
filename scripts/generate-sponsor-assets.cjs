@@ -15,13 +15,25 @@ const imageExtensions = new Set([
   ".webp",
 ]);
 
-/** @type {Array<'gold' | 'silver' | 'bronzo'>} */
-const CATEGORIES = ["gold", "silver", "bronzo"];
+/**
+ * Sponsor asset folders are organized by landing visibility, while the app
+ * keeps the commercial categories used elsewhere.
+ *
+ * @type {Array<{ folder: string, category: 'gold' | 'silver' | 'bronzo' }>}
+ */
+const CATEGORIES = [
+  { folder: "main", category: "gold" },
+  { folder: "gold", category: "gold" },
+  { folder: "silver", category: "silver" },
+  { folder: "base", category: "bronzo" },
+  { folder: "bronzo", category: "bronzo" },
+];
 
 function sponsorName(fileName) {
   return path
     .basename(fileName, path.extname(fileName))
     .replace(/[-_]+/g, " ")
+    .replace(/\b(LOGO|PREMIUM|BASE|MAIN|GOLD|SILVER|BRONZO)\b/gi, " ")
     .replace(/\s+/g, " ")
     .trim()
     .replace(/\b\w/g, (letter) => letter.toUpperCase());
@@ -29,8 +41,8 @@ function sponsorName(fileName) {
 
 const sponsors = [];
 
-for (const category of CATEGORIES) {
-  const categoryDir = path.join(sponsorDir, category);
+for (const { folder, category } of CATEGORIES) {
+  const categoryDir = path.join(sponsorDir, folder);
   if (!fs.existsSync(categoryDir)) continue;
 
   const files = fs
@@ -45,7 +57,7 @@ for (const category of CATEGORIES) {
   for (const fileName of files) {
     sponsors.push({
       name: sponsorName(fileName),
-      src: `/assets/sponsor/${category}/${fileName}`,
+      src: `/assets/sponsor/${folder}/${fileName}`,
       category,
     });
   }

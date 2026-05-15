@@ -133,17 +133,36 @@ type PublicMatchGroup = {
       .delay-3 {
         animation-delay: 320ms;
       }
-      .sponsor-logo-tiered {
+      .sponsor-logo-card {
+        position: relative;
+        overflow: hidden;
         transition:
-          transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
-          box-shadow 220ms ease,
-          border-color 220ms ease;
+          transform 240ms cubic-bezier(0.22, 1, 0.36, 1),
+          border-color 220ms ease,
+          background-color 220ms ease,
+          box-shadow 220ms ease;
       }
-      .sponsor-logo-tiered img {
-        max-height: 100%;
-        max-width: 100%;
+      .sponsor-logo-card::after {
+        content: "";
+        position: absolute;
+        bottom: 14px;
+        left: 18px;
+        height: 2px;
+        width: calc(100% - 36px);
+        border-radius: 999px;
+        background: #ffd400;
+        opacity: 0.36;
+        transform: scaleX(0.16);
+        transform-origin: left;
+        transition:
+          transform 260ms cubic-bezier(0.22, 1, 0.36, 1),
+          opacity 220ms ease;
+      }
+      .sponsor-logo-card img {
         pointer-events: none;
-        transition: transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
+        transition:
+          transform 260ms cubic-bezier(0.22, 1, 0.36, 1),
+          filter 220ms ease;
       }
       @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
         .hero-parallax-glow,
@@ -152,13 +171,18 @@ type PublicMatchGroup = {
         }
       }
       @media (hover: hover) and (pointer: fine) {
-        .sponsor-logo-tiered:hover {
-          transform: translateY(-3px);
-          box-shadow: 0 20px 48px rgba(0, 0, 0, 0.4);
+        .sponsor-logo-card:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 18px 44px rgba(0, 0, 0, 0.28);
           border-color: rgba(255, 212, 0, 0.35);
         }
-        .sponsor-logo-tiered:hover img {
-          transform: scale(1.06);
+        .sponsor-logo-card:hover::after {
+          opacity: 0.8;
+          transform: scaleX(1);
+        }
+        .sponsor-logo-card:hover img {
+          filter: saturate(1.04) contrast(1.03);
+          transform: scale(1.035);
         }
         .card-lift {
           transition:
@@ -746,8 +770,12 @@ type PublicMatchGroup = {
                   Partite e punteggi in tempo reale.
                 </h2>
               </div>
-              <div class="rounded-md border border-white/10 bg-white/[0.04] px-4 py-3">
-                <p class="text-xs font-black uppercase tracking-[0.18em] text-white/45">
+              <div
+                class="rounded-md border border-white/10 bg-white/[0.04] px-4 py-3"
+              >
+                <p
+                  class="text-xs font-black uppercase tracking-[0.18em] text-white/45"
+                >
                   Aggiornamento
                 </p>
                 <p class="mt-1 text-sm font-black text-white">
@@ -767,14 +795,18 @@ type PublicMatchGroup = {
             }
 
             @if (resultsError()) {
-              <p class="mt-5 rounded-lg border border-red-400/30 bg-red-500/10 p-3 text-sm font-semibold text-red-100">
+              <p
+                class="mt-5 rounded-lg border border-red-400/30 bg-red-500/10 p-3 text-sm font-semibold text-red-100"
+              >
                 {{ resultsError() }}
               </p>
             }
 
             <div class="mt-8 grid gap-5">
               @for (group of publicMatchGroups(); track group.tournamentName) {
-                <section class="rounded-lg border border-white/10 bg-black/35 p-4">
+                <section
+                  class="rounded-lg border border-white/10 bg-black/35 p-4"
+                >
                   <h3 class="font-display text-2xl uppercase text-accent">
                     {{ group.tournamentName }}
                   </h3>
@@ -784,10 +816,18 @@ type PublicMatchGroup = {
                         class="rounded-lg border border-white/10 bg-white/[0.04] p-4"
                         [class.border-accent]="match.status === 'live'"
                       >
-                        <div class="flex flex-wrap items-center justify-between gap-2">
+                        <div
+                          class="flex flex-wrap items-center justify-between gap-2"
+                        >
                           <div>
-                            <p class="text-xs font-black uppercase tracking-[0.16em] text-white/42">
-                              {{ match.group_name || match.round_label || "Partita" }}
+                            <p
+                              class="text-xs font-black uppercase tracking-[0.16em] text-white/42"
+                            >
+                              {{
+                                match.group_name ||
+                                  match.round_label ||
+                                  "Partita"
+                              }}
                             </p>
                             <p class="mt-1 text-xs font-semibold text-white/52">
                               {{ publicMatchTimeLabel(match) }}
@@ -802,7 +842,9 @@ type PublicMatchGroup = {
                         </div>
 
                         <div class="mt-4 grid gap-2">
-                          <div class="grid grid-cols-[1fr_auto] items-center gap-3 rounded-md bg-black/35 px-3 py-2">
+                          <div
+                            class="grid grid-cols-[1fr_auto] items-center gap-3 rounded-md bg-black/35 px-3 py-2"
+                          >
                             <p class="truncate text-base font-black">
                               {{ match.home_team_name }}
                             </p>
@@ -810,7 +852,9 @@ type PublicMatchGroup = {
                               {{ match.home_score }}
                             </p>
                           </div>
-                          <div class="grid grid-cols-[1fr_auto] items-center gap-3 rounded-md bg-black/35 px-3 py-2">
+                          <div
+                            class="grid grid-cols-[1fr_auto] items-center gap-3 rounded-md bg-black/35 px-3 py-2"
+                          >
                             <p class="truncate text-base font-black">
                               {{ match.away_team_name }}
                             </p>
@@ -821,7 +865,9 @@ type PublicMatchGroup = {
                         </div>
 
                         @if (match.field_label) {
-                          <p class="mt-3 text-xs font-bold uppercase tracking-[0.14em] text-white/45">
+                          <p
+                            class="mt-3 text-xs font-bold uppercase tracking-[0.14em] text-white/45"
+                          >
                             Campo: {{ match.field_label }}
                           </p>
                         }
@@ -936,11 +982,11 @@ type PublicMatchGroup = {
 
           @if (hasSponsorLogos) {
             <div
-              class="mt-10 overflow-hidden rounded-lg border border-white/10 bg-white/[0.04] p-6 sm:p-8"
+              class="mt-12 border-y border-white/10 py-8 sm:py-10"
               aria-label="Sponsor La Fossa Games"
             >
               <div
-                class="mb-8 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between"
+                class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"
               >
                 <div>
                   <p
@@ -951,82 +997,58 @@ type PublicMatchGroup = {
                   <h3
                     class="mt-2 font-display text-3xl uppercase leading-none text-white sm:text-4xl"
                   >
-                    Chi sostiene La Fossa Games.
+                    Partner sul campo.
                   </h3>
                 </div>
                 <p
                   class="max-w-md text-sm font-semibold leading-6 text-white/58"
                 >
-                  Aziende e attività che rendono possibile l'evento.
+                  Presenze ufficiali, ordinate per visibilità e pensate per
+                  restare pulite anche da mobile.
                 </p>
               </div>
 
               @if (mainSponsors.length) {
-                <div
-                  class="mb-5 rounded-lg border border-accent/20 bg-accent/[0.06] p-4 text-center sm:mb-6 sm:p-5"
-                >
-                  <p
-                    class="text-xs font-black uppercase tracking-[0.24em] text-accent"
-                  >
-                    Sponsor Main
-                  </p>
-                  <p
-                    class="mt-2 max-w-2xl text-sm font-semibold leading-6 text-white/72 sm:mx-auto"
-                  >
-                    Qui trovi le aziende che accompagnano La Fossa Games con la
-                    presenza piu forte e visibile, prima e durante tutto
-                    l'evento.
-                  </p>
-                </div>
-                <div class="flex flex-wrap justify-center gap-8">
+                <div class="mt-7 grid gap-4">
                   @for (logo of mainSponsors; track logo.src) {
-                    <div
-                      class="sponsor-logo-tiered flex h-36 w-36 shrink-0 items-center justify-center rounded-lg border border-white/15 bg-white p-3 shadow-2xl sm:h-44 sm:w-44 sm:p-4 lg:h-52 lg:w-52"
+                    <article
+                      class="sponsor-logo-card flex min-h-64 flex-col justify-between rounded-md border border-accent/30 bg-white p-5 shadow-[0_22px_60px_rgba(0,0,0,0.22)] sm:min-h-72 sm:p-7 lg:min-h-80"
                     >
+                      <div
+                        class="flex items-center justify-between gap-4 text-[0.65rem] font-black uppercase tracking-[0.22em] text-black/42"
+                      >
+                        <span class="text-[#0f3d2e]">Main sponsor</span>
+                      </div>
                       <img
                         [src]="logo.src"
                         [alt]="logo.name"
-                        class="max-h-full max-w-full object-contain"
+                        class="mx-auto my-5 max-h-48 max-w-full object-contain sm:max-h-56 lg:max-h-64"
                         loading="lazy"
                       />
-                    </div>
+                    </article>
                   }
                 </div>
               }
 
               @if (baseSponsors.length) {
-                @if (mainSponsors.length) {
-                  <hr class="my-8 border-white/10" />
-                }
-                <div
-                  class="rounded-lg border border-white/10 bg-black/20 p-4 sm:p-5"
-                >
+                <div class="mt-6">
                   <div
-                    class="mb-4 flex items-center justify-between gap-3 border-b border-white/10 pb-3"
+                    class="mb-3 flex items-center justify-between gap-3 text-xs font-black uppercase tracking-[0.22em]"
                   >
-                    <p
-                      class="text-xs font-black uppercase tracking-[0.24em] text-white/45"
-                    >
-                      Sponsor Base
-                    </p>
-                    <p
-                      class="text-sm font-black uppercase tracking-[0.16em] text-accent"
-                    >
-                      Presenza diffusa
-                    </p>
+                    <p class="text-white/42">Altri Sponsor</p>
                   </div>
-                  <div class="flex flex-wrap justify-center gap-4">
+                  <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     @for (logo of baseSponsors; track logo.src) {
-                      <div
-                        class="sponsor-logo-tiered flex h-20 w-20 shrink-0 items-center justify-center rounded-md border border-white/10 bg-white p-2 shadow-lg sm:h-24 sm:w-24 lg:h-28 lg:w-28"
+                      <article
+                        class="sponsor-logo-card flex min-h-44 items-center justify-center rounded-md border border-white/10 bg-white px-4 py-5 sm:min-h-48 lg:min-h-52"
                       >
                         <img
                           [src]="logo.src"
                           [alt]="logo.name"
-                          class="max-h-full max-w-full object-contain"
+                          class="max-h-40 w-full object-contain sm:max-h-44 lg:max-h-48"
                           loading="lazy"
                         />
-                      </div>
+                      </article>
                     }
                   </div>
                 </div>
@@ -1734,7 +1756,9 @@ export class LandingComponent implements OnInit, OnDestroy, AfterViewInit {
     return `${tournament.name}${date}${fee}`;
   }
 
-  protected publicMatchStatusLabel(status: PublicTournamentMatch["status"]): string {
+  protected publicMatchStatusLabel(
+    status: PublicTournamentMatch["status"],
+  ): string {
     return (
       {
         scheduled: "Programmata",
@@ -1745,7 +1769,9 @@ export class LandingComponent implements OnInit, OnDestroy, AfterViewInit {
     )[status];
   }
 
-  protected publicMatchBadgeClass(status: PublicTournamentMatch["status"]): string {
+  protected publicMatchBadgeClass(
+    status: PublicTournamentMatch["status"],
+  ): string {
     if (status === "live") {
       return "border-accent bg-accent text-on-accent";
     }
@@ -1767,7 +1793,9 @@ export class LandingComponent implements OnInit, OnDestroy, AfterViewInit {
         minute: "2-digit",
       }).format(new Date(match.starts_at));
     }
-    return match.field_label ? `Campo ${match.field_label}` : "Orario da definire";
+    return match.field_label
+      ? `Campo ${match.field_label}`
+      : "Orario da definire";
   }
 
   countdownItems(): { label: string; value: string }[] {
@@ -1883,7 +1911,9 @@ export class LandingComponent implements OnInit, OnDestroy, AfterViewInit {
     );
   }
 
-  private groupPublicMatches(matches: PublicTournamentMatch[]): PublicMatchGroup[] {
+  private groupPublicMatches(
+    matches: PublicTournamentMatch[],
+  ): PublicMatchGroup[] {
     const byTournament = new Map<string, PublicTournamentMatch[]>();
     for (const match of matches) {
       const current = byTournament.get(match.tournament_name) ?? [];
