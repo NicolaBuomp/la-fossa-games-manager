@@ -4600,6 +4600,12 @@ ALTER TABLE public.audit_logs ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY audit_logs_admin_read ON public.audit_logs FOR SELECT USING (public.is_admin());
 
+--
+-- Name: audit_logs audit_logs_own_read; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY audit_logs_own_read ON public.audit_logs FOR SELECT USING (changed_by = auth.uid());
+
 
 --
 -- Name: expenses; Type: ROW SECURITY; Schema: public; Owner: -
