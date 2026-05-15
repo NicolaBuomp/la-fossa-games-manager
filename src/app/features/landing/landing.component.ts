@@ -66,14 +66,6 @@ type Countdown = {
           transform: translate3d(0, 0, 0);
         }
       }
-      @keyframes sponsorMarquee {
-        from {
-          transform: translate3d(0, 0, 0);
-        }
-        to {
-          transform: translate3d(-50%, 0, 0);
-        }
-      }
       .hero-title {
         background: linear-gradient(
           90deg,
@@ -128,54 +120,17 @@ type Countdown = {
       .delay-3 {
         animation-delay: 320ms;
       }
-      .sponsor-marquee {
-        animation: sponsorMarquee 16s linear infinite;
-        display: flex;
-        flex-wrap: nowrap;
-        min-width: max-content;
-        user-select: none;
-        will-change: transform;
-      }
-      .sponsor-marquee-viewport {
-        cursor: grab;
-        overflow-x: auto !important;
-        overflow-y: hidden;
-        overscroll-behavior-x: contain;
-        scrollbar-width: none;
-        touch-action: pan-x;
-      }
-      .sponsor-marquee-viewport::-webkit-scrollbar {
-        display: none;
-      }
-      .sponsor-marquee-viewport:active {
-        cursor: grabbing;
-      }
-      .sponsor-marquee-viewport:active .sponsor-marquee,
-      .sponsor-marquee-viewport.is-dragging .sponsor-marquee {
-        animation-play-state: paused;
-      }
-      .sponsor-logo-card {
-        aspect-ratio: 1 / 1;
+      .sponsor-logo-tiered {
         transition:
           transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
           box-shadow 220ms ease,
           border-color 220ms ease;
       }
-      .sponsor-logo-card img {
+      .sponsor-logo-tiered img {
         max-height: 100%;
         max-width: 100%;
         pointer-events: none;
         transition: transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
-      }
-      .sponsor-logo-card:hover,
-      .sponsor-logo-card:focus-within {
-        border-color: rgba(255, 212, 0, 0.45);
-        box-shadow: 0 18px 42px rgba(0, 0, 0, 0.35);
-        transform: translateY(-2px);
-      }
-      .sponsor-logo-card:hover img,
-      .sponsor-logo-card:focus-within img {
-        transform: scale(1.08);
       }
       @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
         .hero-parallax-glow,
@@ -184,9 +139,13 @@ type Countdown = {
         }
       }
       @media (hover: hover) and (pointer: fine) {
-        .sponsor-marquee-viewport:hover .sponsor-marquee,
-        .sponsor-marquee:hover {
-          animation-play-state: paused;
+        .sponsor-logo-tiered:hover {
+          transform: translateY(-3px);
+          box-shadow: 0 20px 48px rgba(0, 0, 0, 0.4);
+          border-color: rgba(255, 212, 0, 0.35);
+        }
+        .sponsor-logo-tiered:hover img {
+          transform: scale(1.06);
         }
         .card-lift {
           transition:
@@ -215,10 +174,6 @@ type Countdown = {
         }
         .reveal-up {
           opacity: 1;
-          animation: none;
-          transform: none;
-        }
-        .sponsor-marquee {
           animation: none;
           transform: none;
         }
@@ -856,13 +811,13 @@ type Countdown = {
             </div>
           </div>
 
-          @if (sponsorLogos.length) {
+          @if (hasSponsorLogos) {
             <div
-              class="sponsor-marquee-shell mt-10 overflow-hidden rounded-lg border border-white/10 bg-white/[0.04] py-5"
+              class="mt-10 overflow-hidden rounded-lg border border-white/10 bg-white/[0.04] p-6 sm:p-8"
               aria-label="Sponsor La Fossa Games"
             >
               <div
-                class="mb-5 flex flex-col gap-2 px-5 sm:flex-row sm:items-end sm:justify-between"
+                class="mb-8 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between"
               >
                 <div>
                   <p
@@ -882,35 +837,43 @@ type Countdown = {
                   Aziende e attività che rendono possibile l'evento.
                 </p>
               </div>
-              <div
-                class="sponsor-marquee-viewport"
-                (pointerdown)="startSponsorDrag($event)"
-                (pointermove)="moveSponsorDrag($event)"
-                (pointerup)="endSponsorDrag($event)"
-                (pointercancel)="endSponsorDrag($event)"
-                (pointerleave)="endSponsorDrag($event)"
-              >
-                <div
-                  [class]="
-                    sponsorLogos.length > 1
-                      ? 'sponsor-marquee flex items-center gap-4 px-4'
-                      : 'flex items-center justify-center px-5'
-                  "
-                >
-                  @for (logo of visibleSponsorLogos; track logo.src + $index) {
+
+              @if (sponsorsByTier.gold.length) {
+                <div class="flex flex-wrap justify-center gap-8">
+                  @for (logo of sponsorsByTier.gold; track logo.src) {
                     <div
-                      class="sponsor-logo-card flex h-28 w-28 shrink-0 items-center justify-center rounded-md border border-white/10 bg-white p-1.5 shadow-2xl sm:h-32 sm:w-32 sm:p-2 lg:h-36 lg:w-36"
+                      class="sponsor-logo-tiered flex h-36 w-36 shrink-0 items-center justify-center rounded-lg border border-white/15 bg-white p-3 shadow-2xl sm:h-44 sm:w-44 sm:p-4 lg:h-52 lg:w-52"
                     >
                       <img
                         [src]="logo.src"
                         [alt]="logo.name"
-                        class="object-contain"
+                        class="max-h-full max-w-full object-contain"
                         loading="lazy"
                       />
                     </div>
                   }
                 </div>
-              </div>
+              }
+
+              @if (sponsorsByTier.others.length) {
+                @if (sponsorsByTier.gold.length) {
+                  <hr class="my-8 border-white/10" />
+                }
+                <div class="flex flex-wrap justify-center gap-4">
+                  @for (logo of sponsorsByTier.others; track logo.src) {
+                    <div
+                      class="sponsor-logo-tiered flex h-20 w-20 shrink-0 items-center justify-center rounded-md border border-white/10 bg-white p-2 shadow-lg sm:h-24 sm:w-24 lg:h-28 lg:w-28"
+                    >
+                      <img
+                        [src]="logo.src"
+                        [alt]="logo.name"
+                        class="max-h-full max-w-full object-contain"
+                        loading="lazy"
+                      />
+                    </div>
+                  }
+                </div>
+              }
             </div>
           }
 
@@ -1229,10 +1192,6 @@ export class LandingComponent implements OnInit, OnDestroy, AfterViewInit {
   private revealObserver: IntersectionObserver | null = null;
   private parallaxEnabled = false;
   private parallaxTicking = false;
-  private sponsorDragPointerId: number | null = null;
-  private sponsorDragStartX = 0;
-  private sponsorDragStartScrollLeft = 0;
-
   private readonly onScrollParallax = () => {
     if (!this.parallaxEnabled || this.parallaxTicking) {
       return;
@@ -1470,17 +1429,11 @@ export class LandingComponent implements OnInit, OnDestroy, AfterViewInit {
       ],
     },
   ];
-  protected readonly sponsorLogos = SPONSOR_ASSETS;
-  protected readonly sponsorLogoTrack = SPONSOR_ASSETS.length
-    ? Array.from(
-        { length: Math.max(6, SPONSOR_ASSETS.length) },
-        (_, index) => SPONSOR_ASSETS[index % SPONSOR_ASSETS.length],
-      )
-    : [];
-  protected readonly visibleSponsorLogos =
-    SPONSOR_ASSETS.length > 1
-      ? [...this.sponsorLogoTrack, ...this.sponsorLogoTrack]
-      : SPONSOR_ASSETS;
+  protected readonly sponsorsByTier = {
+    gold: SPONSOR_ASSETS.filter((s) => s.category === "gold"),
+    others: SPONSOR_ASSETS.filter((s) => s.category !== "gold"),
+  };
+  protected readonly hasSponsorLogos = SPONSOR_ASSETS.length > 0;
 
   async loadTournaments(): Promise<void> {
     this.loadingTournaments.set(true);
@@ -1619,43 +1572,6 @@ export class LandingComponent implements OnInit, OnDestroy, AfterViewInit {
     this.participationForm.reason = "sponsor";
     this.onReasonChange();
     this.scrollToSection(event, "partecipa");
-  }
-
-  startSponsorDrag(event: PointerEvent): void {
-    if (this.sponsorLogos.length <= 1 || event.button !== 0) {
-      return;
-    }
-
-    const shell = event.currentTarget as HTMLElement;
-    this.sponsorDragPointerId = event.pointerId;
-    this.sponsorDragStartX = event.clientX;
-    this.sponsorDragStartScrollLeft = shell.scrollLeft;
-    shell.classList.add("is-dragging");
-    shell.setPointerCapture(event.pointerId);
-  }
-
-  moveSponsorDrag(event: PointerEvent): void {
-    if (this.sponsorDragPointerId !== event.pointerId) {
-      return;
-    }
-
-    const shell = event.currentTarget as HTMLElement;
-    const dragOffset = event.clientX - this.sponsorDragStartX;
-    shell.scrollLeft = this.sponsorDragStartScrollLeft - dragOffset;
-    event.preventDefault();
-  }
-
-  endSponsorDrag(event: PointerEvent): void {
-    if (this.sponsorDragPointerId !== event.pointerId) {
-      return;
-    }
-
-    const shell = event.currentTarget as HTMLElement;
-    this.sponsorDragPointerId = null;
-    shell.classList.remove("is-dragging");
-    if (shell.hasPointerCapture(event.pointerId)) {
-      shell.releasePointerCapture(event.pointerId);
-    }
   }
 
   openGameDetails(game: Game): void {

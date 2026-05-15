@@ -1,15 +1,20 @@
+export type SponsorCategory = 'gold' | 'silver' | 'bronzo';
+
 export type SponsorAsset = {
   name: string;
   src: string;
+  category: SponsorCategory;
 };
 
 export const SPONSOR_ASSETS: SponsorAsset[] = [
   {
-    "name": "SALVATORE CEPPARULO LOGO",
-    "src": "/assets/sponsor/SALVATORE_CEPPARULO_LOGO.png"
+    "name": "VETERFARM LOGO PREMIUM",
+    "src": "/assets/sponsor/gold/VETERFARM_LOGO_PREMIUM.png",
+    "category": "gold"
   },
   {
-    "name": "VETERFARM LOGO",
-    "src": "/assets/sponsor/VETERFARM_LOGO.png"
+    "name": "SALVATORE CEPPARULO LOGO BASE",
+    "src": "/assets/sponsor/bronzo/SALVATORE_CEPPARULO_LOGO_BASE.png",
+    "category": "bronzo"
   }
 ];
