@@ -13,8 +13,8 @@ export const SPONSOR_ASSETS: SponsorAsset[] = [
     "category": "gold"
   },
   {
-    "name": "SALVATORE CEPPARULO",
-    "src": "/assets/sponsor/base/SALVATORE_CEPPARULO_LOGO_BASE.png",
+    "name": "Regno Regno Dei Mazzoni",
+    "src": "/assets/sponsor/base/regno_regno_dei_mazzoni.jpeg",
     "category": "bronzo"
   }
 ];
