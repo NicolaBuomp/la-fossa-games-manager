@@ -322,6 +322,12 @@ export class ShellComponent implements OnInit {
       short: "U",
       adminOnly: true,
     },
+    {
+      path: "/app/audit",
+      label: "Audit",
+      short: "A",
+      adminOnly: true,
+    },
   ];
 
   readonly visibleNav = computed(() =>

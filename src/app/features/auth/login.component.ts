@@ -7,7 +7,7 @@ import { AuthService } from "../../core/services/auth.service";
   standalone: true,
   imports: [FormsModule, RouterLink],
   template: `
-    <main class="grid min-h-screen place-items-center bg-paper px-4 py-8">
+    <main class="grid min-h-screen place-items-center bg-app px-4 py-8 text-primary">
       <section
         class="w-full max-w-md rounded-lg border border-soft bg-surface p-6 shadow-sm"
       >
@@ -55,7 +55,7 @@ import { AuthService } from "../../core/services/auth.service";
               />
             </label>
             <button
-              class="w-full rounded-lg bg-ink px-4 py-3 text-sm font-bold uppercase tracking-wide text-white disabled:opacity-60"
+              class="w-full rounded-lg bg-ink px-4 py-3 text-sm font-bold uppercase tracking-wide text-white transition hover:opacity-90 disabled:opacity-60"
             >
               {{ loading ? "Accesso..." : "Entra" }}
             </button>

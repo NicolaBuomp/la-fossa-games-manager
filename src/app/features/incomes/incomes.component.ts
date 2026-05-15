@@ -31,7 +31,7 @@ import {
       <div class="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p
-            class="text-xs font-bold uppercase tracking-[0.18em] text-neutral-500"
+            class="text-xs font-bold uppercase tracking-[0.18em] text-muted"
           >
             Modulo entrate
           </p>
@@ -39,7 +39,7 @@ import {
         </div>
         <div class="flex gap-2">
           <button
-            class="rounded-lg bg-white px-4 py-2 text-sm font-bold ring-1 ring-black/10"
+            class="rounded-lg bg-surface px-4 py-2 text-sm font-bold text-primary ring-1 ring-black/15 transition hover:bg-surface-muted"
             (click)="export()"
           >
             CSV
@@ -76,32 +76,34 @@ import {
       }
 
       @if (!items().length) {
-        <lfg-empty-state
-          title="Ancora nessuna entrata"
-          text="Registra incassi, quote, sponsor e altre fonti."
-          actionLabel="Nuova entrata"
-          (action)="newItem()"
-        />
+        <div class="mt-6">
+          <lfg-empty-state
+            title="Ancora nessuna entrata"
+            text="Registra incassi, quote, sponsor e altre fonti."
+            actionLabel="Nuova entrata"
+            (action)="newItem()"
+          />
+        </div>
       } @else {
         <div class="grid gap-3">
           @for (item of items(); track item.id) {
-            <article class="rounded-lg border border-black/10 bg-white p-4">
+            <article class="rounded-lg border border-soft bg-surface p-4">
               <div class="flex flex-wrap justify-between gap-3">
                 <div class="min-w-0">
                   <h2 class="truncate text-base font-bold">
                     {{ item.source }}
                   </h2>
-                  <p class="mt-1 text-xs text-neutral-500">
+                  <p class="mt-1 text-xs text-muted">
                     {{ formatDate(item.date) }} · {{ item.category }}
                     @if (item.received_by) {
                       · da {{ item.received_by }}
                     }
                   </p>
-                  <p class="mt-1 text-xs font-semibold text-neutral-500">
+                  <p class="mt-1 text-xs font-semibold text-muted">
                     {{ insertMeta(item) }}
                   </p>
                   @if (item.notes) {
-                    <p class="mt-2 text-sm text-neutral-600">
+                    <p class="mt-2 text-sm text-muted">
                       {{ item.notes }}
                     </p>
                   }
@@ -111,17 +113,17 @@ import {
                 </p>
               </div>
               <div
-                class="mt-4 flex justify-end gap-2 border-t border-black/5 pt-3"
+                class="mt-4 flex justify-end gap-2 border-t border-soft pt-3"
               >
                 <button
-                  class="rounded-md bg-neutral-100 px-3 py-1.5 text-xs font-bold uppercase"
+                  class="rounded-md bg-surface-muted px-3 py-1.5 text-xs font-bold uppercase"
                   (click)="edit(item)"
                 >
                   Modifica
                 </button>
                 @if (auth.isAdmin()) {
                   <button
-                    class="rounded-md bg-red-50 px-3 py-1.5 text-xs font-bold uppercase text-red-700"
+                    class="state-danger rounded-md border px-3 py-1.5 text-xs font-bold uppercase"
                     (click)="askRemove(item)"
                   >
                     Elimina

@@ -87,6 +87,14 @@ export const routes: Routes = [
             (m) => m.UsersComponent,
           ),
       },
+      {
+        path: "audit",
+        canActivate: [adminGuard],
+        loadComponent: () =>
+          import("./features/audit/audit.component").then(
+            (m) => m.AuditComponent,
+          ),
+      },
     ],
   },
   { path: "**", redirectTo: "" },

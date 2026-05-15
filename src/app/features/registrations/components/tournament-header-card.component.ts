@@ -4,7 +4,7 @@ import { TournamentWithTeams } from "../../../core/types/models";
 @Component({
   selector: "lfg-tournament-header-card",
   standalone: true,
-  host: { class: "block" },
+  host: { class: "mb-5 block" },
   template: `
     <article class="rounded-lg border border-soft bg-surface p-3 shadow-sm sm:p-4">
       <div class="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
