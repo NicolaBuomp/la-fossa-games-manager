@@ -14,6 +14,10 @@ import {
   Registration,
   Sponsor,
 } from "../../core/types/models";
+import { AuditActivityListComponent } from "../audit/components/audit-activity-list.component";
+import { buildAuditActivities } from "../audit/components/audit-activity-builder";
+import { AuditActivityItem } from "../audit/components/audit-activity.model";
+import { AuditDetailModalComponent } from "../audit/components/audit-detail-modal.component";
 import {
   KpiPanelComponent,
   SummaryCardComponent,
@@ -21,7 +25,13 @@ import {
 
 @Component({
   standalone: true,
-  imports: [RouterLink, KpiPanelComponent, SummaryCardComponent],
+  imports: [
+    RouterLink,
+    AuditActivityListComponent,
+    AuditDetailModalComponent,
+    KpiPanelComponent,
+    SummaryCardComponent,
+  ],
   template: `
     <section class="space-y-5">
       <div class="flex flex-wrap items-end justify-between gap-4">
@@ -205,26 +215,19 @@ import {
             Nessuna modifica registrata.
           </p>
         } @else {
-          <div class="mt-4 divide-y divide-black/5">
-            @for (activity of activityItems(); track activity.id) {
-              <div
-                class="grid gap-2 py-3 sm:grid-cols-[1fr_auto] sm:items-center"
-              >
-                <div class="min-w-0">
-                  <p class="text-sm font-bold">
-                    {{ activity.title }}
-                  </p>
-                  <p class="mt-1 text-xs text-muted">
-                    {{ activity.meta }}
-                  </p>
-                </div>
-                <span [class]="activity.badgeClass">{{ activity.badge }}</span>
-              </div>
-            }
-          </div>
+          <lfg-audit-activity-list
+            class="mt-4 block"
+            [activities]="activityItems()"
+            (select)="selectedActivity.set($event)"
+          />
         }
       </section>
     </section>
+
+    <lfg-audit-detail-modal
+      [activity]="selectedActivity()"
+      (close)="selectedActivity.set(null)"
+    />
   `,
 })
 export class DashboardComponent implements OnInit {
@@ -233,6 +236,7 @@ export class DashboardComponent implements OnInit {
   sponsors = signal<Sponsor[]>([]);
   registrations = signal<Registration[]>([]);
   auditLogs = signal<AuditLog[]>([]);
+  selectedActivity = signal<AuditActivityItem | null>(null);
   error = signal("");
   loading = signal(false);
   private readonly snackbar = inject(SnackbarService);
@@ -378,66 +382,8 @@ export class DashboardComponent implements OnInit {
     return this.pendingTournamentRequests() + this.pendingSponsorRequests() > 0;
   }
 
-  activityItems(): Array<{
-    id: string;
-    title: string;
-    meta: string;
-    badge: string;
-    badgeClass: string;
-  }> {
-    const logs = this.auditLogs();
-    const consumed = new Set<string>();
-    const items: Array<{
-      id: string;
-      title: string;
-      meta: string;
-      badge: string;
-      badgeClass: string;
-    }> = [];
-
-    for (const log of logs) {
-      if (consumed.has(log.id)) continue;
-
-      if (log.action === "insert" && log.table_name === "tournament_teams") {
-        consumed.add(log.id);
-        const relatedParticipants = logs.filter(
-          (candidate) =>
-            !consumed.has(candidate.id) &&
-            candidate.action === "insert" &&
-            candidate.table_name === "team_participants" &&
-            candidate.new_data?.["team_id"] === log.record_id &&
-            candidate.changed_by === log.changed_by &&
-            this.secondsBetween(candidate.changed_at, log.changed_at) <= 10,
-        );
-        relatedParticipants.forEach((participant) =>
-          consumed.add(participant.id),
-        );
-        items.push(this.teamInsertActivity(log, relatedParticipants));
-        continue;
-      }
-
-      const group = logs.filter(
-        (candidate) =>
-          !consumed.has(candidate.id) &&
-          candidate.id !== log.id &&
-          candidate.action === log.action &&
-          candidate.table_name === log.table_name &&
-          candidate.changed_by === log.changed_by &&
-          this.secondsBetween(candidate.changed_at, log.changed_at) <= 60,
-      );
-
-      if (group.length) {
-        consumed.add(log.id);
-        group.forEach((item) => consumed.add(item.id));
-        items.push(this.groupedActivity([log, ...group]));
-        continue;
-      }
-
-      consumed.add(log.id);
-      items.push(this.singleActivity(log));
-    }
-
-    return items;
+  activityItems(): AuditActivityItem[] {
+    return buildAuditActivities(this.auditLogs(), this.registrations());
   }
 
   eur(value: number): string {
@@ -445,151 +391,5 @@ export class DashboardComponent implements OnInit {
       style: "currency",
       currency: "EUR",
     }).format(value);
-  }
-
-  formatDateTime(value: string): string {
-    return new Intl.DateTimeFormat("it-IT", {
-      dateStyle: "short",
-      timeStyle: "short",
-    }).format(new Date(value));
-  }
-
-  actionLabel(action: AuditLog["action"]): string {
-    if (action === "insert") return "Aggiunto";
-    if (action === "update") return "Modificato";
-    return "Eliminato";
-  }
-
-  auditBadgeClass(action: AuditLog["action"]): string {
-    const base =
-      "w-fit rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase";
-    if (action === "insert") return `${base} state-success`;
-    if (action === "update") return `${base} state-info`;
-    return `${base} state-danger`;
-  }
-
-  private singleActivity(log: AuditLog): {
-    id: string;
-    title: string;
-    meta: string;
-    badge: string;
-    badgeClass: string;
-  } {
-    return {
-      id: log.id,
-      title: `${this.actorLabel(log)} ha ${this.actionPhrase(log.action)} ${this.tableLabel(log.table_name)} "${this.recordLabel(log)}"`,
-      meta: this.formatDateTime(log.changed_at),
-      badge: this.actionLabel(log.action),
-      badgeClass: this.auditBadgeClass(log.action),
-    };
-  }
-
-  private groupedActivity(logs: AuditLog[]): {
-    id: string;
-    title: string;
-    meta: string;
-    badge: string;
-    badgeClass: string;
-  } {
-    const [first] = logs;
-    return {
-      id: logs.map((log) => log.id).join("-"),
-      title: `${this.actorLabel(first)} ha ${this.actionPhrase(first.action)} ${logs.length} ${this.tablePluralLabel(first.table_name)}`,
-      meta: this.formatDateTime(first.changed_at),
-      badge: this.actionLabel(first.action),
-      badgeClass: this.auditBadgeClass(first.action),
-    };
-  }
-
-  private teamInsertActivity(
-    log: AuditLog,
-    participants: AuditLog[],
-  ): {
-    id: string;
-    title: string;
-    meta: string;
-    badge: string;
-    badgeClass: string;
-  } {
-    const data = log.new_data ?? {};
-    const teamName = this.textValue(data["name"], "squadra");
-    const tournamentName =
-      this.registrations().find((registration) => registration.id === log.record_id)
-        ?.tournament ?? "torneo";
-    const participant = participants[0]?.new_data ?? {};
-    const captain =
-      this.textValue(data["captain_name"], "") ||
-      [participant["first_name"], participant["last_name"]]
-        .filter(
-          (value): value is string =>
-            typeof value === "string" && !!value.trim(),
-        )
-        .join(" ");
-    const captainText = captain ? ` e capitano ${captain}` : "";
-
-    return {
-      id: [log.id, ...participants.map((item) => item.id)].join("-"),
-      title: `${this.actorLabel(log)} ha inserito la squadra "${teamName}" in ${tournamentName}${captainText}`,
-      meta: this.formatDateTime(log.changed_at),
-      badge: this.actionLabel(log.action),
-      badgeClass: this.auditBadgeClass(log.action),
-    };
-  }
-
-  private secondsBetween(a: string, b: string): number {
-    return Math.abs(new Date(a).getTime() - new Date(b).getTime()) / 1000;
-  }
-
-  private actionPhrase(action: AuditLog["action"]): string {
-    if (action === "insert") return "inserito";
-    if (action === "update") return "modificato";
-    return "eliminato";
-  }
-
-  tableLabel(tableName: string): string {
-    return (
-      {
-        expenses: "spesa",
-        incomes: "entrata",
-        sponsors: "sponsor",
-        registrations: "iscrizione",
-        tournaments: "torneo",
-        tournament_teams: "squadra",
-        team_participants: "partecipante",
-      }[tableName] ?? tableName
-    );
-  }
-
-  tablePluralLabel(tableName: string): string {
-    return (
-      {
-        expenses: "spese",
-        incomes: "entrate",
-        sponsors: "sponsor",
-        registrations: "iscrizioni",
-        tournaments: "tornei",
-        tournament_teams: "squadre",
-        team_participants: "partecipanti",
-      }[tableName] ?? tableName
-    );
-  }
-
-  actorLabel(log: AuditLog): string {
-    return log.changed_by_name || "Utente non disponibile";
-  }
-
-  recordLabel(log: AuditLog): string {
-    const data = log.new_data ?? log.old_data ?? {};
-    const value =
-      data["company_name"] ??
-      data["description"] ??
-      data["source"] ??
-      data["name"] ??
-      [data["first_name"], data["last_name"]].filter(Boolean).join(" ");
-    return this.textValue(value, String(log.record_id).slice(0, 8));
-  }
-
-  private textValue(value: unknown, fallback: string): string {
-    return typeof value === "string" && value.trim() ? value.trim() : fallback;
   }
 }

@@ -207,6 +207,10 @@ export interface AuditLog {
   changed_at: string;
   old_data: Record<string, unknown> | null;
   new_data: Record<string, unknown> | null;
+  operation_id?: string | null;
+  summary?: string | null;
+  entity_label?: string | null;
+  context?: Record<string, unknown> | null;
 }
 
 export type InsertExpense = Omit<Expense, 'id' | 'created_by' | 'updated_by' | 'created_at' | 'updated_at'>;

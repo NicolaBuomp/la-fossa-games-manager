@@ -8,10 +8,19 @@ import { ProfileService } from "../../core/services/profile.service";
 import { SnackbarService } from "../../core/services/snackbar.service";
 import { AuditLog, Profile } from "../../core/types/models";
 import { EmptyStateComponent } from "../../shared/components/ui.component";
+import { AuditActivityListComponent } from "./components/audit-activity-list.component";
+import { buildAuditActivities } from "./components/audit-activity-builder";
+import { AuditActivityItem } from "./components/audit-activity.model";
+import { AuditDetailModalComponent } from "./components/audit-detail-modal.component";
 
 @Component({
   standalone: true,
-  imports: [FormsModule, EmptyStateComponent],
+  imports: [
+    FormsModule,
+    AuditActivityListComponent,
+    AuditDetailModalComponent,
+    EmptyStateComponent,
+  ],
   template: `
     <section class="space-y-5">
       <div class="flex flex-wrap items-end justify-between gap-3">
@@ -90,33 +99,11 @@ import { EmptyStateComponent } from "../../shared/components/ui.component";
         />
       } @else {
         <section class="overflow-hidden rounded-lg border border-soft bg-surface">
-          <div class="divide-y divide-black/5">
-            @for (log of rows(); track log.id) {
-              <article class="grid gap-3 p-4 lg:grid-cols-[1fr_auto]">
-                <div class="min-w-0">
-                  <p class="text-sm font-bold">
-                    {{ actorLabel(log) }} ha {{ actionPhrase(log.action) }}
-                    {{ tableLabel(log.table_name) }}
-                    <span class="font-normal text-muted">
-                      "{{ recordLabel(log) }}"
-                    </span>
-                  </p>
-                  <p class="mt-1 text-xs text-muted">
-                    {{ formatDateTime(log.changed_at) }} ·
-                    {{ log.table_name }} · {{ log.record_id }}
-                  </p>
-                  @if (changedFields(log).length) {
-                    <p class="mt-2 text-xs text-muted">
-                      Campi: {{ changedFields(log).join(", ") }}
-                    </p>
-                  }
-                </div>
-                <span [class]="auditBadgeClass(log.action)">
-                  {{ actionLabel(log.action) }}
-                </span>
-              </article>
-            }
-          </div>
+          <lfg-audit-activity-list
+            class="block px-4"
+            [activities]="activityItems()"
+            (select)="selectedActivity.set($event)"
+          />
         </section>
 
         <footer
@@ -149,6 +136,11 @@ import { EmptyStateComponent } from "../../shared/components/ui.component";
         </footer>
       }
     </section>
+
+    <lfg-audit-detail-modal
+      [activity]="selectedActivity()"
+      (close)="selectedActivity.set(null)"
+    />
   `,
 })
 export class AuditComponent implements OnInit {
@@ -159,6 +151,7 @@ export class AuditComponent implements OnInit {
   pageSize = signal(20);
   action = signal<AuditActionFilter>("all");
   changedBy = signal("");
+  selectedActivity = signal<AuditActivityItem | null>(null);
   loading = signal(false);
   error = signal("");
   totalPages = computed(() =>
@@ -240,71 +233,8 @@ export class AuditComponent implements OnInit {
     return `${start}-${end}`;
   }
 
-  actionLabel(action: AuditLog["action"]): string {
-    if (action === "insert") return "Aggiunto";
-    if (action === "update") return "Modificato";
-    return "Eliminato";
-  }
-
-  actionPhrase(action: AuditLog["action"]): string {
-    if (action === "insert") return "inserito";
-    if (action === "update") return "modificato";
-    return "eliminato";
-  }
-
-  auditBadgeClass(action: AuditLog["action"]): string {
-    const base =
-      "w-fit rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase";
-    if (action === "insert") return `${base} state-success`;
-    if (action === "update") return `${base} state-info`;
-    return `${base} state-danger`;
-  }
-
-  tableLabel(tableName: string): string {
-    return (
-      {
-        expenses: "spesa",
-        incomes: "entrata",
-        sponsors: "sponsor",
-        registrations: "iscrizione",
-        tournaments: "torneo",
-        tournament_teams: "squadra",
-        team_participants: "partecipante",
-      }[tableName] ?? tableName
-    );
-  }
-
-  actorLabel(log: AuditLog): string {
-    return log.changed_by_name || "Utente non disponibile";
-  }
-
-  recordLabel(log: AuditLog): string {
-    const data = log.new_data ?? log.old_data ?? {};
-    const value =
-      data["company_name"] ??
-      data["description"] ??
-      data["source"] ??
-      data["name"] ??
-      [data["first_name"], data["last_name"]].filter(Boolean).join(" ");
-    return typeof value === "string" && value.trim()
-      ? value
-      : String(log.record_id).slice(0, 8);
-  }
-
-  changedFields(log: AuditLog): string[] {
-    if (log.action !== "update" || !log.old_data || !log.new_data) return [];
-    const oldData = log.old_data;
-    const newData = log.new_data;
-    return Object.keys(newData).filter(
-      (key) => JSON.stringify(oldData[key]) !== JSON.stringify(newData[key]),
-    );
-  }
-
-  formatDateTime(value: string): string {
-    return new Intl.DateTimeFormat("it-IT", {
-      dateStyle: "short",
-      timeStyle: "short",
-    }).format(new Date(value));
+  activityItems(): AuditActivityItem[] {
+    return buildAuditActivities(this.rows());
   }
 
   profileDisplayName(profile: Profile): string {
