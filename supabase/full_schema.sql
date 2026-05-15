@@ -2525,10 +2525,10 @@ CREATE VIEW public.public_tournament_standings AS
 
 
 --
--- Name: registrations; Type: TABLE; Schema: public; Owner: -
+-- Name: registrations_legacy_backup; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.registrations (
+CREATE TABLE public.registrations_legacy_backup (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     name text NOT NULL,
     tournament text NOT NULL,
@@ -3065,10 +3065,10 @@ ALTER TABLE ONLY public.profiles
 
 
 --
--- Name: registrations registrations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: registrations_legacy_backup registrations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.registrations
+ALTER TABLE ONLY public.registrations_legacy_backup
     ADD CONSTRAINT registrations_pkey PRIMARY KEY (id);
 
 
@@ -3762,7 +3762,7 @@ CREATE UNIQUE INDEX profiles_username_uidx ON public.profiles USING btree (lower
 -- Name: registrations_paid_idx; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX registrations_paid_idx ON public.registrations USING btree (paid);
+CREATE INDEX registrations_paid_idx ON public.registrations_legacy_backup USING btree (paid);
 
 
 --
@@ -3920,24 +3920,24 @@ CREATE TRIGGER participation_requests_updated_at BEFORE UPDATE ON public.partici
 
 
 --
--- Name: registrations registrations_audit_log; Type: TRIGGER; Schema: public; Owner: -
+-- Name: registrations_legacy_backup registrations_audit_log; Type: TRIGGER; Schema: public; Owner: -
 --
 
-CREATE TRIGGER registrations_audit_log AFTER INSERT OR DELETE OR UPDATE ON public.registrations FOR EACH ROW EXECUTE FUNCTION public.record_audit_log();
-
-
---
--- Name: registrations registrations_created_by; Type: TRIGGER; Schema: public; Owner: -
---
-
-CREATE TRIGGER registrations_created_by BEFORE INSERT ON public.registrations FOR EACH ROW EXECUTE FUNCTION public.set_created_by();
+CREATE TRIGGER registrations_audit_log AFTER INSERT OR DELETE OR UPDATE ON public.registrations_legacy_backup FOR EACH ROW EXECUTE FUNCTION public.record_audit_log();
 
 
 --
--- Name: registrations registrations_updated_at; Type: TRIGGER; Schema: public; Owner: -
+-- Name: registrations_legacy_backup registrations_created_by; Type: TRIGGER; Schema: public; Owner: -
 --
 
-CREATE TRIGGER registrations_updated_at BEFORE UPDATE ON public.registrations FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+CREATE TRIGGER registrations_created_by BEFORE INSERT ON public.registrations_legacy_backup FOR EACH ROW EXECUTE FUNCTION public.set_created_by();
+
+
+--
+-- Name: registrations_legacy_backup registrations_updated_at; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER registrations_updated_at BEFORE UPDATE ON public.registrations_legacy_backup FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 
 
 --
@@ -4277,18 +4277,18 @@ ALTER TABLE ONLY public.profiles
 
 
 --
--- Name: registrations registrations_created_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: registrations_legacy_backup registrations_created_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.registrations
+ALTER TABLE ONLY public.registrations_legacy_backup
     ADD CONSTRAINT registrations_created_by_fkey FOREIGN KEY (created_by) REFERENCES auth.users(id);
 
 
 --
--- Name: registrations registrations_updated_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: registrations_legacy_backup registrations_updated_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.registrations
+ALTER TABLE ONLY public.registrations_legacy_backup
     ADD CONSTRAINT registrations_updated_by_fkey FOREIGN KEY (updated_by) REFERENCES auth.users(id);
 
 
@@ -4765,37 +4765,37 @@ CREATE POLICY profiles_self_read ON public.profiles FOR SELECT USING (((id = aut
 
 
 --
--- Name: registrations; Type: ROW SECURITY; Schema: public; Owner: -
+-- Name: registrations_legacy_backup; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
-ALTER TABLE public.registrations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.registrations_legacy_backup ENABLE ROW LEVEL SECURITY;
 
 --
--- Name: registrations registrations_admin_delete; Type: POLICY; Schema: public; Owner: -
+-- Name: registrations_legacy_backup registrations_admin_delete; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY registrations_admin_delete ON public.registrations FOR DELETE USING (public.is_admin());
-
-
---
--- Name: registrations registrations_member_insert; Type: POLICY; Schema: public; Owner: -
---
-
-CREATE POLICY registrations_member_insert ON public.registrations FOR INSERT WITH CHECK (public.is_active_member());
+CREATE POLICY registrations_admin_delete ON public.registrations_legacy_backup FOR DELETE USING (public.is_admin());
 
 
 --
--- Name: registrations registrations_member_read; Type: POLICY; Schema: public; Owner: -
+-- Name: registrations_legacy_backup registrations_member_insert; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY registrations_member_read ON public.registrations FOR SELECT USING (public.is_active_member());
+CREATE POLICY registrations_member_insert ON public.registrations_legacy_backup FOR INSERT WITH CHECK (public.is_active_member());
 
 
 --
--- Name: registrations registrations_member_update; Type: POLICY; Schema: public; Owner: -
+-- Name: registrations_legacy_backup registrations_member_read; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY registrations_member_update ON public.registrations FOR UPDATE USING (public.is_active_member()) WITH CHECK (public.is_active_member());
+CREATE POLICY registrations_member_read ON public.registrations_legacy_backup FOR SELECT USING (public.is_active_member());
+
+
+--
+-- Name: registrations_legacy_backup registrations_member_update; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY registrations_member_update ON public.registrations_legacy_backup FOR UPDATE USING (public.is_active_member()) WITH CHECK (public.is_active_member());
 
 
 --

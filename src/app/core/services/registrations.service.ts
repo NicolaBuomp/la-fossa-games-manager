@@ -1,6 +1,5 @@
 import { Injectable } from "@angular/core";
 import {
-  InsertRegistration,
   InsertTeamParticipant,
   InsertTournament,
   InsertTournamentTeam,
@@ -11,7 +10,6 @@ import {
   TournamentTeam,
   TournamentWithTeams,
 } from "../types/models";
-import { CrudService } from "./crud.service";
 import { SupabaseService } from "./supabase.service";
 
 const DEFAULT_TOURNAMENTS: {
@@ -30,15 +28,10 @@ const DEFAULT_TOURNAMENTS: {
 ];
 
 @Injectable({ providedIn: "root" })
-export class RegistrationsService extends CrudService<
-  Registration,
-  InsertRegistration
-> {
-  constructor(supabase: SupabaseService) {
-    super(supabase, "registrations", "registration_date");
-  }
+export class RegistrationsService {
+  constructor(private readonly supabase: SupabaseService) {}
 
-  override async list(): Promise<Registration[]> {
+  async list(): Promise<Registration[]> {
     const tournaments = await this.listTournaments();
     const registrations = tournaments.flatMap((tournament) =>
       tournament.tournament_teams.map((team) => ({
