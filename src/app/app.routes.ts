@@ -65,6 +65,13 @@ export const routes: Routes = [
           ),
       },
       {
+        path: "tournaments",
+        loadComponent: () =>
+          import("./features/tournaments/tournaments.component").then(
+            (m) => m.TournamentsComponent,
+          ),
+      },
+      {
         path: "participation-requests",
         loadComponent: () =>
           import("./features/participation-requests/participation-requests.component").then(

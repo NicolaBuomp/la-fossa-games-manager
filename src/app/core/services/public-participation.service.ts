@@ -9,7 +9,8 @@ export class PublicParticipationService {
   async listAvailableTournaments(): Promise<PublicTournament[]> {
     const { data, error } = await this.supabase.client
       .from('tournaments')
-      .select('id, name, sport, fee, date')
+      .select('id, name, sport, fee, date, public_status')
+      .neq('public_status', 'hidden')
       .order('name', { ascending: true });
 
     if (error) throw error;

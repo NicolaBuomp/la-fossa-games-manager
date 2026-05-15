@@ -304,6 +304,7 @@ export class ShellComponent implements OnInit {
       adminOnly: true,
     },
     { path: "/app/registrations", label: "Iscritti", short: "I" },
+    { path: "/app/tournaments", label: "Tornei", short: "T" },
     {
       path: "/app/participation-requests",
       label: "Richieste",

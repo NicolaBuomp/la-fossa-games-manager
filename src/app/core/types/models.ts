@@ -4,6 +4,24 @@ export type SponsorType = 'cash' | 'bonifico';
 export type SponsorCategory = 'bronzo' | 'silver' | 'gold';
 export type ExpenseStatus = 'pagata' | 'da_rimborsare' | 'rimborsata';
 export type TournamentSport = 'calcio' | 'pallavolo' | 'altro';
+export type TournamentStatus =
+  | 'draft'
+  | 'registrations_open'
+  | 'registrations_closed'
+  | 'groups_generated'
+  | 'in_progress'
+  | 'completed'
+  | 'archived';
+export type TournamentPublicStatus =
+  | 'hidden'
+  | 'registrations_open'
+  | 'published'
+  | 'results_published';
+export type TournamentMatchStatus =
+  | 'scheduled'
+  | 'live'
+  | 'completed'
+  | 'cancelled';
 export type ParticipantGender = 'uomo' | 'donna';
 
 export interface Profile {
@@ -110,11 +128,72 @@ export interface Tournament {
   sport: TournamentSport;
   fee: number;
   date: string | null;
+  status: TournamentStatus;
+  public_status: TournamentPublicStatus;
+  published_at: string | null;
   notes: string | null;
   created_by: string | null;
   updated_by: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface TournamentGroupTeam {
+  id: string;
+  group_id: string;
+  team_id: string;
+  seed: number | null;
+  created_at: string;
+  tournament_teams?: Pick<TournamentTeam, 'id' | 'name'> | null;
+}
+
+export interface TournamentGroup {
+  id: string;
+  tournament_id: string;
+  name: string;
+  seed_index: number | null;
+  created_at: string;
+  updated_at: string;
+  tournament_group_teams?: TournamentGroupTeam[];
+}
+
+export interface TournamentMatch {
+  id: string;
+  tournament_id: string;
+  group_id: string | null;
+  round_label: string | null;
+  home_team_id: string;
+  away_team_id: string;
+  home_score: number;
+  away_score: number;
+  status: TournamentMatchStatus;
+  starts_at: string | null;
+  ends_at: string | null;
+  field_label: string | null;
+  created_at: string;
+  updated_at: string;
+  home_team?: Pick<TournamentTeam, 'id' | 'name'> | null;
+  away_team?: Pick<TournamentTeam, 'id' | 'name'> | null;
+  tournament_groups?: Pick<TournamentGroup, 'name'> | null;
+}
+
+export interface TournamentStanding {
+  id: string;
+  tournament_id: string;
+  group_id: string;
+  team_id: string;
+  played: number;
+  wins: number;
+  draws: number;
+  losses: number;
+  goals_for: number;
+  goals_against: number;
+  goal_diff: number;
+  points: number;
+  rank: number;
+  updated_at: string;
+  tournament_teams?: Pick<TournamentTeam, 'id' | 'name'> | null;
+  tournament_groups?: Pick<TournamentGroup, 'name'> | null;
 }
 
 export interface TournamentTeam {
@@ -156,12 +235,19 @@ export interface TournamentWithTeams extends Tournament {
   tournament_teams: TournamentTeamWithParticipants[];
 }
 
+export interface OperationalTournament extends TournamentWithTeams {
+  tournament_groups: TournamentGroup[];
+  tournament_matches: TournamentMatch[];
+  tournament_standings: TournamentStanding[];
+}
+
 export interface PublicTournament {
   id: string;
   name: string;
   sport: TournamentSport;
   fee: number;
   date: string | null;
+  public_status?: TournamentPublicStatus;
 }
 
 export interface ParticipationRequest {
@@ -216,7 +302,19 @@ export interface AuditLog {
 export type InsertExpense = Omit<Expense, 'id' | 'created_by' | 'updated_by' | 'created_at' | 'updated_at'>;
 export type InsertIncome = Omit<Income, 'id' | 'created_by' | 'updated_by' | 'created_at' | 'updated_at'>;
 export type InsertSponsor = Omit<Sponsor, 'id' | 'created_by' | 'updated_by' | 'created_at' | 'updated_at'>;
-export type InsertTournament = Omit<Tournament, 'id' | 'code' | 'created_by' | 'updated_by' | 'created_at' | 'updated_at'> & { code?: string | null };
+export type InsertTournament = Omit<
+  Tournament,
+  | 'id'
+  | 'code'
+  | 'status'
+  | 'public_status'
+  | 'published_at'
+  | 'created_by'
+  | 'updated_by'
+  | 'created_at'
+  | 'updated_at'
+> & { code?: string | null };
+export type UpdateTournamentPublication = Pick<Tournament, 'status' | 'public_status' | 'published_at'>;
 export type InsertTournamentTeam = Omit<TournamentTeam, 'id' | 'created_by' | 'updated_by' | 'created_at' | 'updated_at'>;
 export type InsertTeamParticipant = Omit<TeamParticipant, 'id' | 'created_by' | 'updated_by' | 'created_at' | 'updated_at'>;
 export type InsertParticipationRequest = Omit<ParticipationRequest, 'id' | 'email' | 'status' | 'updated_by' | 'created_at' | 'updated_at'> & {

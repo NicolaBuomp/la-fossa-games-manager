@@ -95,6 +95,8 @@ export class RegistrationsService {
         name: tournament.name,
         sport: tournament.sport,
         fee: tournament.fee ?? 0,
+        status: "registrations_open",
+        public_status: "registrations_open",
       })),
       { onConflict: "code", ignoreDuplicates: true },
     );
@@ -108,6 +110,9 @@ export class RegistrationsService {
       ...tournament,
       sport: tournament.sport ?? "altro",
       fee: Number(tournament.fee || 0),
+      status: tournament.status ?? "registrations_open",
+      public_status: tournament.public_status ?? "registrations_open",
+      published_at: tournament.published_at ?? null,
       tournament_teams: [...(tournament.tournament_teams ?? [])]
         .sort((a, b) => a.name.localeCompare(b.name, "it"))
         .map((team) => ({
