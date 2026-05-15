@@ -9,7 +9,10 @@ import {
   signal,
 } from "@angular/core";
 import { FormsModule } from "@angular/forms";
-import { SPONSOR_ASSETS } from "../../core/generated/sponsor-assets";
+import {
+  SPONSOR_ASSETS,
+  SponsorAsset,
+} from "../../core/generated/sponsor-assets";
 import { PublicParticipationService } from "../../core/services/public-participation.service";
 import { SnackbarService } from "../../core/services/snackbar.service";
 import { PublicTournament } from "../../core/types/models";
@@ -838,9 +841,25 @@ type Countdown = {
                 </p>
               </div>
 
-              @if (sponsorsByTier.gold.length) {
+              @if (mainSponsors.length) {
+                <div
+                  class="mb-5 rounded-lg border border-accent/20 bg-accent/[0.06] p-4 text-center sm:mb-6 sm:p-5"
+                >
+                  <p
+                    class="text-xs font-black uppercase tracking-[0.24em] text-accent"
+                  >
+                    Sponsor Main
+                  </p>
+                  <p
+                    class="mt-2 max-w-2xl text-sm font-semibold leading-6 text-white/72 sm:mx-auto"
+                  >
+                    Qui trovi le aziende che accompagnano La Fossa Games con la
+                    presenza piu forte e visibile, prima e durante tutto
+                    l'evento.
+                  </p>
+                </div>
                 <div class="flex flex-wrap justify-center gap-8">
-                  @for (logo of sponsorsByTier.gold; track logo.src) {
+                  @for (logo of mainSponsors; track logo.src) {
                     <div
                       class="sponsor-logo-tiered flex h-36 w-36 shrink-0 items-center justify-center rounded-lg border border-white/15 bg-white p-3 shadow-2xl sm:h-44 sm:w-44 sm:p-4 lg:h-52 lg:w-52"
                     >
@@ -855,23 +874,41 @@ type Countdown = {
                 </div>
               }
 
-              @if (sponsorsByTier.others.length) {
-                @if (sponsorsByTier.gold.length) {
+              @if (baseSponsors.length) {
+                @if (mainSponsors.length) {
                   <hr class="my-8 border-white/10" />
                 }
-                <div class="flex flex-wrap justify-center gap-4">
-                  @for (logo of sponsorsByTier.others; track logo.src) {
-                    <div
-                      class="sponsor-logo-tiered flex h-20 w-20 shrink-0 items-center justify-center rounded-md border border-white/10 bg-white p-2 shadow-lg sm:h-24 sm:w-24 lg:h-28 lg:w-28"
+                <div
+                  class="rounded-lg border border-white/10 bg-black/20 p-4 sm:p-5"
+                >
+                  <div
+                    class="mb-4 flex items-center justify-between gap-3 border-b border-white/10 pb-3"
+                  >
+                    <p
+                      class="text-xs font-black uppercase tracking-[0.24em] text-white/45"
                     >
-                      <img
-                        [src]="logo.src"
-                        [alt]="logo.name"
-                        class="max-h-full max-w-full object-contain"
-                        loading="lazy"
-                      />
-                    </div>
-                  }
+                      Sponsor Base
+                    </p>
+                    <p
+                      class="text-sm font-black uppercase tracking-[0.16em] text-accent"
+                    >
+                      Presenza diffusa
+                    </p>
+                  </div>
+                  <div class="flex flex-wrap justify-center gap-4">
+                    @for (logo of baseSponsors; track logo.src) {
+                      <div
+                        class="sponsor-logo-tiered flex h-20 w-20 shrink-0 items-center justify-center rounded-md border border-white/10 bg-white p-2 shadow-lg sm:h-24 sm:w-24 lg:h-28 lg:w-28"
+                      >
+                        <img
+                          [src]="logo.src"
+                          [alt]="logo.name"
+                          class="max-h-full max-w-full object-contain"
+                          loading="lazy"
+                        />
+                      </div>
+                    }
+                  </div>
                 </div>
               }
             </div>
@@ -1093,7 +1130,9 @@ type Countdown = {
               <div class="mt-4 grid gap-3 text-sm font-semibold text-white/64">
                 <span>{{ eventAddress }}</span>
                 <span>{{ eventDateRange }}</span>
-                <span class="font-black uppercase tracking-[0.14em] text-accent">
+                <span
+                  class="font-black uppercase tracking-[0.14em] text-accent"
+                >
                   Richieste aperte
                 </span>
               </div>
@@ -1429,10 +1468,12 @@ export class LandingComponent implements OnInit, OnDestroy, AfterViewInit {
       ],
     },
   ];
-  protected readonly sponsorsByTier = {
-    gold: SPONSOR_ASSETS.filter((s) => s.category === "gold"),
-    others: SPONSOR_ASSETS.filter((s) => s.category !== "gold"),
-  };
+  protected readonly mainSponsors = SPONSOR_ASSETS.filter(
+    (sponsor) => sponsor.category === "gold",
+  );
+  protected readonly baseSponsors: SponsorAsset[] = SPONSOR_ASSETS.filter(
+    (sponsor) => sponsor.category !== "gold",
+  );
   protected readonly hasSponsorLogos = SPONSOR_ASSETS.length > 0;
 
   async loadTournaments(): Promise<void> {
