@@ -38,7 +38,6 @@ export const routes: Routes = [
       },
       {
         path: "expenses",
-        canActivate: [adminGuard],
         loadComponent: () =>
           import("./features/expenses/expenses.component").then(
             (m) => m.ExpensesComponent,
@@ -54,7 +53,6 @@ export const routes: Routes = [
       },
       {
         path: "sponsors",
-        canActivate: [adminGuard],
         loadComponent: () =>
           import("./features/sponsors/sponsors.component").then(
             (m) => m.SponsorsComponent,

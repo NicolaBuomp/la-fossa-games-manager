@@ -6,10 +6,15 @@ import { ProfileService } from "../../core/services/profile.service";
 import { RequestBadgesService } from "../../core/services/request-badges.service";
 import { SnackbarService } from "../../core/services/snackbar.service";
 import { SponsorsService } from "../../core/services/sponsors.service";
-import { SPONSOR_STATUSES } from "../../core/types/constants";
+import {
+  PAYMENT_METHODS,
+  SPONSOR_CATEGORIES,
+  SPONSOR_STATUSES,
+} from "../../core/types/constants";
 import {
   InsertSponsor,
   Sponsor,
+  SponsorCategory,
   SponsorStatus,
   SponsorType,
 } from "../../core/types/models";
@@ -29,7 +34,7 @@ import {
   StatusFilterPillsComponent,
 } from "../../shared/components/status-filter-pills.component";
 
-type SponsorForm = InsertSponsor & { withoutValue: boolean };
+type SponsorForm = InsertSponsor & { withoutPromisedAmount: boolean };
 
 @Component({
   standalone: true,
@@ -78,7 +83,7 @@ type SponsorForm = InsertSponsor & { withoutValue: boolean };
         (filterChange)="setStatusFilter($event)"
       />
       <lfg-kpi-panel title="KPI sponsor" storageKey="sponsors">
-        <section class="grid gap-3 sm:grid-cols-3">
+        <section class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <lfg-summary-card
             label="Da contattare"
             [value]="String(contactTotal())"
@@ -92,10 +97,16 @@ type SponsorForm = InsertSponsor & { withoutValue: boolean };
             hint="Sponsor da seguire"
           />
           <lfg-summary-card
-            label="Confermato/pagato"
-            [value]="eur(confirmedTotal())"
+            label="Promesso"
+            [value]="eur(promisedTotal())"
             tone="income"
-            [hint]="confirmedPaidCount() + ' sponsor'"
+            [hint]="confirmedPaidCount() + ' sponsor confermati/pagati'"
+          />
+          <lfg-summary-card
+            label="Incassato"
+            [value]="eur(receivedTotal())"
+            tone="income"
+            hint="Importi già ricevuti"
           />
         </section>
       </lfg-kpi-panel>
@@ -179,12 +190,22 @@ type SponsorForm = InsertSponsor & { withoutValue: boolean };
                 <div class="text-right">
                   @if (!compactView()) {
                     <p class="text-[10px] font-bold uppercase text-muted">
-                      {{ item.value > 0 ? "Valore" : "Importo assente" }}
+                      {{ item.promised_amount > 0 ? "Promesso" : "Importo assente" }}
                     </p>
                   }
                   <p class="font-black" [class.text-sm]="compactView()">
-                    {{ sponsorValueLabel(item) }}
+                    {{ promisedAmountLabel(item) }}
                   </p>
+                  @if (!compactView() && item.received_amount > 0) {
+                    <p class="mt-1 text-xs font-bold text-income">
+                      Incassato {{ eur(item.received_amount) }}
+                    </p>
+                  }
+                  @if (!compactView() && item.promised_amount > item.received_amount) {
+                    <p class="mt-1 text-xs font-semibold text-muted">
+                      Residuo {{ eur(item.promised_amount - item.received_amount) }}
+                    </p>
+                  }
                 </div>
               </div>
               <div
@@ -199,7 +220,11 @@ type SponsorForm = InsertSponsor & { withoutValue: boolean };
                 @if (!compactView()) {
                   <span
                     class="rounded-full bg-surface-muted px-2.5 py-1 text-[10px] font-bold uppercase"
-                    >{{ sponsorTypeLabel(item.type) }}</span
+                    >{{ categoryLabel(item.category) }}</span
+                  >
+                  <span
+                    class="rounded-full bg-surface-muted px-2.5 py-1 text-[10px] font-bold uppercase"
+                    >{{ item.payment_method || sponsorTypeLabel(item.type) }}</span
                   >
                 }
               </div>
@@ -308,21 +333,37 @@ export class SponsorsComponent implements OnInit {
     { name: "contact_name", label: "Referente", type: "text" },
     { name: "contact_info", label: "Contatto", type: "text" },
     {
-      name: "value",
-      label: "Importo/valore",
+      name: "category",
+      label: "Categoria",
+      type: "select",
+      options: SPONSOR_CATEGORIES.map((category) => ({
+        label: category.label,
+        value: category.id,
+      })),
+    },
+    {
+      name: "promised_amount",
+      label: "Importo promesso",
       type: "number",
       min: 0,
       step: 0.01,
-      disabled: () => this.form.withoutValue,
+      disabled: () => this.form.withoutPromisedAmount,
     },
     {
-      name: "type",
-      label: "Metodo",
+      name: "received_amount",
+      label: "Importo ricevuto",
+      type: "number",
+      min: 0,
+      step: 0.01,
+    },
+    {
+      name: "payment_method",
+      label: "Metodo pagamento",
       type: "select",
-      options: [
-        { label: "Cash", value: "cash" },
-        { label: "Bonifico", value: "bonifico" },
-      ],
+      options: PAYMENT_METHODS.map((method) => ({
+        label: method,
+        value: method,
+      })),
     },
     {
       name: "status",
@@ -334,7 +375,7 @@ export class SponsorsComponent implements OnInit {
       })),
     },
     {
-      name: "withoutValue",
+      name: "withoutPromisedAmount",
       label: "Sponsor senza importo per ora",
       type: "checkbox",
       help: "Usalo per contatti, lead e trattative da richiamare: resta tracciato ma non entra nei totali economici.",
@@ -359,7 +400,9 @@ export class SponsorsComponent implements OnInit {
       const items = await this.service.list();
       this.items.set(items);
       this.userNames.set(
-        await this.profiles.displayNames(items.map((item) => item.created_by)),
+        await this.profiles.displayNames(
+          items.flatMap((item) => [item.created_by, item.responsible_user_id]),
+        ),
       );
       await this.badges.refresh();
     } catch (e) {
@@ -372,14 +415,16 @@ export class SponsorsComponent implements OnInit {
     this.error.set("");
     this.editing.set(null);
     this.form = this.emptyForm();
-    this.form.withoutValue = false;
+    this.form.withoutPromisedAmount = false;
     this.modalOpen.set(true);
   }
 
   newLead(): void {
     this.newItem();
-    this.form.withoutValue = true;
+    this.form.withoutPromisedAmount = true;
     this.form.value = 0;
+    this.form.promised_amount = 0;
+    this.form.received_amount = 0;
     this.form.status = "contattato";
     this.form.notes = "Lead sponsor da ricontattare.";
   }
@@ -389,14 +434,21 @@ export class SponsorsComponent implements OnInit {
     this.editing.set(item);
     this.form = {
       company_name: item.company_name,
+      category: item.category ?? "bronzo",
       contact_name: item.contact_name,
       contact_info: item.contact_info,
-      value: item.value,
       type: item.type,
+      value: item.value,
+      promised_amount: Number(item.promised_amount ?? item.value ?? 0),
+      received_amount: Number(
+        item.received_amount ?? (item.status === "pagato" ? item.value : 0),
+      ),
+      payment_method: item.payment_method ?? this.sponsorTypeLabel(item.type),
+      responsible_user_id: item.responsible_user_id,
       status: item.status,
       deliverables: item.deliverables,
       notes: item.notes,
-      withoutValue: Number(item.value || 0) === 0,
+      withoutPromisedAmount: Number(item.promised_amount ?? item.value ?? 0) === 0,
     };
     this.modalOpen.set(true);
   }
@@ -406,10 +458,19 @@ export class SponsorsComponent implements OnInit {
     this.saving.set(true);
     this.error.set("");
     try {
-      const { withoutValue, ...form } = this.form;
+      const { withoutPromisedAmount, ...form } = this.form;
+      const promisedAmount = withoutPromisedAmount
+        ? 0
+        : Number(form.promised_amount || 0);
+      const receivedAmount = Number(form.received_amount || 0);
       const payload = {
         ...form,
-        value: withoutValue ? 0 : Number(form.value || 0),
+        promised_amount: promisedAmount,
+        received_amount: receivedAmount,
+        value: promisedAmount,
+        type: this.sponsorTypeForMethod(form.payment_method),
+        responsible_user_id:
+          form.responsible_user_id || this.auth.profile()?.id || null,
       };
       const current = this.editing();
       if (current) await this.service.update(current.id, payload);
@@ -427,7 +488,11 @@ export class SponsorsComponent implements OnInit {
     if (this.updatingSponsorId()) return;
     this.updatingSponsorId.set(item.id);
     try {
-      await this.service.update(item.id, { status });
+      const payload: Partial<InsertSponsor> = { status };
+      if (status === "pagato" && Number(item.received_amount || 0) === 0) {
+        payload.received_amount = Number(item.promised_amount || item.value || 0);
+      }
+      await this.service.update(item.id, payload);
       await this.load();
     } catch (e) {
       this.setError(this.message(e));
@@ -467,10 +532,16 @@ export class SponsorsComponent implements OnInit {
     return this.items().filter((item) => item.status === "in_trattativa")
       .length;
   }
-  confirmedTotal(): number {
+  promisedTotal(): number {
     return this.items()
       .filter((i) => i.status === "confermato" || i.status === "pagato")
-      .reduce((s, i) => s + Number(i.value || 0), 0);
+      .reduce((s, i) => s + Number(i.promised_amount ?? i.value ?? 0), 0);
+  }
+  receivedTotal(): number {
+    return this.items().reduce(
+      (s, i) => s + Number(i.received_amount || 0),
+      0,
+    );
   }
   confirmedPaidCount(): number {
     return this.items().filter(
@@ -499,9 +570,16 @@ export class SponsorsComponent implements OnInit {
   sponsorTypeLabel(type: SponsorType): string {
     return type === "bonifico" ? "Bonifico" : "Cash";
   }
-  sponsorValueLabel(item: Sponsor): string {
-    return Number(item.value || 0) > 0
-      ? this.eur(item.value)
+  sponsorTypeForMethod(method: string | null): SponsorType {
+    return method === "Bonifico" ? "bonifico" : "cash";
+  }
+  categoryLabel(category: SponsorCategory): string {
+    return SPONSOR_CATEGORIES.find((item) => item.id === category)?.label ?? category;
+  }
+  promisedAmountLabel(item: Sponsor): string {
+    const amount = Number(item.promised_amount ?? item.value ?? 0);
+    return amount > 0
+      ? this.eur(amount)
       : "Nessun importo";
   }
   eur(value: number): string {
@@ -522,18 +600,26 @@ export class SponsorsComponent implements OnInit {
   emptyForm(): SponsorForm {
     return {
       company_name: "",
+      category: "bronzo",
       contact_name: "",
       contact_info: "",
       type: "cash" as SponsorType,
       value: 0,
+      promised_amount: 0,
+      received_amount: 0,
+      payment_method: PAYMENT_METHODS[0],
+      responsible_user_id: null,
       status: "contattato",
       deliverables: "",
       notes: "",
-      withoutValue: true,
+      withoutPromisedAmount: true,
     };
   }
   syncValueMode(): void {
-    if (this.form.withoutValue) this.form.value = 0;
+    if (this.form.withoutPromisedAmount) {
+      this.form.promised_amount = 0;
+      this.form.value = 0;
+    }
   }
   private message(error: unknown): string {
     return error instanceof Error ? error.message : "Operazione non riuscita.";

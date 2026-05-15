@@ -308,13 +308,13 @@ export class DashboardComponent implements OnInit {
   sponsorConfirmed(): number {
     return this.sponsors()
       .filter((item) => item.status === "confermato")
-      .reduce((sum, item) => sum + Number(item.value || 0), 0);
+      .reduce((sum, item) => sum + Number(item.promised_amount ?? item.value ?? 0), 0);
   }
 
   sponsorNegotiating(): number {
     return this.sponsors()
       .filter((item) => item.status === "in_trattativa")
-      .reduce((sum, item) => sum + Number(item.value || 0), 0);
+      .reduce((sum, item) => sum + Number(item.promised_amount ?? item.value ?? 0), 0);
   }
 
   probableBalance(): number {
@@ -327,9 +327,10 @@ export class DashboardComponent implements OnInit {
   }
 
   sponsorPaid(): number {
-    return this.sponsors()
-      .filter((item) => item.status === "pagato")
-      .reduce((sum, item) => sum + Number(item.value || 0), 0);
+    return this.sponsors().reduce(
+      (sum, item) => sum + Number(item.received_amount || 0),
+      0,
+    );
   }
 
   sponsorPaidCount(): number {

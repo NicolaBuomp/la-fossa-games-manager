@@ -295,7 +295,6 @@ export class ShellComponent implements OnInit {
       path: "/app/expenses",
       label: "Spese",
       short: "-",
-      adminOnly: true,
     },
     {
       path: "/app/incomes",
@@ -315,7 +314,6 @@ export class ShellComponent implements OnInit {
       label: "Sponsor",
       short: "S",
       badge: "sponsorRequests",
-      adminOnly: true,
     },
     { path: "/app/profile", label: "Profilo", short: "P" },
     {

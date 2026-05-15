@@ -1,4 +1,4 @@
-import { SponsorStatus } from "./models";
+import { ExpenseStatus, SponsorCategory, SponsorStatus } from "./models";
 
 export const EXPENSE_CATEGORIES = [
   "Attrezzatura",
@@ -29,6 +29,29 @@ export const PAYMENT_METHODS = [
   "POS/Carta",
   "PayPal",
   "Altro",
+];
+
+export const EXPENSE_STATUSES: Array<{
+  id: ExpenseStatus;
+  label: string;
+  className: string;
+}> = [
+  { id: "pagata", label: "Pagata", className: "state-success" },
+  {
+    id: "da_rimborsare",
+    label: "Da rimborsare",
+    className: "state-warning",
+  },
+  { id: "rimborsata", label: "Rimborsata", className: "state-info" },
+];
+
+export const SPONSOR_CATEGORIES: Array<{
+  id: SponsorCategory;
+  label: string;
+}> = [
+  { id: "bronzo", label: "Bronzo" },
+  { id: "silver", label: "Silver" },
+  { id: "gold", label: "Gold" },
 ];
 
 export const SPONSOR_STATUSES: Array<{

@@ -6,14 +6,16 @@ import { ProfileService } from "../../core/services/profile.service";
 import { SnackbarService } from "../../core/services/snackbar.service";
 import {
   EXPENSE_CATEGORIES,
+  EXPENSE_STATUSES,
   PAYMENT_METHODS,
 } from "../../core/types/constants";
-import { Expense, InsertExpense, Profile } from "../../core/types/models";
+import { Expense, ExpenseStatus, InsertExpense, Profile } from "../../core/types/models";
 import {
   ConfirmModalComponent,
   EmptyStateComponent,
   KpiPanelComponent,
   SummaryCardComponent,
+  StatusBadgeComponent,
 } from "../../shared/components/ui.component";
 import {
   CrudFormField,
@@ -26,6 +28,7 @@ import {
     EmptyStateComponent,
     KpiPanelComponent,
     SummaryCardComponent,
+    StatusBadgeComponent,
     ConfirmModalComponent,
     CrudFormModalComponent,
   ],
@@ -100,6 +103,12 @@ import {
                       · da {{ item.paid_by }}
                     }
                   </p>
+                  <div class="mt-2">
+                    <lfg-status-badge
+                      [label]="statusLabel(item.status)"
+                      [className]="statusClass(item.status)"
+                    />
+                  </div>
                   <p class="mt-1 text-xs font-semibold text-muted">
                     {{ insertMeta(item) }}
                   </p>
@@ -167,6 +176,7 @@ export class ExpensesComponent implements OnInit {
   confirmMessage = signal("");
   private readonly snackbar = inject(SnackbarService);
   categories = EXPENSE_CATEGORIES;
+  statuses = EXPENSE_STATUSES;
   methods = PAYMENT_METHODS;
   form: InsertExpense = this.emptyForm();
   formFields = computed<CrudFormField[]>(() => [
@@ -187,6 +197,15 @@ export class ExpensesComponent implements OnInit {
       options: this.categories.map((category) => ({
         label: category,
         value: category,
+      })),
+    },
+    {
+      name: "status",
+      label: "Stato",
+      type: "select",
+      options: this.statuses.map((status) => ({
+        label: status.label,
+        value: status.id,
       })),
     },
     {
@@ -256,6 +275,7 @@ export class ExpensesComponent implements OnInit {
       description: item.description,
       category: item.category,
       amount: item.amount,
+      status: item.status,
       paid_by: item.paid_by,
       payment_method: item.payment_method,
       notes: item.notes,
@@ -318,6 +338,12 @@ export class ExpensesComponent implements OnInit {
   average(): number {
     return this.items().length ? this.total() / this.items().length : 0;
   }
+  statusLabel(status: ExpenseStatus): string {
+    return this.statuses.find((item) => item.id === status)?.label ?? status;
+  }
+  statusClass(status: ExpenseStatus): string {
+    return this.statuses.find((item) => item.id === status)?.className ?? "";
+  }
   eur(value: number): string {
     return new Intl.NumberFormat("it-IT", {
       style: "currency",
@@ -345,6 +371,7 @@ export class ExpensesComponent implements OnInit {
       description: "",
       category: EXPENSE_CATEGORIES[0],
       amount: 0,
+      status: "pagata",
       paid_by: "",
       payment_method: PAYMENT_METHODS[0],
       notes: "",

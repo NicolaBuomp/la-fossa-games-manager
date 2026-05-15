@@ -1,6 +1,8 @@
 export type UserRole = 'staff' | 'admin';
 export type SponsorStatus = 'contattato' | 'in_trattativa' | 'confermato' | 'pagato';
 export type SponsorType = 'cash' | 'bonifico';
+export type SponsorCategory = 'bronzo' | 'silver' | 'gold';
+export type ExpenseStatus = 'pagata' | 'da_rimborsare' | 'rimborsata';
 export type TournamentSport = 'calcio' | 'pallavolo' | 'altro';
 export type ParticipantGender = 'uomo' | 'donna';
 
@@ -40,6 +42,7 @@ export interface Expense {
   description: string;
   category: string;
   amount: number;
+  status: ExpenseStatus;
   paid_by: string | null;
   payment_method: string | null;
   notes: string | null;
@@ -67,10 +70,15 @@ export interface Income {
 export interface Sponsor {
   id: string;
   company_name: string;
+  category: SponsorCategory;
   contact_name: string | null;
   contact_info: string | null;
   type: SponsorType;
   value: number;
+  promised_amount: number;
+  received_amount: number;
+  payment_method: string | null;
+  responsible_user_id: string | null;
   status: SponsorStatus;
   deliverables: string | null;
   notes: string | null;
