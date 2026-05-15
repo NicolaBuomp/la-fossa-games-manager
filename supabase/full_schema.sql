@@ -2353,7 +2353,7 @@ CREATE TABLE public.participation_requests (
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
     CONSTRAINT participation_requests_consents_check CHECK ((privacy_accepted AND whatsapp_accepted AND rules_accepted)),
     CONSTRAINT participation_requests_email_check CHECK (((email IS NULL) OR (email ~* '^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$'::text))),
-    CONSTRAINT participation_requests_status_check CHECK ((status = ANY (ARRAY['nuova'::text, 'in_gestione'::text, 'contattata'::text, 'archiviata'::text])))
+    CONSTRAINT participation_requests_status_check CHECK ((status = ANY (ARRAY['nuova'::text, 'in_gestione'::text, 'contattata'::text, 'archiviata'::text, 'trasferita'::text])))
 );
 
 
