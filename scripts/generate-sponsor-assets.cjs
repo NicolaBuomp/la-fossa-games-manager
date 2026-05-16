@@ -23,6 +23,7 @@ const imageExtensions = new Set([
  */
 const CATEGORIES = [
   { folder: "main", category: "gold" },
+  { folder: "medium", category: "silver" },
   { folder: "gold", category: "gold" },
   { folder: "silver", category: "silver" },
   { folder: "base", category: "bronzo" },

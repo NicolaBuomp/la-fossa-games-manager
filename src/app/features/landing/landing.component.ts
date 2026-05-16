@@ -133,6 +133,19 @@ type PublicMatchGroup = {
       .delay-3 {
         animation-delay: 320ms;
       }
+      @keyframes sponsorPulse {
+        0% {
+          opacity: 0;
+          transform: scale(0.985);
+        }
+        45% {
+          opacity: 0.5;
+        }
+        100% {
+          opacity: 0;
+          transform: scale(1.02);
+        }
+      }
       .sponsor-logo-card {
         position: relative;
         overflow: hidden;
@@ -141,6 +154,15 @@ type PublicMatchGroup = {
           border-color 220ms ease,
           background-color 220ms ease,
           box-shadow 220ms ease;
+      }
+      .sponsor-logo-card::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        border: 1px solid rgba(255, 212, 0, 0.55);
+        opacity: 0;
+        pointer-events: none;
       }
       .sponsor-logo-card::after {
         content: "";
@@ -160,9 +182,7 @@ type PublicMatchGroup = {
       }
       .sponsor-logo-card img {
         pointer-events: none;
-        transition:
-          transform 260ms cubic-bezier(0.22, 1, 0.36, 1),
-          filter 220ms ease;
+        transition: filter 220ms ease;
       }
       @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
         .hero-parallax-glow,
@@ -176,13 +196,16 @@ type PublicMatchGroup = {
           box-shadow: 0 18px 44px rgba(0, 0, 0, 0.28);
           border-color: rgba(255, 212, 0, 0.35);
         }
+        .sponsor-logo-card:hover::before {
+          animation: sponsorPulse 560ms cubic-bezier(0.22, 1, 0.36, 1);
+        }
         .sponsor-logo-card:hover::after {
           opacity: 0.8;
           transform: scaleX(1);
         }
         .sponsor-logo-card:hover img {
-          filter: saturate(1.04) contrast(1.03);
-          transform: scale(1.035);
+          filter: saturate(1.06) contrast(1.04)
+            drop-shadow(0 8px 14px rgba(10, 10, 10, 0.18));
         }
         .card-lift {
           transition:
@@ -1019,18 +1042,22 @@ type PublicMatchGroup = {
                       >
                         <span class="text-[#0f3d2e]">Main sponsor</span>
                       </div>
-                      <img
-                        [src]="logo.src"
-                        [alt]="logo.name"
-                        class="mx-auto my-5 max-h-48 max-w-full object-contain sm:max-h-56 lg:max-h-64"
-                        loading="lazy"
-                      />
+                      <div
+                        class="my-3 flex h-48 w-full items-center justify-center sm:h-56 lg:h-64"
+                      >
+                        <img
+                          [src]="logo.src"
+                          [alt]="logo.name"
+                          class="h-full w-full scale-110 object-contain object-center sm:scale-[1.15]"
+                          loading="lazy"
+                        />
+                      </div>
                     </article>
                   }
                 </div>
               }
 
-              @if (baseSponsors.length) {
+              @if (mediumSponsors.length) {
                 <div class="mt-6">
                   <div
                     class="mb-3 flex items-center justify-between gap-3 text-xs font-black uppercase tracking-[0.22em]"
@@ -1038,16 +1065,48 @@ type PublicMatchGroup = {
                     <p class="text-white/42">Altri Sponsor</p>
                   </div>
                   <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    @for (logo of baseSponsors; track logo.src) {
+                    @for (logo of mediumSponsors; track logo.src) {
                       <article
                         class="sponsor-logo-card flex min-h-44 items-center justify-center rounded-md border border-white/10 bg-white px-4 py-5 sm:min-h-48 lg:min-h-52"
                       >
-                        <img
-                          [src]="logo.src"
-                          [alt]="logo.name"
-                          class="max-h-40 w-full object-contain sm:max-h-44 lg:max-h-48"
-                          loading="lazy"
-                        />
+                        <div
+                          class="flex h-36 w-full items-center justify-center sm:h-40 lg:h-44"
+                        >
+                          <img
+                            [src]="logo.src"
+                            [alt]="logo.name"
+                            class="h-full w-full scale-125 object-contain object-center"
+                            loading="lazy"
+                          />
+                        </div>
+                      </article>
+                    }
+                  </div>
+                </div>
+              }
+
+              @if (baseSponsors.length) {
+                <div class="mt-5">
+                  <div
+                    class="mb-2 flex items-center justify-between gap-3 text-xs font-black uppercase tracking-[0.22em]"
+                  >
+                    <p class="text-white/35">Sponsor base</p>
+                  </div>
+                  <div class="grid gap-3 sm:grid-cols-3 lg:grid-cols-4">
+                    @for (logo of baseSponsors; track logo.src) {
+                      <article
+                        class="sponsor-logo-card flex min-h-36 items-center justify-center rounded-md border border-white/10 bg-white px-3 py-3 sm:min-h-40"
+                      >
+                        <div
+                          class="flex h-28 w-full items-center justify-center sm:h-32"
+                        >
+                          <img
+                            [src]="logo.src"
+                            [alt]="logo.name"
+                            class="h-full w-full scale-[1.35] object-contain object-center"
+                            loading="lazy"
+                          />
+                        </div>
                       </article>
                     }
                   </div>
@@ -1653,11 +1712,16 @@ export class LandingComponent implements OnInit, OnDestroy, AfterViewInit {
       ],
     },
   ];
-  protected readonly mainSponsors = SPONSOR_ASSETS.filter(
-    (sponsor) => sponsor.category === "gold",
+  protected readonly mainSponsors = SPONSOR_ASSETS.filter((sponsor) =>
+    sponsor.src.startsWith("/assets/sponsor/main/"),
+  );
+  protected readonly mediumSponsors: SponsorAsset[] = SPONSOR_ASSETS.filter(
+    (sponsor) =>
+      !sponsor.src.startsWith("/assets/sponsor/main/") &&
+      !sponsor.src.startsWith("/assets/sponsor/base/"),
   );
   protected readonly baseSponsors: SponsorAsset[] = SPONSOR_ASSETS.filter(
-    (sponsor) => sponsor.category !== "gold",
+    (sponsor) => sponsor.src.startsWith("/assets/sponsor/base/"),
   );
   protected readonly hasSponsorLogos = SPONSOR_ASSETS.length > 0;
 
