@@ -184,6 +184,51 @@ type PublicMatchGroup = {
         pointer-events: none;
         transition: filter 220ms ease;
       }
+      .sponsor-carousel {
+        position: relative;
+        overflow: hidden;
+        mask-image: linear-gradient(
+          to right,
+          transparent 0,
+          rgba(0, 0, 0, 1) 5%,
+          rgba(0, 0, 0, 1) 95%,
+          transparent 100%
+        );
+      }
+      .sponsor-carousel-track {
+        --sponsor-gap: 0.9rem;
+        display: flex;
+        width: max-content;
+        gap: var(--sponsor-gap);
+        padding-right: var(--sponsor-gap);
+        animation: sponsorTicker var(--ticker-duration, 34s) linear infinite;
+      }
+      .sponsor-carousel-track--main {
+        --ticker-duration: 42s;
+      }
+      .sponsor-carousel-track--medium {
+        --ticker-duration: 52s;
+      }
+      .sponsor-carousel-track--base {
+        --ticker-duration: 62s;
+      }
+      .sponsor-logo-card--main {
+        width: min(34vw, 23rem);
+      }
+      .sponsor-logo-card--medium {
+        width: min(24vw, 15.5rem);
+      }
+      .sponsor-logo-card--base {
+        width: min(20vw, 13rem);
+      }
+      @keyframes sponsorTicker {
+        from {
+          transform: translate3d(0, 0, 0);
+        }
+        to {
+          transform: translate3d(-50%, 0, 0);
+        }
+      }
       @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
         .hero-parallax-glow,
         .hero-parallax-content {
@@ -206,6 +251,12 @@ type PublicMatchGroup = {
         .sponsor-logo-card:hover img {
           filter: saturate(1.06) contrast(1.04)
             drop-shadow(0 8px 14px rgba(10, 10, 10, 0.18));
+        }
+        .sponsor-carousel:hover .sponsor-carousel-track {
+          animation-play-state: paused;
+        }
+        .sponsor-carousel:focus-within .sponsor-carousel-track {
+          animation-play-state: paused;
         }
         .card-lift {
           transition:
@@ -231,6 +282,14 @@ type PublicMatchGroup = {
         .hero-title {
           animation: none;
           background-position: center;
+        }
+        .sponsor-carousel {
+          mask-image: none;
+          overflow-x: auto;
+          scrollbar-width: thin;
+        }
+        .sponsor-carousel-track {
+          animation: none;
         }
         .reveal-up {
           opacity: 1;
@@ -984,18 +1043,18 @@ type PublicMatchGroup = {
               <h2
                 class="mt-3 max-w-4xl font-display text-4xl uppercase leading-none text-accent sm:text-6xl"
               >
-                Tipologie sponsor disponibili.
+                Partnership pensate per farsi notare.
               </h2>
             </div>
             <div class="max-w-xl">
               <p class="text-base font-semibold leading-7 text-white/68">
-                Tre livelli di presenza per aziende e attività che vogliono
-                sostenere La Fossa Games e comparire nei momenti chiave
-                dell'evento.
+                Un impianto chiaro, tre livelli e una presenza visiva curata: il
+                tuo brand entra nel ritmo dell'evento con spazio reale, online e
+                sul campo.
               </p>
               <a
                 href="#partecipa"
-                class="mt-5 inline-flex rounded-md bg-accent px-5 py-3 text-sm font-black uppercase tracking-[0.14em] text-on-accent transition hover:bg-white"
+                class="mt-5 inline-flex min-h-11 items-center rounded-md bg-accent px-5 py-3 text-sm font-black uppercase tracking-[0.14em] text-on-accent transition hover:-translate-y-0.5 hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-[#090909]"
                 (click)="selectSponsorContact($event)"
               >
                 Richiedi informazioni sponsor
@@ -1003,133 +1062,68 @@ type PublicMatchGroup = {
             </div>
           </div>
 
-          @if (hasSponsorLogos) {
-            <div
-              class="mt-12 border-y border-white/10 py-8 sm:py-10"
-              aria-label="Sponsor La Fossa Games"
+          <div class="mt-8 grid grid-cols-3 gap-3 sm:gap-4">
+            <article
+              class="rounded-md border border-accent/30 bg-accent/[0.05] px-3 py-3 sm:px-4"
             >
-              <div
-                class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"
+              <p
+                class="font-display text-3xl leading-none text-accent sm:text-4xl"
               >
-                <div>
-                  <p
-                    class="text-xs font-black uppercase tracking-[0.28em] text-accent"
-                  >
-                    I nostri sponsor
-                  </p>
-                  <h3
-                    class="mt-2 font-display text-3xl uppercase leading-none text-white sm:text-4xl"
-                  >
-                    Partner sul campo.
-                  </h3>
-                </div>
-                <p
-                  class="max-w-md text-sm font-semibold leading-6 text-white/58"
-                >
-                  Presenze ufficiali, ordinate per visibilità e pensate per
-                  restare pulite anche da mobile.
-                </p>
-              </div>
+                3
+              </p>
+              <p
+                class="mt-1 text-[0.68rem] font-black uppercase tracking-[0.18em] text-white/58 sm:text-xs"
+              >
+                Livelli
+              </p>
+            </article>
+            <article
+              class="rounded-md border border-white/10 bg-white/[0.03] px-3 py-3 sm:px-4"
+            >
+              <p
+                class="font-display text-3xl leading-none text-accent sm:text-4xl"
+              >
+                5
+              </p>
+              <p
+                class="mt-1 text-[0.68rem] font-black uppercase tracking-[0.18em] text-white/58 sm:text-xs"
+              >
+                Giorni evento
+              </p>
+            </article>
+            <article
+              class="rounded-md border border-[#10B981]/35 bg-[#10B981]/[0.06] px-3 py-3 sm:px-4"
+            >
+              <p
+                class="font-display text-3xl leading-none text-[#6af0c1] sm:text-4xl"
+              >
+                1
+              </p>
+              <p
+                class="mt-1 text-[0.68rem] font-black uppercase tracking-[0.18em] text-white/58 sm:text-xs"
+              >
+                Community unica
+              </p>
+            </article>
+          </div>
 
-              @if (mainSponsors.length) {
-                <div class="mt-7 grid gap-4">
-                  @for (logo of mainSponsors; track logo.src) {
-                    <article
-                      class="sponsor-logo-card flex min-h-64 flex-col justify-between rounded-md border border-accent/30 bg-white p-5 shadow-[0_22px_60px_rgba(0,0,0,0.22)] sm:min-h-72 sm:p-7 lg:min-h-80"
-                    >
-                      <div
-                        class="flex items-center justify-between gap-4 text-[0.65rem] font-black uppercase tracking-[0.22em] text-black/42"
-                      >
-                        <span class="text-[#0f3d2e]">Main sponsor</span>
-                      </div>
-                      <div
-                        class="my-3 flex h-48 w-full items-center justify-center sm:h-56 lg:h-64"
-                      >
-                        <img
-                          [src]="logo.src"
-                          [alt]="logo.name"
-                          class="h-full w-full scale-110 object-contain object-center sm:scale-[1.15]"
-                          loading="lazy"
-                        />
-                      </div>
-                    </article>
-                  }
-                </div>
-              }
-
-              @if (mediumSponsors.length) {
-                <div class="mt-6">
-                  <div
-                    class="mb-3 flex items-center justify-between gap-3 text-xs font-black uppercase tracking-[0.22em]"
-                  >
-                    <p class="text-white/42">Altri Sponsor</p>
-                  </div>
-                  <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    @for (logo of mediumSponsors; track logo.src) {
-                      <article
-                        class="sponsor-logo-card flex min-h-44 items-center justify-center rounded-md border border-white/10 bg-white px-4 py-5 sm:min-h-48 lg:min-h-52"
-                      >
-                        <div
-                          class="flex h-36 w-full items-center justify-center sm:h-40 lg:h-44"
-                        >
-                          <img
-                            [src]="logo.src"
-                            [alt]="logo.name"
-                            class="h-full w-full scale-125 object-contain object-center"
-                            loading="lazy"
-                          />
-                        </div>
-                      </article>
-                    }
-                  </div>
-                </div>
-              }
-
-              @if (baseSponsors.length) {
-                <div class="mt-5">
-                  <div
-                    class="mb-2 flex items-center justify-between gap-3 text-xs font-black uppercase tracking-[0.22em]"
-                  >
-                    <p class="text-white/35">Sponsor base</p>
-                  </div>
-                  <div class="grid gap-3 sm:grid-cols-3 lg:grid-cols-4">
-                    @for (logo of baseSponsors; track logo.src) {
-                      <article
-                        class="sponsor-logo-card flex min-h-36 items-center justify-center rounded-md border border-white/10 bg-white px-3 py-3 sm:min-h-40"
-                      >
-                        <div
-                          class="flex h-28 w-full items-center justify-center sm:h-32"
-                        >
-                          <img
-                            [src]="logo.src"
-                            [alt]="logo.name"
-                            class="h-full w-full scale-[1.35] object-contain object-center"
-                            loading="lazy"
-                          />
-                        </div>
-                      </article>
-                    }
-                  </div>
-                </div>
-              }
-            </div>
-          }
-
-          <div class="mt-10 grid gap-4 lg:grid-cols-3">
+          <div class="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             @for (tier of sponsorTiers; track tier.name) {
               <article
                 class="card-lift relative rounded-lg border p-5 shadow-2xl transition sm:p-6"
                 [class]="
                   tier.name === 'Gold'
-                    ? 'border-[#ffd400]/50 bg-[#ffd400]/[0.06] ring-1 ring-[#ffd400]/20 shadow-[0_0_48px_rgba(255,212,0,0.10)]'
-                    : 'border-white/10 bg-white/[0.04] hover-border-accent-70'
+                    ? 'border-[#ffd400]/55 bg-[#ffd400]/[0.08] ring-1 ring-[#ffd400]/30 shadow-[0_0_42px_rgba(255,212,0,0.09)] md:col-span-2 lg:col-span-1'
+                    : tier.name === 'Silver'
+                      ? 'border-white/15 bg-white/[0.06]'
+                      : 'border-[#d98945]/30 bg-[#d98945]/[0.06]'
                 "
               >
                 @if (tier.name === "Gold") {
                   <span
                     class="absolute -top-3 left-5 rounded-full bg-[#ffd400] px-3 py-0.5 text-[0.65rem] font-black uppercase tracking-[0.18em] text-black"
                   >
-                    Consigliato
+                    Visibilità massima
                   </span>
                 }
                 <div class="flex items-center gap-4">
@@ -1158,13 +1152,13 @@ type PublicMatchGroup = {
                     ></div>
                   </div>
                 </div>
-                <p class="mt-5 text-sm font-semibold leading-6 text-white/58">
+                <p class="mt-5 text-sm font-semibold leading-6 text-white/70">
                   {{ tier.description }}
                 </p>
                 <ul class="mt-6 grid gap-4">
                   @for (perk of tier.perks; track perk) {
                     <li
-                      class="grid grid-cols-[auto_1fr] gap-3 text-sm font-bold uppercase leading-6 tracking-[0.08em] text-white/82"
+                      class="grid grid-cols-[auto_1fr] gap-3 text-sm font-bold uppercase leading-6 tracking-[0.08em] text-white/88"
                     >
                       <span
                         class="mt-1 h-2.5 w-2.5 rounded-full"
@@ -1176,6 +1170,210 @@ type PublicMatchGroup = {
                 </ul>
               </article>
             }
+          </div>
+
+          @if (hasSponsorLogos) {
+            <div
+              class="mt-12 border-y border-white/10 py-8 sm:py-10"
+              aria-label="Sponsor La Fossa Games"
+            >
+              <div
+                class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"
+              >
+                <div>
+                  <p
+                    class="text-xs font-black uppercase tracking-[0.28em] text-accent"
+                  >
+                    I nostri sponsor
+                  </p>
+                  <h3
+                    class="mt-2 font-display text-3xl uppercase leading-none text-white sm:text-4xl"
+                  >
+                    Partner sul campo.
+                  </h3>
+                </div>
+              </div>
+
+              @if (mainSponsors.length) {
+                <div class="mt-7">
+                  <div
+                    class="mb-3 flex items-center justify-between gap-3 text-xs font-black uppercase tracking-[0.22em]"
+                  >
+                    <p class="text-accent">Main sponsor</p>
+                  </div>
+                  <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:hidden">
+                    @for (logo of mainSponsors; track logo.src) {
+                      <article
+                        class="sponsor-logo-card flex min-h-52 items-center justify-center rounded-md border border-accent/30 bg-white px-5 py-6 shadow-[0_18px_40px_rgba(0,0,0,0.2)]"
+                      >
+                        <div
+                          class="flex h-40 w-full items-center justify-center"
+                        >
+                          <img
+                            [src]="logo.src"
+                            [alt]="logo.name"
+                            class="h-full w-full object-contain object-center"
+                            loading="lazy"
+                          />
+                        </div>
+                      </article>
+                    }
+                  </div>
+                  <div class="hidden lg:block">
+                    <div class="sponsor-carousel">
+                      <div
+                        class="sponsor-carousel-track sponsor-carousel-track--main"
+                      >
+                        @for (
+                          logo of mainSponsorsCarousel;
+                          track logo.src + "-" + $index
+                        ) {
+                          <article
+                            class="sponsor-logo-card sponsor-logo-card--main flex min-h-72 shrink-0 flex-col justify-between rounded-md border border-accent/30 bg-white p-6 shadow-[0_20px_50px_rgba(0,0,0,0.22)]"
+                          >
+                            <div
+                              class="flex items-center justify-between gap-4 text-[0.65rem] font-black uppercase tracking-[0.22em] text-black/42"
+                            >
+                              <span class="text-[#0f3d2e]">Main sponsor</span>
+                            </div>
+                            <div
+                              class="my-3 flex h-56 w-full items-center justify-center"
+                            >
+                              <img
+                                [src]="logo.src"
+                                [alt]="logo.name"
+                                class="h-full w-full scale-110 object-contain object-center"
+                                loading="lazy"
+                              />
+                            </div>
+                          </article>
+                        }
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              }
+
+              @if (mediumSponsors.length) {
+                <div class="mt-6">
+                  <div
+                    class="mb-3 flex items-center justify-between gap-3 text-xs font-black uppercase tracking-[0.22em]"
+                  >
+                    <p class="text-white/42">Altri Sponsor</p>
+                  </div>
+                  <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:hidden">
+                    @for (logo of mediumSponsors; track logo.src) {
+                      <article
+                        class="sponsor-logo-card flex min-h-36 items-center justify-center rounded-md border border-white/10 bg-white px-3 py-4"
+                      >
+                        <div
+                          class="flex h-28 w-full items-center justify-center"
+                        >
+                          <img
+                            [src]="logo.src"
+                            [alt]="logo.name"
+                            class="h-full w-full object-contain object-center"
+                            loading="lazy"
+                          />
+                        </div>
+                      </article>
+                    }
+                  </div>
+                  <div class="hidden lg:block">
+                    <div class="sponsor-carousel">
+                      <div
+                        class="sponsor-carousel-track sponsor-carousel-track--medium"
+                      >
+                        @for (
+                          logo of mediumSponsorsCarousel;
+                          track logo.src + "-" + $index
+                        ) {
+                          <article
+                            class="sponsor-logo-card sponsor-logo-card--medium flex min-h-48 shrink-0 items-center justify-center rounded-md border border-white/10 bg-white px-4 py-5"
+                          >
+                            <div
+                              class="flex h-40 w-full items-center justify-center"
+                            >
+                              <img
+                                [src]="logo.src"
+                                [alt]="logo.name"
+                                class="h-full w-full scale-125 object-contain object-center"
+                                loading="lazy"
+                              />
+                            </div>
+                          </article>
+                        }
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              }
+
+              @if (baseSponsors.length) {
+                <div class="mt-5">
+                  <div
+                    class="mb-2 flex items-center justify-between gap-3 text-xs font-black uppercase tracking-[0.22em]"
+                  >
+                    <p class="text-white/35">Sponsor base</p>
+                  </div>
+                  <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:hidden">
+                    @for (logo of baseSponsors; track logo.src) {
+                      <article
+                        class="sponsor-logo-card flex min-h-28 items-center justify-center rounded-md border border-white/10 bg-white px-2 py-3"
+                      >
+                        <div
+                          class="flex h-20 w-full items-center justify-center"
+                        >
+                          <img
+                            [src]="logo.src"
+                            [alt]="logo.name"
+                            class="h-full w-full object-contain object-center"
+                            loading="lazy"
+                          />
+                        </div>
+                      </article>
+                    }
+                  </div>
+                  <div class="hidden lg:block">
+                    <div class="sponsor-carousel">
+                      <div
+                        class="sponsor-carousel-track sponsor-carousel-track--base"
+                      >
+                        @for (
+                          logo of baseSponsorsCarousel;
+                          track logo.src + "-" + $index
+                        ) {
+                          <article
+                            class="sponsor-logo-card sponsor-logo-card--base flex min-h-36 shrink-0 items-center justify-center rounded-md border border-white/10 bg-white px-3 py-3"
+                          >
+                            <div
+                              class="flex h-28 w-full items-center justify-center"
+                            >
+                              <img
+                                [src]="logo.src"
+                                [alt]="logo.name"
+                                class="h-full w-full scale-[1.35] object-contain object-center"
+                                loading="lazy"
+                              />
+                            </div>
+                          </article>
+                        }
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+
+          <div class="mt-8 flex justify-center lg:justify-end">
+            <a
+              href="#partecipa"
+              class="inline-flex min-h-11 items-center rounded-md border border-accent/40 bg-accent/[0.08] px-5 py-3 text-sm font-black uppercase tracking-[0.14em] text-accent transition hover:-translate-y-0.5 hover:bg-accent hover:text-on-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-[#090909]"
+              (click)="selectSponsorContact($event)"
+            >
+              Diventa sponsor ufficiale
+            </a>
           </div>
         </div>
       </section>
@@ -1723,6 +1921,18 @@ export class LandingComponent implements OnInit, OnDestroy, AfterViewInit {
   protected readonly baseSponsors: SponsorAsset[] = SPONSOR_ASSETS.filter(
     (sponsor) => sponsor.src.startsWith("/assets/sponsor/base/"),
   );
+  protected readonly mainSponsorsCarousel: SponsorAsset[] = [
+    ...this.mainSponsors,
+    ...this.mainSponsors,
+  ];
+  protected readonly mediumSponsorsCarousel: SponsorAsset[] = [
+    ...this.mediumSponsors,
+    ...this.mediumSponsors,
+  ];
+  protected readonly baseSponsorsCarousel: SponsorAsset[] = [
+    ...this.baseSponsors,
+    ...this.baseSponsors,
+  ];
   protected readonly hasSponsorLogos = SPONSOR_ASSETS.length > 0;
 
   async loadTournaments(): Promise<void> {
