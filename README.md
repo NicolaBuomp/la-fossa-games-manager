@@ -69,6 +69,37 @@ npm start
 
 Apri `http://localhost:4200`.
 
+### Gestione Ambienti (Dev / Prod)
+
+Per differenziare il collegamento al database di sviluppo e produzione, puoi creare dei file `.env.dev` e `.env.prod` nella root del progetto:
+
+1. Crea `.env.dev` con le chiavi del DB di test.
+2. Crea `.env.prod` con le chiavi del DB di produzione.
+
+Puoi quindi avviare o buildare l'app usando i seguenti comandi:
+
+- **Sviluppo (con .env.dev):**
+  ```bash
+  npm run start:dev
+  ```
+
+- **Produzione locale (con .env.prod):**
+  ```bash
+  npm run start:prod
+  ```
+
+- **Build per Sviluppo:**
+  ```bash
+  npm run build:dev
+  ```
+
+- **Build per Produzione:**
+  ```bash
+  npm run build:prod
+  ```
+
+Il comando standard `npm start` continuerà a usare `.env` o `.env.local` come fallback.
+
 ## Seed opzionale
 
 Il file `supabase/seed/dev_seed.sql` contiene dati dimostrativi. Usalo solo in sviluppo e dopo aver creato almeno un utente autenticato. Se vuoi promuovere un utente ad admin, modifica la UUID o usa l'email come mostrato sopra.

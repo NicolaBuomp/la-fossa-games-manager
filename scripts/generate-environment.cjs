@@ -8,7 +8,15 @@ const outputPath = path.join(
   "environments",
   "environment.generated.ts",
 );
+
+// Get environment from command line argument, default to empty (standard behavior)
+const mode = process.argv[2]; // e.g. "dev" or "prod"
 const envFiles = [".env", ".env.local"];
+
+if (mode) {
+  // If mode is provided, prioritize .env.[mode]
+  envFiles.unshift(`.env.${mode}`);
+}
 
 function parseEnv(content) {
   return content

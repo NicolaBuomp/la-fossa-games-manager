@@ -4,6 +4,7 @@ dist/
 .angular/
 .env
 .env.local
+.env.*
 src/environments/environment.generated.ts
 .DS_Store
 Thumbs.db
