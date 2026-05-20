@@ -436,7 +436,7 @@ export class SponsorsComponent implements OnInit {
 
   constructor(
     readonly auth: AuthService,
-    private readonly service: SponsorsService,
+    private readonly sponsorService: SponsorsService,
     private readonly exporter: ExportService,
     private readonly profiles: ProfileService,
     private readonly badges: RequestBadgesService,
@@ -449,7 +449,7 @@ export class SponsorsComponent implements OnInit {
   async load(): Promise<void> {
     try {
       const [rawItems, assignableProfiles] = await Promise.all([
-        this.service.list(),
+        this.sponsorService.list(),
         this.loadAssignableProfiles(),
       ]);
       const items = this.visibleSponsors(rawItems);
@@ -539,8 +539,8 @@ export class SponsorsComponent implements OnInit {
           : this.auth.profile()?.id || null,
       };
       const current = this.editing();
-      if (current) await this.service.update(current.id, payload);
-      else await this.service.create(payload);
+      if (current) await this.sponsorService.update(current.id, payload);
+      else await this.sponsorService.create(payload);
       this.modalOpen.set(false);
       await this.load();
     } catch (e) {
@@ -560,7 +560,7 @@ export class SponsorsComponent implements OnInit {
           item.promised_amount || item.value || 0,
         );
       }
-      await this.service.update(item.id, payload);
+      await this.sponsorService.update(item.id, payload);
       await this.load();
     } catch (e) {
       this.setError(this.message(e));
@@ -573,7 +573,7 @@ export class SponsorsComponent implements OnInit {
     this.confirmMessage.set(`Eliminare lo sponsor "${item.company_name}"?`);
     this.confirmPending.set(async () => {
       try {
-        await this.service.remove(item.id);
+        await this.sponsorService.remove(item.id);
         await this.load();
       } catch (e) {
         this.setError(this.message(e));

@@ -71,19 +71,25 @@ Apri `http://localhost:4200`.
 
 ### Gestione Ambienti (Dev / Prod)
 
-Per differenziare il collegamento al database di sviluppo e produzione, puoi creare dei file `.env.dev` e `.env.prod` nella root del progetto:
+Per differenziare il collegamento al database di sviluppo e produzione usando un unico file `.env`:
 
-1. Crea `.env.dev` con le chiavi del DB di test.
-2. Crea `.env.prod` con le chiavi del DB di produzione.
+1. Nel tuo file `.env` (o `.env.local`), definisci le chiavi con i prefissi `DEV` e `PROD`:
+   ```text
+   SUPABASE_DEV_URL=...
+   SUPABASE_DEV_ANON_KEY=...
 
-Puoi quindi avviare o buildare l'app usando i seguenti comandi:
+   SUPABASE_PROD_URL=...
+   SUPABASE_PROD_ANON_KEY=...
+   ```
 
-- **Sviluppo (con .env.dev):**
+2. Avvia o builda l'app usando i comandi dedicati:
+
+- **Sviluppo (usa chiavi _DEV):**
   ```bash
   npm run start:dev
   ```
 
-- **Produzione locale (con .env.prod):**
+- **Produzione locale (usa chiavi _PROD):**
   ```bash
   npm run start:prod
   ```
@@ -98,7 +104,7 @@ Puoi quindi avviare o buildare l'app usando i seguenti comandi:
   npm run build:prod
   ```
 
-Il comando standard `npm start` continuerà a usare `.env` o `.env.local` come fallback.
+Il comando standard `npm start` continuerà a cercare le chiavi standard `SUPABASE_URL` e `SUPABASE_ANON_KEY`.
 
 ## Seed opzionale
 

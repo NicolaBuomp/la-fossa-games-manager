@@ -14,8 +14,8 @@ const mode = process.argv[2]; // e.g. "dev" or "prod"
 const envFiles = [".env", ".env.local"];
 
 if (mode) {
-  // If mode is provided, prioritize .env.[mode]
-  envFiles.unshift(`.env.${mode}`);
+  // If mode is provided, it should have the highest priority
+  envFiles.push(`.env.${mode}`);
 }
 
 function parseEnv(content) {
@@ -47,9 +47,13 @@ function parseEnv(content) {
 const fileValues = envFiles.reduce((values, fileName) => {
   const envPath = path.join(root, fileName);
   if (!fs.existsSync(envPath)) {
+    if (fileName.startsWith(".env.") && fileName !== ".env.local") {
+      console.warn(`[Warning] Environment file ${fileName} not found, skipping.`);
+    }
     return values;
   }
 
+  console.log(`[Info] Loading environment from ${fileName}`);
   return {
     ...values,
     ...parseEnv(fs.readFileSync(envPath, "utf8")),
@@ -58,13 +62,31 @@ const fileValues = envFiles.reduce((values, fileName) => {
 
 const pickValue = (key) => fileValues[key] || process.env[key];
 
-const supabaseUrl = pickValue("SUPABASE_URL");
-const supabaseAnonKey = pickValue("SUPABASE_ANON_KEY");
+let supabaseUrl;
+let supabaseAnonKey;
+
+if (mode === "prod") {
+  console.log("[Info] Using Production keys (SUPABASE_PROD_*)");
+  supabaseUrl = pickValue("SUPABASE_PROD_URL");
+  supabaseAnonKey = pickValue("SUPABASE_PROD_ANON_KEY");
+} else if (mode === "dev") {
+  console.log("[Info] Using Development keys (SUPABASE_DEV_*)");
+  supabaseUrl = pickValue("SUPABASE_DEV_URL");
+  supabaseAnonKey = pickValue("SUPABASE_DEV_ANON_KEY");
+} else {
+  console.log("[Info] Using standard keys (SUPABASE_URL)");
+  supabaseUrl = pickValue("SUPABASE_URL");
+  supabaseAnonKey = pickValue("SUPABASE_ANON_KEY");
+}
 
 if (!supabaseUrl || !supabaseAnonKey) {
+  const required = mode 
+    ? `SUPABASE_${mode.toUpperCase()}_URL and SUPABASE_${mode.toUpperCase()}_ANON_KEY`
+    : "SUPABASE_URL and SUPABASE_ANON_KEY";
+    
   throw new Error(
-    "Missing Supabase keys. " +
-      "Required keys: SUPABASE_URL and SUPABASE_ANON_KEY. " +
+    `Missing Supabase keys for mode "${mode || 'default'}". ` +
+      `Required keys: ${required}. ` +
       `Add them to one of: ${envFiles.join(", ")} or process env.`,
   );
 }
