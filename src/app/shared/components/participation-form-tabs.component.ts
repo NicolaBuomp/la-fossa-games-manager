@@ -24,7 +24,7 @@ export interface ParticipationFormValue {
   template: `
     <form
       class="rounded-lg border border-white/15 bg-black p-5 shadow-2xl sm:p-6"
-      (ngSubmit)="submit.emit()"
+      (ngSubmit)="submitted.emit()"
     >
       <div class="flex flex-wrap items-start justify-between gap-3">
         <div>
@@ -248,7 +248,7 @@ export class ParticipationFormTabsComponent {
     tournament: PublicTournament,
   ) => string;
   @Output() reasonChange = new EventEmitter<ParticipationFormReason>();
-  @Output() submit = new EventEmitter<void>();
+  @Output() submitted = new EventEmitter<void>();
 
   setReason(reason: ParticipationFormReason): void {
     this.form.reason = reason;
