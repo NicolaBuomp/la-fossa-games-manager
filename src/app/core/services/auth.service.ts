@@ -28,8 +28,10 @@ export class AuthService {
     private readonly router: Router
   ) {
     void this.ensureReady();
-    this.supabase.client.auth.onAuthStateChange((_event, session) => {
+    this.supabase.client.auth.onAuthStateChange((event, session) => {
       this.sessionState.set(session);
+      // INITIAL_SESSION is handled by initialize(); TOKEN_REFRESHED doesn't change the user identity.
+      if (event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') return;
       void this.loadProfileForCurrentSession();
     });
   }
