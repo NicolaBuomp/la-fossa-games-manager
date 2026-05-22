@@ -10,16 +10,19 @@ import {
   ParticipationRequest,
   ParticipationRequestNoteWithProfile,
   ParticipationRequestWithTournament,
+  RequestStatusCounts,
 } from "../../core/types/models";
 import {
   DIRECT_TOURNAMENT_CODES,
   DUO_TOURNAMENT_CODES,
   FILTER_ALL,
+  PAGE_SIZE,
   PARTICIPANT_GENDER,
   PARTICIPATION_REQUEST_STATUS,
   PARTICIPATION_REQUEST_STATUSES,
   TOURNAMENT_SPORT,
 } from "../../core/types/constants";
+import { PaginationComponent } from "../../shared/components/pagination.component";
 import {
   ConfirmModalComponent,
   EmptyStateComponent,
@@ -62,6 +65,7 @@ type TransferForm = {
     ModalComponent,
     ConfirmModalComponent,
     StatusFilterPillsComponent,
+    PaginationComponent,
   ],
   template: `
     <section class="space-y-5">
@@ -116,7 +120,7 @@ type TransferForm = {
           placeholder="Cerca per nome o email…"
           class="w-full rounded-lg border border-soft bg-surface px-4 py-2.5 text-sm outline-none placeholder:text-muted"
           [value]="searchQuery()"
-          (input)="searchQuery.set($any($event.target).value)"
+          (input)="onSearchInput($any($event.target).value)"
         />
       </div>
       <lfg-status-filter-pills
@@ -130,22 +134,14 @@ type TransferForm = {
         </p>
       }
 
-      @if (!filteredRequests().length && !loading()) {
+      @if (!requests().length && !loading()) {
         <lfg-empty-state
-          [title]="
-            requests().length
-              ? 'Nessuna richiesta per questo stato'
-              : 'Nessuna richiesta'
-          "
-          [text]="
-            requests().length
-              ? 'Cambia filtro per vedere altre richieste.'
-              : 'Le richieste inviate dal sito pubblico compariranno qui.'
-          "
+          [title]="totalItems() > 0 ? 'Nessuna richiesta per questo stato' : 'Nessuna richiesta'"
+          [text]="totalItems() > 0 ? 'Cambia filtro per vedere altre richieste.' : 'Le richieste inviate dal sito pubblico compariranno qui.'"
         />
       } @else {
         <div class="grid gap-3">
-          @for (request of filteredRequests(); track request.id) {
+          @for (request of requests(); track request.id) {
             <article
               class="rounded-lg border border-soft bg-surface p-4 shadow-sm"
             >
@@ -331,6 +327,12 @@ type TransferForm = {
             </article>
           }
         </div>
+        <lfg-pagination
+          [page]="page()"
+          [pageSize]="pageSize"
+          [total]="totalItems()"
+          (pageChange)="onPageChange($event)"
+        />
       }
     </section>
 
@@ -499,6 +501,10 @@ type TransferForm = {
 })
 export class ParticipationRequestsComponent implements OnInit {
   requests = signal<ParticipationRequestWithTournament[]>([]);
+  totalItems = signal(0);
+  page = signal(1);
+  readonly pageSize = PAGE_SIZE;
+  statusCounts = signal<RequestStatusCounts | null>(null);
   noteDrafts = signal<Record<string, string>>({});
   loading = signal(false);
   error = signal("");
@@ -510,6 +516,7 @@ export class ParticipationRequestsComponent implements OnInit {
   transferRequest = signal<ParticipationRequestWithTournament | null>(null);
   confirmPending = signal<(() => Promise<void>) | null>(null);
   confirmMessage = signal("");
+  private searchTimer: ReturnType<typeof setTimeout> | null = null;
   private readonly snackbar = inject(SnackbarService);
   transferForm: TransferForm = this.emptyTransferForm();
   requestStatuses = PARTICIPATION_REQUEST_STATUSES;
@@ -521,21 +528,6 @@ export class ParticipationRequestsComponent implements OnInit {
       active: this.statusFilter() === status.id,
     })),
   ]);
-  filteredRequests = computed(() => {
-    const status = this.statusFilter();
-    const q = this.searchQuery().toLowerCase().trim();
-    let items = status === FILTER_ALL
-      ? this.requests()
-      : this.requests().filter((r) => r.status === status);
-    if (q) {
-      items = items.filter(
-        (r) =>
-          `${r.first_name} ${r.last_name}`.toLowerCase().includes(q) ||
-          (r.email ?? "").toLowerCase().includes(q),
-      );
-    }
-    return items;
-  });
 
   constructor(
     private readonly service: ParticipationRequestsService,
@@ -543,25 +535,53 @@ export class ParticipationRequestsComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    void this.load();
+    void Promise.all([this.load(), this.loadStatusCounts()]);
   }
 
   async load(): Promise<void> {
     this.loading.set(true);
     this.error.set("");
     try {
-      const requests = await this.service.list();
-      this.requests.set(requests);
-      // Preserve existing drafts — only initialize keys that don't exist yet
+      const result = await this.service.list({
+        search: this.searchQuery(),
+        status: this.statusFilter(),
+        page: this.page(),
+        pageSize: this.pageSize,
+      });
+      this.requests.set(result.data);
+      this.totalItems.set(result.total);
       const existing = this.noteDrafts();
       this.noteDrafts.set(
-        Object.fromEntries(requests.map((r) => [r.id, existing[r.id] ?? ""])),
+        Object.fromEntries(result.data.map((r) => [r.id, existing[r.id] ?? ""])),
       );
     } catch (error) {
       this.setError(this.message(error));
     } finally {
       this.loading.set(false);
     }
+  }
+
+  async loadStatusCounts(): Promise<void> {
+    try {
+      this.statusCounts.set(await this.service.countsByStatus());
+    } catch {
+      // non-critical
+    }
+  }
+
+  onSearchInput(q: string): void {
+    this.searchQuery.set(q);
+    if (this.searchTimer !== null) clearTimeout(this.searchTimer);
+    this.searchTimer = setTimeout(() => {
+      this.searchTimer = null;
+      this.page.set(1);
+      void this.load();
+    }, 300);
+  }
+
+  onPageChange(p: number): void {
+    this.page.set(p);
+    void this.load();
   }
 
   async setStatus(
@@ -577,6 +597,7 @@ export class ParticipationRequestsComponent implements OnInit {
           item.id === request.id ? { ...item, status } : item,
         ),
       );
+      void this.loadStatusCounts();
     } catch (error) {
       this.setError(this.message(error));
     } finally {
@@ -586,6 +607,8 @@ export class ParticipationRequestsComponent implements OnInit {
 
   setStatusFilter(value: string): void {
     this.statusFilter.set(value as RequestStatus | typeof FILTER_ALL);
+    this.page.set(1);
+    void this.load();
   }
 
   openTransferModal(request: ParticipationRequestWithTournament): void {
@@ -652,9 +675,7 @@ export class ParticipationRequestsComponent implements OnInit {
     this.confirmPending.set(async () => {
       try {
         await this.service.remove(request.id);
-        this.requests.update((requests) =>
-          requests.filter((item) => item.id !== request.id),
-        );
+        await Promise.all([this.load(), this.loadStatusCounts()]);
       } catch (error) {
         this.setError(this.message(error));
       }
@@ -688,16 +709,16 @@ export class ParticipationRequestsComponent implements OnInit {
   }
 
   newCount(): number {
-    return this.requests().filter((r) => r.status === PARTICIPATION_REQUEST_STATUS.New).length;
+    return this.statusCounts()?.newCount ?? 0;
   }
   managingCount(): number {
-    return this.requests().filter((r) => r.status === PARTICIPATION_REQUEST_STATUS.Managing).length;
+    return this.statusCounts()?.managingCount ?? 0;
   }
   contactedCount(): number {
-    return this.requests().filter((r) => r.status === PARTICIPATION_REQUEST_STATUS.Contacted).length;
+    return this.statusCounts()?.contactedCount ?? 0;
   }
   archivedCount(): number {
-    return this.requests().filter((r) => r.status === PARTICIPATION_REQUEST_STATUS.Archived).length;
+    return this.statusCounts()?.archivedCount ?? 0;
   }
 
   formatDateTime(value: string): string {

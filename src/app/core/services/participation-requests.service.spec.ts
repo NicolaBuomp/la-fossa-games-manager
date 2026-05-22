@@ -29,9 +29,19 @@ class ParticipationQuery {
     return this;
   }
 
-  order(column: string): Promise<QueryResponse> {
+  or(filter: string): ParticipationQuery {
+    this.calls.push(`${this.table}.or:${filter}`);
+    return this;
+  }
+
+  order(column: string): ParticipationQuery {
     this.calls.push(`${this.table}.order:${column}`);
-    return Promise.resolve(this.next(`${this.table}.order`));
+    return this;
+  }
+
+  range(from: number, to: number): Promise<QueryResponse> {
+    this.calls.push(`${this.table}.range:${from}:${to}`);
+    return Promise.resolve(this.next(`${this.table}.range`));
   }
 
   update(payload: unknown): ParticipationQuery {
@@ -136,7 +146,7 @@ describe("ParticipationRequestsService", () => {
       profiles: null,
     };
     const { service } = setup({
-      "participation_requests.order": [
+      "participation_requests.range": [
         { error: new Error("profiles blocked"), data: null },
         {
           error: null,
@@ -145,30 +155,31 @@ describe("ParticipationRequestsService", () => {
               participation_request_notes: [older, newer],
             }),
           ],
+          count: 1,
         },
       ],
     });
 
     const result = await service.list();
 
-    expect(result).toHaveSize(1);
-    expect(result[0].participation_request_notes.map((note) => note.id)).toEqual(
+    expect(result.data).toHaveSize(1);
+    expect(result.data[0].participation_request_notes.map((note) => note.id)).toEqual(
       ["note-2", "note-1"],
     );
   });
 
   it("falls back to base requests when notes are blocked", async () => {
     const { service } = setup({
-      "participation_requests.order": [
+      "participation_requests.range": [
         { error: new Error("profiles blocked"), data: null },
         { error: new Error("notes blocked"), data: null },
-        { error: null, data: [request()] },
+        { error: null, data: [request()], count: 1 },
       ],
     });
 
     const result = await service.list();
 
-    expect(result[0].participation_request_notes).toEqual([]);
+    expect(result.data[0].participation_request_notes).toEqual([]);
   });
 
   it("returns pending count with zero fallback", async () => {

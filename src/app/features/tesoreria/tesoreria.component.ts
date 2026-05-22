@@ -331,7 +331,7 @@ export class TesoreriaComponent implements OnInit {
 
   async load(): Promise<void> {
     try {
-      const items = await this.txService.list();
+      const { data: items } = await this.txService.list({ pageSize: 10_000 });
       this.allItems.set(items);
       this.selectedItems.set([]);
     } catch (e) {

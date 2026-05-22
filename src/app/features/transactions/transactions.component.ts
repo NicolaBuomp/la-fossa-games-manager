@@ -21,6 +21,7 @@ import {
   DeliveryStatusFilter,
   FILTER_ALL,
   INCOME_CATEGORIES,
+  PAGE_SIZE,
   PAYMENT_METHODS,
   TRANSACTION_SOURCE_TABLE,
   TRANSACTION_TYPE,
@@ -33,12 +34,14 @@ import {
   InsertIncome,
   Profile,
   Transaction,
+  TransactionSummary,
   TransactionType,
 } from "../../core/types/models";
 import {
   CrudFormField,
   CrudFormModalComponent,
 } from "../../shared/components/crud-form-modal.component";
+import { PaginationComponent } from "../../shared/components/pagination.component";
 import {
   FilterOption,
   StatusFilterPillsComponent,
@@ -62,6 +65,7 @@ import {
     ConfirmModalComponent,
     CrudFormModalComponent,
     StatusFilterPillsComponent,
+    PaginationComponent,
   ],
   template: `
     <section class="space-y-5">
@@ -135,7 +139,7 @@ import {
           placeholder="Cerca per descrizione…"
           class="w-full rounded-lg border border-soft bg-surface px-4 py-2.5 text-sm outline-none placeholder:text-muted"
           [value]="searchQuery()"
-          (input)="searchQuery.set($any($event.target).value)"
+          (input)="onSearchInput($any($event.target).value)"
         />
         <lfg-status-filter-pills
           [options]="typeFilterOptions"
@@ -149,7 +153,7 @@ import {
         }
       </div>
 
-      @if (!filteredItems().length) {
+      @if (!items().length) {
         <div class="mt-6">
           <lfg-empty-state
             title="Nessuna transazione trovata"
@@ -160,7 +164,7 @@ import {
         </div>
       } @else {
         <div class="grid gap-3">
-          @for (item of filteredItems(); track item.source_id) {
+          @for (item of items(); track item.source_id) {
             <article class="rounded-lg border border-soft bg-surface p-4 shadow-sm">
               <div class="flex flex-wrap justify-between gap-3">
                 <div class="min-w-0 flex-1">
@@ -273,6 +277,12 @@ import {
             </article>
           }
         </div>
+        <lfg-pagination
+          [page]="page()"
+          [pageSize]="pageSize"
+          [total]="totalItems()"
+          (pageChange)="onPageChange($event)"
+        />
       }
     </section>
 
@@ -310,6 +320,10 @@ import {
 })
 export class TransactionsComponent implements OnInit {
   items = signal<Transaction[]>([]);
+  totalItems = signal(0);
+  page = signal(1);
+  readonly pageSize = PAGE_SIZE;
+  summary = signal<TransactionSummary | null>(null);
   profilesList = signal<Profile[]>([]);
   userNames = signal<Record<string, string>>({});
   error = signal("");
@@ -329,6 +343,7 @@ export class TransactionsComponent implements OnInit {
   deliveryFilter = signal<DeliveryStatusFilter>(FILTER_ALL);
   searchQuery = signal("");
 
+  private searchTimer: ReturnType<typeof setTimeout> | null = null;
   private readonly snackbar = inject(SnackbarService);
 
   get typeFilterOptions(): () => FilterOption[] {
@@ -347,52 +362,13 @@ export class TransactionsComponent implements OnInit {
     ];
   }
 
-  readonly filteredItems = computed(() => {
-    let result = this.items();
-    const type = this.typeFilter();
-    const delivery = this.deliveryFilter();
-    const q = this.searchQuery().toLowerCase().trim();
-
-    if (type !== FILTER_ALL) {
-      result = result.filter((i) => i.type === type);
-    }
-    if (delivery !== FILTER_ALL) {
-      result = result.filter((i) => {
-        if (i.type !== TRANSACTION_TYPE.Income) return true;
-        return delivery === DELIVERY_STATUS.Pending
-          ? !i.delivered_to_treasurer
-          : i.delivered_to_treasurer;
-      });
-    }
-    if (q) {
-      result = result.filter((i) =>
-        (i.description ?? "").toLowerCase().includes(q),
-      );
-    }
-    return result;
-  });
-
-  readonly totalIncomes = computed(() =>
-    this.items()
-      .filter((i) => i.type === TRANSACTION_TYPE.Income)
-      .reduce((s, i) => s + Number(i.amount || 0), 0),
-  );
-  readonly totalExpenses = computed(() =>
-    this.items()
-      .filter((i) => i.type === TRANSACTION_TYPE.Expense)
-      .reduce((s, i) => s + Number(i.amount || 0), 0),
-  );
+  readonly totalIncomes = computed(() => this.summary()?.totalIncomes ?? 0);
+  readonly totalExpenses = computed(() => this.summary()?.totalExpenses ?? 0);
   readonly balance = computed(() => this.totalIncomes() - this.totalExpenses());
-  readonly incomeCount = computed(() => this.items().filter((i) => i.type === TRANSACTION_TYPE.Income).length);
-  readonly expenseCount = computed(() => this.items().filter((i) => i.type === TRANSACTION_TYPE.Expense).length);
-  readonly pendingDelivery = computed(() =>
-    this.items()
-      .filter((i) => i.type === TRANSACTION_TYPE.Income && !i.delivered_to_treasurer)
-      .reduce((s, i) => s + Number(i.amount || 0), 0),
-  );
-  readonly pendingDeliveryCount = computed(() =>
-    this.items().filter((i) => i.type === TRANSACTION_TYPE.Income && !i.delivered_to_treasurer).length,
-  );
+  readonly incomeCount = computed(() => this.summary()?.incomeCount ?? 0);
+  readonly expenseCount = computed(() => this.summary()?.expenseCount ?? 0);
+  readonly pendingDelivery = computed(() => this.summary()?.pendingDelivery ?? 0);
+  readonly pendingDeliveryCount = computed(() => this.summary()?.pendingDeliveryCount ?? 0);
 
   readonly incomeFormFields = computed<CrudFormField[]>(() => [
     { name: "source", label: "Fonte", type: "text", required: true },
@@ -472,16 +448,36 @@ export class TransactionsComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    void this.load();
+    void Promise.all([this.load(), this.loadSummary(), this.loadProfiles()]);
   }
 
   async load(): Promise<void> {
     try {
-      const [transactions, profilesData] = await Promise.all([
-        this.txService.list(),
-        this.profiles.list(),
-      ]);
-      this.items.set(transactions);
+      const result = await this.txService.list({
+        type: this.typeFilter(),
+        deliveryStatus: this.deliveryFilter(),
+        search: this.searchQuery(),
+        page: this.page(),
+        pageSize: this.pageSize,
+      });
+      this.items.set(result.data);
+      this.totalItems.set(result.total);
+    } catch (e) {
+      this.setError(this.message(e));
+    }
+  }
+
+  async loadSummary(): Promise<void> {
+    try {
+      this.summary.set(await this.txService.summary());
+    } catch {
+      // non-critical: KPIs degrade gracefully
+    }
+  }
+
+  async loadProfiles(): Promise<void> {
+    try {
+      const profilesData = await this.profiles.list();
       this.profilesList.set(profilesData);
       this.userNames.set(
         Object.fromEntries(
@@ -493,12 +489,31 @@ export class TransactionsComponent implements OnInit {
     }
   }
 
+  onSearchInput(q: string): void {
+    this.searchQuery.set(q);
+    if (this.searchTimer !== null) clearTimeout(this.searchTimer);
+    this.searchTimer = setTimeout(() => {
+      this.searchTimer = null;
+      this.page.set(1);
+      void this.load();
+    }, 300);
+  }
+
+  onPageChange(p: number): void {
+    this.page.set(p);
+    void this.load();
+  }
+
   setTypeFilter(value: string): void {
     this.typeFilter.set(value as typeof FILTER_ALL | TransactionType);
+    this.page.set(1);
+    void this.load();
   }
 
   setDeliveryFilter(value: string): void {
     this.deliveryFilter.set(value as DeliveryStatusFilter);
+    this.page.set(1);
+    void this.load();
   }
 
   newIncome(): void {
@@ -555,7 +570,7 @@ export class TransactionsComponent implements OnInit {
       if (current?.id) await this.incomesService.update(current.id, payload);
       else await this.incomesService.create(payload);
       this.incomeModalOpen.set(false);
-      await this.load();
+      await Promise.all([this.load(), this.loadSummary()]);
     } catch (e) {
       this.setError(this.message(e));
     } finally {
@@ -573,7 +588,7 @@ export class TransactionsComponent implements OnInit {
       if (current?.id) await this.expensesService.update(current.id, payload);
       else await this.expensesService.create(payload);
       this.expenseModalOpen.set(false);
-      await this.load();
+      await Promise.all([this.load(), this.loadSummary()]);
     } catch (e) {
       this.setError(this.message(e));
     } finally {
@@ -597,7 +612,7 @@ export class TransactionsComponent implements OnInit {
       try {
         if (item.source_table === TRANSACTION_SOURCE_TABLE.Incomes) await this.incomesService.remove(item.source_id);
         else if (item.source_table === TRANSACTION_SOURCE_TABLE.Expenses) await this.expensesService.remove(item.source_id);
-        await this.load();
+        await Promise.all([this.load(), this.loadSummary()]);
       } catch (e) {
         this.setError(this.message(e));
       }
@@ -610,11 +625,21 @@ export class TransactionsComponent implements OnInit {
     if (fn) await fn();
   }
 
-  export(): void {
-    this.exporter.downloadCsv(
-      "transazioni-la-fossa-games.csv",
-      this.filteredItems() as unknown as Record<string, unknown>[],
-    );
+  async export(): Promise<void> {
+    try {
+      const { data } = await this.txService.list({
+        type: this.typeFilter(),
+        deliveryStatus: this.deliveryFilter(),
+        search: this.searchQuery(),
+        pageSize: 10_000,
+      });
+      this.exporter.downloadCsv(
+        "transazioni-la-fossa-games.csv",
+        data as unknown as Record<string, unknown>[],
+      );
+    } catch (e) {
+      this.setError(this.message(e));
+    }
   }
 
   expenseStatusLabel(status: string): string {

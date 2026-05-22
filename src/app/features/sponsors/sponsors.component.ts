@@ -8,6 +8,7 @@ import { SnackbarService } from "../../core/services/snackbar.service";
 import { SponsorsService } from "../../core/services/sponsors.service";
 import {
   FILTER_ALL,
+  PAGE_SIZE,
   PAYMENT_METHODS,
   PAYMENT_METHOD,
   SPONSOR_CATEGORY,
@@ -22,12 +23,14 @@ import {
   Sponsor,
   SponsorCategory,
   SponsorStatus,
+  SponsorsSummary,
   SponsorType,
 } from "../../core/types/models";
 import {
   CrudFormField,
   CrudFormModalComponent,
 } from "../../shared/components/crud-form-modal.component";
+import { PaginationComponent } from "../../shared/components/pagination.component";
 import {
   FilterOption,
   StatusFilterPillsComponent,
@@ -53,6 +56,7 @@ type SponsorForm = InsertSponsor & { withoutPromisedAmount: boolean };
     ConfirmModalComponent,
     StatusFilterPillsComponent,
     CrudFormModalComponent,
+    PaginationComponent,
   ],
   template: `
     <section class="space-y-5">
@@ -97,7 +101,7 @@ type SponsorForm = InsertSponsor & { withoutPromisedAmount: boolean };
           placeholder="Cerca per azienda o referente…"
           class="w-full rounded-lg border border-soft bg-surface px-4 py-2.5 text-sm outline-none placeholder:text-muted"
           [value]="searchQuery()"
-          (input)="searchQuery.set($any($event.target).value)"
+          (input)="onSearchInput($any($event.target).value)"
         />
       </div>
       <lfg-status-filter-pills
@@ -174,7 +178,7 @@ type SponsorForm = InsertSponsor & { withoutPromisedAmount: boolean };
           actionLabel="Nuovo sponsor"
           (action)="newItem()"
         />
-      } @else if (!filteredItems().length) {
+      } @else if (!items().length) {
         <lfg-empty-state
           title="Nessuno sponsor per questo stato"
           text="Cambia filtro per vedere altri sponsor."
@@ -187,12 +191,13 @@ type SponsorForm = InsertSponsor & { withoutPromisedAmount: boolean };
               : 'grid gap-3 xl:grid-cols-2'
           "
         >
-          @for (item of filteredItems(); track item.id) {
+          @for (item of items(); track item.id) {
             <article
               class="rounded-lg border border-soft bg-surface"
               [class.p-2]="compactView()"
               [class.p-4]="!compactView()"
             >
+
               <div
                 class="flex flex-wrap items-start justify-between"
                 [class.gap-2]="compactView()"
@@ -321,6 +326,12 @@ type SponsorForm = InsertSponsor & { withoutPromisedAmount: boolean };
             </article>
           }
         </div>
+        <lfg-pagination
+          [page]="page()"
+          [pageSize]="pageSize"
+          [total]="totalItems()"
+          (pageChange)="onPageChange($event)"
+        />
       }
     </section>
 
@@ -346,6 +357,10 @@ type SponsorForm = InsertSponsor & { withoutPromisedAmount: boolean };
 })
 export class SponsorsComponent implements OnInit {
   items = signal<Sponsor[]>([]);
+  totalItems = signal(0);
+  page = signal(1);
+  readonly pageSize = PAGE_SIZE;
+  sponsorSummary = signal<SponsorsSummary | null>(null);
   assignableProfiles = signal<Profile[]>([]);
   userNames = signal<Record<string, string>>({});
   error = signal("");
@@ -358,6 +373,7 @@ export class SponsorsComponent implements OnInit {
   compactView = signal(false);
   confirmPending = signal<(() => Promise<void>) | null>(null);
   confirmMessage = signal("");
+  private searchTimer: ReturnType<typeof setTimeout> | null = null;
   private readonly snackbar = inject(SnackbarService);
   statuses = SPONSOR_STATUSES;
   statusFilterOptions = computed<FilterOption[]>(() => [
@@ -458,31 +474,65 @@ export class SponsorsComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    void this.load();
+    void Promise.all([this.load(), this.loadSummary(), this.loadProfiles()]);
   }
 
   async load(): Promise<void> {
     try {
-      const [rawItems, assignableProfiles] = await Promise.all([
-        this.sponsorService.list(),
-        this.loadAssignableProfiles(),
-      ]);
-      const items = this.visibleSponsors(rawItems);
+      const userId = this.nonAdminUserId();
+      const result = await this.sponsorService.listPaged({
+        search: this.searchQuery(),
+        status: this.statusFilter(),
+        page: this.page(),
+        pageSize: this.pageSize,
+        userId,
+      });
+      this.items.set(result.data);
+      this.totalItems.set(result.total);
+      const ids = result.data.flatMap((i) => [i.created_by, i.responsible_user_id]);
+      const names = await this.profiles.displayNames(ids);
+      this.userNames.update((prev) => ({ ...prev, ...names }));
+    } catch (e) {
+      this.setError(this.message(e));
+    }
+  }
+
+  async loadSummary(): Promise<void> {
+    try {
+      const userId = this.nonAdminUserId();
+      this.sponsorSummary.set(await this.sponsorService.summary(userId));
+    } catch {
+      // non-critical
+    }
+  }
+
+  async loadProfiles(): Promise<void> {
+    try {
+      const assignableProfiles = await this.loadAssignableProfiles();
       this.assignableProfiles.set(assignableProfiles);
-      this.items.set(items);
       this.userNames.set(
-        await this.profiles.displayNames([
-          ...items.flatMap((item) => [
-            item.created_by,
-            item.responsible_user_id,
-          ]),
-          ...assignableProfiles.map((profile) => profile.id),
-        ]),
+        await this.profiles.displayNames(
+          assignableProfiles.map((profile) => profile.id),
+        ),
       );
     } catch (e) {
       this.setError(this.message(e));
-    } finally {
     }
+  }
+
+  onSearchInput(q: string): void {
+    this.searchQuery.set(q);
+    if (this.searchTimer !== null) clearTimeout(this.searchTimer);
+    this.searchTimer = setTimeout(() => {
+      this.searchTimer = null;
+      this.page.set(1);
+      void this.load();
+    }, 300);
+  }
+
+  onPageChange(p: number): void {
+    this.page.set(p);
+    void this.load();
   }
 
   newItem(): void {
@@ -552,7 +602,7 @@ export class SponsorsComponent implements OnInit {
       if (current) await this.sponsorService.update(current.id, payload);
       else await this.sponsorService.create(payload);
       this.modalOpen.set(false);
-      await this.load();
+      await Promise.all([this.load(), this.loadSummary()]);
     } catch (e) {
       this.setError(this.message(e));
     } finally {
@@ -571,7 +621,7 @@ export class SponsorsComponent implements OnInit {
         );
       }
       await this.sponsorService.update(item.id, payload);
-      await this.load();
+      await Promise.all([this.load(), this.loadSummary()]);
     } catch (e) {
       this.setError(this.message(e));
     } finally {
@@ -584,7 +634,7 @@ export class SponsorsComponent implements OnInit {
     this.confirmPending.set(async () => {
       try {
         await this.sponsorService.remove(item.id);
-        await this.load();
+        await Promise.all([this.load(), this.loadSummary()]);
       } catch (e) {
         this.setError(this.message(e));
       }
@@ -597,47 +647,42 @@ export class SponsorsComponent implements OnInit {
     if (fn) await fn();
   }
 
-  export(): void {
-    this.exporter.downloadCsv(
-      "sponsor-la-fossa-games.csv",
-      this.filteredItems() as unknown as Record<string, unknown>[],
-    );
+  async export(): Promise<void> {
+    try {
+      const userId = this.nonAdminUserId();
+      const { data } = await this.sponsorService.listPaged({
+        search: this.searchQuery(),
+        status: this.statusFilter(),
+        pageSize: 10_000,
+        userId,
+      });
+      this.exporter.downloadCsv(
+        "sponsor-la-fossa-games.csv",
+        data as unknown as Record<string, unknown>[],
+      );
+    } catch (e) {
+      this.setError(this.message(e));
+    }
   }
   contactTotal(): number {
-    return this.items().filter((item) => item.status === SPONSOR_STATUS.Contacted).length;
+    return this.sponsorSummary()?.contactedCount ?? 0;
   }
   negotiatingTotal(): number {
-    return this.items().filter((item) => item.status === SPONSOR_STATUS.Negotiating)
-      .length;
+    return this.sponsorSummary()?.negotiatingCount ?? 0;
   }
   promisedTotal(): number {
-    return this.items()
-      .filter((i) => i.status === SPONSOR_STATUS.Confirmed || i.status === SPONSOR_STATUS.Paid)
-      .reduce((s, i) => s + Number(i.promised_amount ?? i.value ?? 0), 0);
+    return this.sponsorSummary()?.promisedTotal ?? 0;
   }
   receivedTotal(): number {
-    return this.items().reduce((s, i) => s + Number(i.received_amount || 0), 0);
+    return this.sponsorSummary()?.receivedTotal ?? 0;
   }
   confirmedPaidCount(): number {
-    return this.items().filter(
-      (i) => i.status === SPONSOR_STATUS.Confirmed || i.status === SPONSOR_STATUS.Paid,
-    ).length;
-  }
-  filteredItems(): Sponsor[] {
-    const status = this.statusFilter();
-    const q = this.searchQuery().toLowerCase().trim();
-    let items = status === FILTER_ALL ? this.items() : this.items().filter((i) => i.status === status);
-    if (q) {
-      items = items.filter(
-        (i) =>
-          i.company_name.toLowerCase().includes(q) ||
-          (i.contact_name ?? "").toLowerCase().includes(q),
-      );
-    }
-    return items;
+    return this.sponsorSummary()?.confirmedPaidCount ?? 0;
   }
   setStatusFilter(value: string): void {
     this.statusFilter.set(value as SponsorStatus | typeof FILTER_ALL);
+    this.page.set(1);
+    void this.load();
   }
   updateForm(patch: Record<string, unknown>): void {
     this.form = { ...this.form, ...patch };
@@ -710,14 +755,9 @@ export class SponsorsComponent implements OnInit {
     }
   }
 
-  private visibleSponsors(items: Sponsor[]): Sponsor[] {
-    if (this.auth.isAdmin()) return items;
-    const userId = this.auth.profile()?.id ?? this.auth.user()?.id;
-    if (!userId) return [];
-    return items.filter(
-      (item) =>
-        item.responsible_user_id === userId || item.created_by === userId,
-    );
+  private nonAdminUserId(): string | undefined {
+    if (this.auth.isAdmin()) return undefined;
+    return this.auth.profile()?.id ?? this.auth.user()?.id;
   }
 
   private async loadAssignableProfiles(): Promise<Profile[]> {

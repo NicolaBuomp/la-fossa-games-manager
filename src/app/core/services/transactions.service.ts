@@ -1,10 +1,11 @@
 import { Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
-import { DeliveryItem, Transaction, TransactionType } from '../types/models';
+import { DeliveryItem, PagedResult, Transaction, TransactionSummary, TransactionType } from '../types/models';
 import {
   DELIVERY_STATUS,
   DeliveryStatusFilter,
   FILTER_ALL,
+  PAGE_SIZE,
   SUPABASE_RPC,
   SUPABASE_TABLE,
   TRANSACTION_TYPE,
@@ -16,16 +17,23 @@ export interface TransactionFilters {
   deliveryStatus?: DeliveryStatusFilter;
   dateFrom?: string;
   dateTo?: string;
+  search?: string;
+  page?: number;
+  pageSize?: number;
 }
 
 @Injectable({ providedIn: 'root' })
 export class TransactionsService {
   constructor(private readonly supabase: SupabaseService) {}
 
-  async list(filters: TransactionFilters = {}): Promise<Transaction[]> {
+  async list(filters: TransactionFilters = {}): Promise<PagedResult<Transaction>> {
+    const { page = 1, pageSize = PAGE_SIZE } = filters;
+    const from = (page - 1) * pageSize;
+    const to = from + pageSize - 1;
+
     let query = this.supabase.client
       .from(SUPABASE_TABLE.TransactionsView)
-      .select('*')
+      .select('*', { count: 'exact' })
       .order('date', { ascending: false })
       .order('created_at', { ascending: false });
 
@@ -46,10 +54,34 @@ export class TransactionsService {
     if (filters.dateTo) {
       query = query.lte('date', filters.dateTo);
     }
+    if (filters.search) {
+      query = query.ilike('description', `%${filters.search}%`);
+    }
 
-    const { data, error } = await query;
+    query = query.range(from, to);
+
+    const { data, error, count } = await query;
     if (error) throw error;
-    return (data ?? []) as Transaction[];
+    return { data: (data ?? []) as Transaction[], total: count ?? 0 };
+  }
+
+  async summary(): Promise<TransactionSummary> {
+    const { data, error } = await this.supabase.client
+      .from(SUPABASE_TABLE.TransactionsView)
+      .select('amount, type, delivered_to_treasurer');
+    if (error) throw error;
+    const rows = (data ?? []) as Pick<Transaction, 'amount' | 'type' | 'delivered_to_treasurer'>[];
+    const incomes = rows.filter((r) => r.type === TRANSACTION_TYPE.Income);
+    const expenses = rows.filter((r) => r.type === TRANSACTION_TYPE.Expense);
+    const pendingIncomes = incomes.filter((r) => !r.delivered_to_treasurer);
+    return {
+      totalIncomes: incomes.reduce((s, r) => s + Number(r.amount || 0), 0),
+      totalExpenses: expenses.reduce((s, r) => s + Number(r.amount || 0), 0),
+      incomeCount: incomes.length,
+      expenseCount: expenses.length,
+      pendingDelivery: pendingIncomes.reduce((s, r) => s + Number(r.amount || 0), 0),
+      pendingDeliveryCount: pendingIncomes.length,
+    };
   }
 
   async markDelivered(items: DeliveryItem[], deliveredBy: string): Promise<void> {

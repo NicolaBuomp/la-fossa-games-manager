@@ -19,14 +19,12 @@ const imageExtensions = new Set([
  * Sponsor asset folders are organized by landing visibility, while the app
  * keeps the commercial categories used elsewhere.
  *
- * @type {Array<{ folder: string, category: 'gold' | 'silver' | 'bronzo' }>}
+ * @type {Array<{ folder: string, category: 'platino' | 'oro' | 'argento' | 'bronzo' }>}
  */
 const CATEGORIES = [
-  { folder: "main", category: "gold" },
-  { folder: "medium", category: "silver" },
-  { folder: "gold", category: "gold" },
-  { folder: "silver", category: "silver" },
-  { folder: "base", category: "bronzo" },
+  { folder: "platino", category: "platino" },
+  { folder: "oro", category: "oro" },
+  { folder: "argento", category: "argento" },
   { folder: "bronzo", category: "bronzo" },
 ];
 
@@ -34,7 +32,7 @@ function sponsorName(fileName) {
   return path
     .basename(fileName, path.extname(fileName))
     .replace(/[-_]+/g, " ")
-    .replace(/\b(LOGO|PREMIUM|BASE|MAIN|GOLD|SILVER|BRONZO)\b/gi, " ")
+    .replace(/\b(LOGO|PREMIUM|BASE|MAIN|PLATINO|ORO|ARGENTO|BRONZO)\b/gi, " ")
     .replace(/\s+/g, " ")
     .trim()
     .replace(/\b\w/g, (letter) => letter.toUpperCase());
@@ -67,7 +65,7 @@ for (const { folder, category } of CATEGORIES) {
 fs.mkdirSync(outputDir, { recursive: true });
 fs.writeFileSync(
   outputFile,
-  `export type SponsorCategory = 'gold' | 'silver' | 'bronzo';
+  `export type SponsorCategory = 'platino' | 'oro' | 'argento' | 'bronzo';
 
 export type SponsorAsset = {
   name: string;

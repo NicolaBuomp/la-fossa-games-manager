@@ -354,3 +354,32 @@ export type InsertTeamParticipant = Omit<TeamParticipant, 'id' | 'created_by' | 
 export type InsertParticipationRequest = Omit<ParticipationRequest, 'id' | 'email' | 'status' | 'updated_by' | 'created_at' | 'updated_at'> & {
   email?: string | null;
 };
+
+export interface PagedResult<T> {
+  data: T[];
+  total: number;
+}
+
+export interface TransactionSummary {
+  totalIncomes: number;
+  totalExpenses: number;
+  incomeCount: number;
+  expenseCount: number;
+  pendingDelivery: number;
+  pendingDeliveryCount: number;
+}
+
+export interface SponsorsSummary {
+  contactedCount: number;
+  negotiatingCount: number;
+  confirmedPaidCount: number;
+  promisedTotal: number;
+  receivedTotal: number;
+}
+
+export interface RequestStatusCounts {
+  newCount: number;
+  managingCount: number;
+  contactedCount: number;
+  archivedCount: number;
+}

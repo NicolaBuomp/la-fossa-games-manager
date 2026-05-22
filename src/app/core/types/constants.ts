@@ -130,6 +130,7 @@ export const AUDIT_ACTION = {
 } as const satisfies Record<string, AuditAction>;
 
 export const FILTER_ALL = "all";
+export const PAGE_SIZE = 25;
 
 export const DELIVERY_STATUS = {
   Pending: "pending",

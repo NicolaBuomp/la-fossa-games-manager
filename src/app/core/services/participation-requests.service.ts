@@ -2,10 +2,14 @@ import { Injectable } from "@angular/core";
 import {
   InsertTeamParticipant,
   InsertTournamentTeam,
+  PagedResult,
   ParticipationRequest,
   ParticipationRequestWithTournament,
+  RequestStatusCounts,
 } from "../types/models";
 import {
+  FILTER_ALL,
+  PAGE_SIZE,
   PARTICIPATION_REQUEST_STATUS,
   SUPABASE_TABLE,
 } from "../types/constants";
@@ -28,49 +32,91 @@ export interface ParticipationRequestTransferPayload {
   participants: TransferParticipant[];
 }
 
+export interface RequestListParams {
+  search?: string;
+  status?: RequestStatus | typeof FILTER_ALL;
+  page?: number;
+  pageSize?: number;
+}
+
 @Injectable({ providedIn: "root" })
 export class ParticipationRequestsService {
   constructor(private readonly supabase: SupabaseService) {}
 
-  async list(): Promise<ParticipationRequestWithTournament[]> {
-    const { data, error } = await this.supabase.client
-      .from(SUPABASE_TABLE.ParticipationRequests)
-      .select(
-        "*, tournaments(name, code, sport, fee), participation_request_notes(*, profiles(full_name, email))",
-      )
-      .neq("status", PARTICIPATION_REQUEST_STATUS.Transferred)
-      .order("created_at", { ascending: false });
+  async list(params: RequestListParams = {}): Promise<PagedResult<ParticipationRequestWithTournament>> {
+    const { page = 1, pageSize = PAGE_SIZE, search, status } = params;
+    const from = (page - 1) * pageSize;
+    const to = from + pageSize - 1;
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const applyFilters = (q: any) => {
+      let filtered = q.neq("status", PARTICIPATION_REQUEST_STATUS.Transferred);
+      if (status && status !== FILTER_ALL) {
+        filtered = filtered.eq("status", status);
+      }
+      if (search) {
+        filtered = filtered.or(
+          `first_name.ilike.%${search}%,last_name.ilike.%${search}%,email.ilike.%${search}%`,
+        );
+      }
+      return filtered.order("created_at", { ascending: false }).range(from, to);
+    };
+
+    const { data, error, count } = await applyFilters(
+      this.supabase.client
+        .from(SUPABASE_TABLE.ParticipationRequests)
+        .select(
+          "*, tournaments(name, code, sport, fee), participation_request_notes(*, profiles(full_name, email))",
+          { count: "exact" },
+        ),
+    );
 
     if (!error) {
-      return this.mapRequests(data);
+      return { data: this.mapRequests(data), total: count ?? 0 };
     }
 
     // Staff may not have access to related profiles; fallback keeps requests visible.
-    const fallback = await this.supabase.client
-      .from(SUPABASE_TABLE.ParticipationRequests)
-      .select("*, tournaments(name, code, sport, fee), participation_request_notes(*)")
-      .neq("status", PARTICIPATION_REQUEST_STATUS.Transferred)
-      .order("created_at", { ascending: false });
+    const fallback = await applyFilters(
+      this.supabase.client
+        .from(SUPABASE_TABLE.ParticipationRequests)
+        .select(
+          "*, tournaments(name, code, sport, fee), participation_request_notes(*)",
+          { count: "exact" },
+        ),
+    );
 
     if (!fallback.error) {
-      return this.mapRequests(fallback.data);
+      return { data: this.mapRequests(fallback.data), total: fallback.count ?? 0 };
     }
 
-    // Last fallback: if notes are blocked by RLS, keep the base requests visible.
-    const baseOnly = await this.supabase.client
-      .from(SUPABASE_TABLE.ParticipationRequests)
-      .select("*, tournaments(name, code, sport, fee)")
-      .neq("status", PARTICIPATION_REQUEST_STATUS.Transferred)
-      .order("created_at", { ascending: false });
+    // Last fallback: if notes are blocked by RLS, keep base requests visible.
+    const baseOnly = await applyFilters(
+      this.supabase.client
+        .from(SUPABASE_TABLE.ParticipationRequests)
+        .select("*, tournaments(name, code, sport, fee)", { count: "exact" }),
+    );
 
     if (baseOnly.error) throw error;
-    const rows = (baseOnly.data ??
-      []) as Array<ParticipationRequestWithTournament>;
+    const rows = (baseOnly.data ?? []) as ParticipationRequestWithTournament[];
+    return {
+      data: rows.map((request) => ({ ...request, participation_request_notes: [] })),
+      total: baseOnly.count ?? 0,
+    };
+  }
 
-    return rows.map((request) => ({
-      ...request,
-      participation_request_notes: [],
-    }));
+  async countsByStatus(): Promise<RequestStatusCounts> {
+    const { data, error } = await this.supabase.client
+      .from(SUPABASE_TABLE.ParticipationRequests)
+      .select("status")
+      .neq("status", PARTICIPATION_REQUEST_STATUS.Transferred);
+    if (error) throw error;
+    const rows = (data ?? []) as Pick<ParticipationRequest, "status">[];
+    return {
+      newCount: rows.filter((r) => r.status === PARTICIPATION_REQUEST_STATUS.New).length,
+      managingCount: rows.filter((r) => r.status === PARTICIPATION_REQUEST_STATUS.Managing).length,
+      contactedCount: rows.filter((r) => r.status === PARTICIPATION_REQUEST_STATUS.Contacted).length,
+      archivedCount: rows.filter((r) => r.status === PARTICIPATION_REQUEST_STATUS.Archived).length,
+    };
   }
 
   async pendingCount(): Promise<number> {

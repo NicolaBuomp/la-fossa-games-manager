@@ -2,7 +2,7 @@ import { TestBed } from "@angular/core/testing";
 import { ParticipationRequestsService } from "../../core/services/participation-requests.service";
 import { RequestBadgesService } from "../../core/services/request-badges.service";
 import { SnackbarService } from "../../core/services/snackbar.service";
-import { ParticipationRequestWithTournament } from "../../core/types/models";
+import { PagedResult, ParticipationRequestWithTournament } from "../../core/types/models";
 import { ParticipationRequestsComponent } from "./participation-requests.component";
 
 describe("ParticipationRequestsComponent", () => {
@@ -40,9 +40,10 @@ describe("ParticipationRequestsComponent", () => {
   beforeEach(() => {
     service = jasmine.createSpyObj<ParticipationRequestsService>(
       "ParticipationRequestsService",
-      ["list", "updateStatus", "transferToTournament", "addNote", "remove"],
+      ["list", "countsByStatus", "updateStatus", "transferToTournament", "addNote", "remove"],
     );
-    service.list.and.resolveTo([]);
+    service.list.and.resolveTo({ data: [], total: 0 } as PagedResult<ParticipationRequestWithTournament>);
+    service.countsByStatus.and.resolveTo({ newCount: 0, managingCount: 0, contactedCount: 0, archivedCount: 0 });
     service.updateStatus.and.resolveTo();
     service.transferToTournament.and.resolveTo();
     service.addNote.and.resolveTo();
@@ -63,20 +64,14 @@ describe("ParticipationRequestsComponent", () => {
     );
   });
 
-  it("filters requests by status and computes counters", () => {
-    component.requests.set([
-      request({ id: "new", status: "nuova" }),
-      request({ id: "managed", status: "in_gestione" }),
-      request({ id: "contacted", status: "contattata" }),
-    ]);
+  it("calls service with status filter and shows counts from statusCounts", () => {
+    component.statusCounts.set({ newCount: 3, managingCount: 2, contactedCount: 1, archivedCount: 0 });
 
     component.setStatusFilter("contattata");
 
-    expect(component.filteredRequests().map((item) => item.id)).toEqual([
-      "contacted",
-    ]);
-    expect(component.newCount()).toBe(1);
-    expect(component.managingCount()).toBe(1);
+    expect(service.list).toHaveBeenCalled();
+    expect(component.newCount()).toBe(3);
+    expect(component.managingCount()).toBe(2);
     expect(component.contactedCount()).toBe(1);
   });
 
