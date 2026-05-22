@@ -23,7 +23,7 @@ export interface ParticipationFormValue {
   host: { class: "block" },
   template: `
     <form
-      class="rounded-lg border border-white/15 bg-black p-5 shadow-2xl sm:p-6"
+      class="w-full min-w-0 rounded-lg border border-white/15 bg-black p-5 shadow-2xl sm:p-6"
       (ngSubmit)="submitted.emit()"
     >
       <div class="flex flex-wrap items-start justify-between gap-3">
@@ -102,7 +102,7 @@ export interface ParticipationFormValue {
               required
               name="tournament"
               [(ngModel)]="form.tournament_id"
-              class="focus-border-accent focus-ring-accent rounded-md border border-white/20 bg-[#101010] px-3 py-3 text-base font-semibold normal-case tracking-normal text-white outline-none transition"
+              class="w-full focus-border-accent focus-ring-accent rounded-md border border-white/20 bg-[#101010] px-3 py-3 text-base font-semibold normal-case tracking-normal text-white outline-none transition"
             >
               <option value="" disabled>Seleziona un torneo</option>
               @for (tournament of tournaments(); track tournament.id) {
@@ -122,7 +122,7 @@ export interface ParticipationFormValue {
               name="companyName"
               [(ngModel)]="form.company_name"
               autocomplete="organization"
-              class="focus-border-accent focus-ring-accent rounded-md border border-white/20 bg-[#101010] px-3 py-3 text-base font-semibold normal-case tracking-normal text-white outline-none transition"
+              class="w-full focus-border-accent focus-ring-accent rounded-md border border-white/20 bg-[#101010] px-3 py-3 text-base font-semibold normal-case tracking-normal text-white outline-none transition"
             />
           </label>
         }
@@ -137,7 +137,7 @@ export interface ParticipationFormValue {
               name="firstName"
               [(ngModel)]="form.first_name"
               autocomplete="given-name"
-              class="focus-border-accent focus-ring-accent rounded-md border border-white/20 bg-[#101010] px-3 py-3 text-base font-semibold normal-case tracking-normal text-white outline-none transition"
+              class="w-full focus-border-accent focus-ring-accent rounded-md border border-white/20 bg-[#101010] px-3 py-3 text-base font-semibold normal-case tracking-normal text-white outline-none transition"
             />
           </label>
           <label
@@ -149,7 +149,7 @@ export interface ParticipationFormValue {
               name="lastName"
               [(ngModel)]="form.last_name"
               autocomplete="family-name"
-              class="focus-border-accent focus-ring-accent rounded-md border border-white/20 bg-[#101010] px-3 py-3 text-base font-semibold normal-case tracking-normal text-white outline-none transition"
+              class="w-full focus-border-accent focus-ring-accent rounded-md border border-white/20 bg-[#101010] px-3 py-3 text-base font-semibold normal-case tracking-normal text-white outline-none transition"
             />
           </label>
         </div>
@@ -164,7 +164,7 @@ export interface ParticipationFormValue {
             name="phone"
             [(ngModel)]="form.phone"
             autocomplete="tel"
-            class="focus-border-accent focus-ring-accent rounded-md border border-white/20 bg-[#101010] px-3 py-3 text-base font-semibold normal-case tracking-normal text-white outline-none transition"
+            class="w-full focus-border-accent focus-ring-accent rounded-md border border-white/20 bg-[#101010] px-3 py-3 text-base font-semibold normal-case tracking-normal text-white outline-none transition"
           />
         </label>
 

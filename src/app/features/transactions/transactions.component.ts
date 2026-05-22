@@ -166,66 +166,25 @@ import {
         <div class="grid gap-3">
           @for (item of items(); track item.source_id) {
             <article class="rounded-lg border border-soft bg-surface p-4 shadow-sm">
-              <div class="flex flex-wrap justify-between gap-3">
-                <div class="min-w-0 flex-1">
-                  <div class="flex flex-wrap items-center gap-2">
-                    <span
-                      class="shrink-0 text-xs font-black uppercase"
-                      [class.text-positive]="item.type === transactionType.Income"
-                      [class.text-negative]="item.type === transactionType.Expense"
-                    >
-                      {{ item.type === transactionType.Income ? '↑ Entrata' : '↓ Spesa' }}
+              <!-- Riga superiore: tipo + importo sempre affiancati -->
+              <div class="flex items-start justify-between gap-2">
+                <div class="flex min-w-0 flex-wrap items-center gap-1.5">
+                  <span
+                    class="shrink-0 text-xs font-black uppercase"
+                    [class.text-positive]="item.type === transactionType.Income"
+                    [class.text-negative]="item.type === transactionType.Expense"
+                  >
+                    {{ item.type === transactionType.Income ? '↑ Entrata' : '↓ Spesa' }}
+                  </span>
+                  @if (item.source_table === transactionSourceTable.TournamentTeams) {
+                    <span class="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-blue-700">
+                      Iscrizione torneo
                     </span>
-                    <!-- Badge fonte automatica -->
-                    @if (item.source_table === transactionSourceTable.TournamentTeams) {
-                      <span class="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-blue-700">
-                        Iscrizione torneo
-                      </span>
-                    } @else if (item.source_table === transactionSourceTable.Sponsors) {
-                      <span class="rounded-full bg-purple-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-purple-700">
-                        Sponsor
-                      </span>
-                    }
-                    <h2 class="truncate text-base font-bold">
-                      {{ item.description }}
-                    </h2>
-                  </div>
-                  <p class="mt-1 text-xs text-muted">
-                    {{ formatDate(item.date) }} · {{ item.category }}
-                    @if (item.person) {
-                      · {{ item.person }}
-                    }
-                    @if (item.payment_method) {
-                      · {{ item.payment_method }}
-                    }
-                  </p>
-
-                  @if (item.type === transactionType.Expense && item.expense_status) {
-                    <div class="mt-2">
-                      <lfg-status-badge
-                        [label]="expenseStatusLabel(item.expense_status)"
-                        [className]="expenseStatusClass(item.expense_status)"
-                      />
-                    </div>
+                  } @else if (item.source_table === transactionSourceTable.Sponsors) {
+                    <span class="rounded-full bg-purple-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-purple-700">
+                      Sponsor
+                    </span>
                   }
-
-                  @if (item.type === transactionType.Income) {
-                    <div class="mt-2">
-                      @if (item.delivered_to_treasurer) {
-                        <span class="inline-flex items-center gap-1 rounded-full border border-green-200 bg-green-50 px-2 py-0.5 text-xs font-semibold text-green-700">
-                          ✓ Consegnato al tesoriere · {{ formatDate(item.delivered_at!) }}
-                        </span>
-                      } @else {
-                        <span class="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-700">
-                          Da consegnare al tesoriere
-                        </span>
-                      }
-                    </div>
-                  }
-
-                  <p class="mt-1 text-xs font-semibold text-muted">
-                    {{ insertMeta(item) }}
-                  </p>
                 </div>
                 <p
                   class="shrink-0 text-lg font-black"
@@ -235,6 +194,46 @@ import {
                   {{ item.type === transactionType.Income ? '+' : '−' }}{{ eur(item.amount) }}
                 </p>
               </div>
+
+              <!-- Descrizione sotto, a piena larghezza -->
+              <h2 class="mt-1 text-base font-bold leading-snug">
+                {{ item.description }}
+              </h2>
+
+              <!-- Metadati su più righe su mobile -->
+              <p class="mt-1 text-xs text-muted">
+                {{ formatDate(item.date) }}
+                @if (item.category) { · {{ item.category }} }
+                @if (item.person) { · {{ item.person }} }
+                @if (item.payment_method) { · {{ item.payment_method }} }
+              </p>
+
+              @if (item.type === transactionType.Expense && item.expense_status) {
+                <div class="mt-2">
+                  <lfg-status-badge
+                    [label]="expenseStatusLabel(item.expense_status)"
+                    [className]="expenseStatusClass(item.expense_status)"
+                  />
+                </div>
+              }
+
+              @if (item.type === transactionType.Income) {
+                <div class="mt-2">
+                  @if (item.delivered_to_treasurer) {
+                    <span class="inline-flex items-center gap-1 rounded-full border border-green-200 bg-green-50 px-2 py-0.5 text-xs font-semibold text-green-700">
+                      ✓ Consegnato al tesoriere · {{ formatDate(item.delivered_at!) }}
+                    </span>
+                  } @else {
+                    <span class="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-700">
+                      Da consegnare al tesoriere
+                    </span>
+                  }
+                </div>
+              }
+
+              <p class="mt-1 text-xs font-semibold text-muted">
+                {{ insertMeta(item) }}
+              </p>
 
               <!-- Azioni: solo per righe modificabili (incomes/expenses manuali) -->
               @if (item.source_table === transactionSourceTable.Incomes || item.source_table === transactionSourceTable.Expenses) {

@@ -15,17 +15,17 @@ import { LandingParticipationForm } from "./landing.models";
       <div
         class="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.85fr_1fr] lg:items-start reveal-up"
       >
-        <div>
+        <div class="min-w-0">
           <p class="text-xs font-black uppercase tracking-[0.28em] text-accent">
             Iscrizioni e sponsor
           </p>
           <h2
-            class="mt-3 max-w-4xl font-display text-4xl uppercase leading-none text-accent sm:text-6xl"
+            class="mt-3 font-display text-3xl uppercase leading-none text-accent sm:text-5xl lg:text-6xl"
           >
             Partecipa o diventa sponsor.
           </h2>
           <p
-            class="mt-6 max-w-2xl text-lg font-semibold leading-8 text-white/72"
+            class="mt-6 text-base font-semibold leading-7 text-white/72 sm:text-lg sm:leading-8"
           >
             Scegli se vuoi partecipare a un torneo o ricevere informazioni sulle
             sponsorizzazioni, lascia un numero WhatsApp e ti ricontatteremo con
@@ -37,23 +37,13 @@ import { LandingParticipationForm } from "./landing.models";
             class="mx-auto h-40 w-40 rounded-full object-cover sm:h-48 sm:w-48"
           />
           <div class="mt-8 space-y-4">
-            <div
-              class="grid gap-2 border-t border-white/10 pt-4 sm:grid-cols-[auto_1fr] sm:items-start sm:gap-4"
-            >
-              <span
-                class="text-sm font-bold uppercase tracking-[0.16em] text-white/48"
-                >Luogo</span
-              >
-              <span class="font-black sm:text-right">{{ eventAddress }}</span>
+            <div class="border-t border-white/10 pt-4">
+              <span class="text-sm font-bold uppercase tracking-[0.16em] text-white/48">Luogo</span>
+              <p class="mt-1 font-black break-words">{{ eventAddress }}</p>
             </div>
-            <div
-              class="grid gap-2 border-t border-white/10 pt-4 sm:grid-cols-[auto_1fr] sm:items-start sm:gap-4"
-            >
-              <span
-                class="text-sm font-bold uppercase tracking-[0.16em] text-white/48"
-                >Date</span
-              >
-              <span class="font-black sm:text-right">{{ eventDateRange }}</span>
+            <div class="border-t border-white/10 pt-4">
+              <span class="text-sm font-bold uppercase tracking-[0.16em] text-white/48">Date</span>
+              <p class="mt-1 font-black">{{ eventDateRange }}</p>
             </div>
           </div>
         </div>
