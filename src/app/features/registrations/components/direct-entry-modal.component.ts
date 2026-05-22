@@ -66,12 +66,13 @@ export interface DirectEntryForm {
               </label>
             </div>
             <label class="grid gap-1 text-sm font-bold">
-              Contatto
+              Telefono <span class="text-red-500">*</span>
               <input
-                type="text"
+                type="tel"
+                required
                 name="p1_contact"
                 [(ngModel)]="form.person1.contact"
-                placeholder="Es. mario@email.com o 3XXXXXXXXX"
+                placeholder="Es. 3331234567"
                 class="rounded-lg border border-soft bg-surface-muted px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"
               />
             </label>
@@ -107,12 +108,12 @@ export interface DirectEntryForm {
                 </label>
               </div>
               <label class="grid gap-1 text-sm font-bold">
-                Contatto
+                Telefono
                 <input
-                  type="text"
+                  type="tel"
                   name="p2_contact"
                   [(ngModel)]="form.person2.contact"
-                  placeholder="Es. luigi@email.com o 3XXXXXXXXX"
+                  placeholder="Es. 3331234567"
                   class="rounded-lg border border-soft bg-surface-muted px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"
                 />
               </label>

@@ -13,15 +13,15 @@ import {
   TournamentWithTeams,
 } from "../../core/types/models";
 import {
+  FilterOption,
+  StatusFilterPillsComponent,
+} from "../../shared/components/status-filter-pills.component";
+import {
   ConfirmModalComponent,
   EmptyStateComponent,
   KpiPanelComponent,
   SummaryCardComponent,
 } from "../../shared/components/ui.component";
-import {
-  FilterOption,
-  StatusFilterPillsComponent,
-} from "../../shared/components/status-filter-pills.component";
 import { DirectEntryModalComponent } from "./components/direct-entry-modal.component";
 import { ParticipantModalComponent } from "./components/participant-modal.component";
 import { RegistrationsTableComponent } from "./components/registrations-table.component";
@@ -434,6 +434,13 @@ export class RegistrationsComponent implements OnInit {
 
   async saveTeam(payload: InsertTournamentTeam): Promise<void> {
     if (this.saving()) return;
+    if (!this.hasPhone(payload.captain_contact)) {
+      const message =
+        "Inserisci il numero di telefono di almeno un partecipante referente.";
+      this.modalError.set(message);
+      this.snackbar.warning(message);
+      return;
+    }
     this.saving.set(true);
     this.modalError.set("");
     try {
@@ -535,7 +542,9 @@ export class RegistrationsComponent implements OnInit {
         last_name: payload.last_name.trim(),
         contact: payload.contact?.trim() || null,
         registered:
-          tournament?.sport === "pallavolo" ? Boolean(payload.registered) : false,
+          tournament?.sport === "pallavolo"
+            ? Boolean(payload.registered)
+            : false,
       };
       if (current) {
         await this.service.updateParticipant(current.id, normalizedPayload);
@@ -575,6 +584,13 @@ export class RegistrationsComponent implements OnInit {
 
   async saveDirectEntry(payload: DirectForm): Promise<void> {
     if (this.saving()) return;
+    if (!this.hasAtLeastOneDirectPhone(payload)) {
+      const message =
+        "Inserisci il numero di telefono di almeno un partecipante.";
+      this.modalError.set(message);
+      this.snackbar.warning(message);
+      return;
+    }
     this.saving.set(true);
     this.modalError.set("");
     try {
@@ -824,6 +840,23 @@ export class RegistrationsComponent implements OnInit {
       last_name: person.last_name.trim(),
       contact: person.contact.trim(),
     };
+  }
+
+  private hasPhone(value: string | null | undefined): boolean {
+    return Boolean(value?.trim());
+  }
+
+  private hasAtLeastOneDirectPhone(payload: DirectForm): boolean {
+    if (this.hasPhone(payload.person1.contact)) {
+      return true;
+    }
+    const tournament = this.tournaments().find(
+      (item) => item.id === payload.tournament_id,
+    );
+    if (!tournament || !this.isDuoTournament(tournament)) {
+      return false;
+    }
+    return this.hasPhone(payload.person2.contact);
   }
 
   private emptyTeamForm(): InsertTournamentTeam {

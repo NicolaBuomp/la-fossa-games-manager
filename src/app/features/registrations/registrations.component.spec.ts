@@ -88,14 +88,17 @@ describe("RegistrationsComponent", () => {
       ],
     );
     service.listTournaments.and.resolveTo([]);
-    service.createTeam.and.callFake(async (payload: InsertTournamentTeam) => ({
-      id: "created-team",
-      created_by: null,
-      updated_by: null,
-      created_at: "2026-05-01T10:00:00Z",
-      updated_at: "2026-05-01T10:00:00Z",
-      ...payload,
-    }) as TournamentTeam);
+    service.createTeam.and.callFake(
+      async (payload: InsertTournamentTeam) =>
+        ({
+          id: "created-team",
+          created_by: null,
+          updated_by: null,
+          created_at: "2026-05-01T10:00:00Z",
+          updated_at: "2026-05-01T10:00:00Z",
+          ...payload,
+        }) as TournamentTeam,
+    );
     service.createParticipant.and.callFake(
       async (payload: InsertTeamParticipant) => ({
         id: `participant-${service.createParticipant.calls.count()}`,
@@ -118,12 +121,17 @@ describe("RegistrationsComponent", () => {
       providers: [
         { provide: AuthService, useValue: { isAdmin: () => true } },
         { provide: RegistrationsService, useValue: service },
-        { provide: ExportService, useValue: { downloadCsv: jasmine.createSpy() } },
+        {
+          provide: ExportService,
+          useValue: { downloadCsv: jasmine.createSpy() },
+        },
         { provide: SnackbarService, useValue: snackbar },
       ],
     });
 
-    component = TestBed.runInInjectionContext(() => new RegistrationsComponent());
+    component = TestBed.runInInjectionContext(
+      () => new RegistrationsComponent(),
+    );
   });
 
   it("normalizes team payloads and uses the tournament fee", async () => {
@@ -154,6 +162,28 @@ describe("RegistrationsComponent", () => {
     });
   });
 
+  it("blocks team creation when participant phone is missing", async () => {
+    component.tournaments.set([tournament()]);
+
+    await component.saveTeam({
+      tournament_id: "tournament-1",
+      name: "Team A",
+      captain_name: "Mario",
+      captain_contact: "   ",
+      vice_captain_name: "",
+      vice_captain_contact: "",
+      fee: 0,
+      paid: false,
+      notes: "",
+    });
+
+    expect(service.createTeam).not.toHaveBeenCalled();
+    expect(component.modalError()).toContain(
+      "numero di telefono di almeno un partecipante referente",
+    );
+    expect(snackbar.warning).toHaveBeenCalled();
+  });
+
   it("blocks adding participants beyond the tournament limit", () => {
     component.tournaments.set([
       tournament({
@@ -181,7 +211,9 @@ describe("RegistrationsComponent", () => {
         tournament_teams: [
           {
             ...tournament().tournament_teams[0],
-            team_participants: [participant("registered", { registered: true })],
+            team_participants: [
+              participant("registered", { registered: true }),
+            ],
           },
         ],
       }),
@@ -215,8 +247,16 @@ describe("RegistrationsComponent", () => {
     await component.saveDirectEntry({
       tournament_id: "briscola",
       paid: true,
-      person1: { first_name: " Mario ", last_name: " Rossi ", contact: " 333 " },
-      person2: { first_name: " Luigi ", last_name: " Verdi ", contact: " 334 " },
+      person1: {
+        first_name: " Mario ",
+        last_name: " Rossi ",
+        contact: " 333 ",
+      },
+      person2: {
+        first_name: " Luigi ",
+        last_name: " Verdi ",
+        contact: " 334 ",
+      },
     });
 
     expect(service.createTeam).toHaveBeenCalledOnceWith({
@@ -247,5 +287,32 @@ describe("RegistrationsComponent", () => {
         contact: "334",
       }),
     );
+  });
+
+  it("blocks direct entry when all participant phones are missing", async () => {
+    component.tournaments.set([
+      tournament({
+        id: "briscola",
+        code: "briscola",
+        name: "Briscola",
+        sport: "altro",
+        fee: 20,
+        tournament_teams: [],
+      }),
+    ]);
+
+    await component.saveDirectEntry({
+      tournament_id: "briscola",
+      paid: false,
+      person1: { first_name: "Mario", last_name: "Rossi", contact: " " },
+      person2: { first_name: "Luigi", last_name: "Verdi", contact: "" },
+    });
+
+    expect(service.createTeam).not.toHaveBeenCalled();
+    expect(service.createParticipant).not.toHaveBeenCalled();
+    expect(component.modalError()).toContain(
+      "numero di telefono di almeno un partecipante",
+    );
+    expect(snackbar.warning).toHaveBeenCalled();
   });
 });

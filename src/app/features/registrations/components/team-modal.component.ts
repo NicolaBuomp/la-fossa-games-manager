@@ -38,11 +38,35 @@ import { ModalComponent } from "../../../shared/components/ui.component";
           </label>
 
           <label class="grid gap-1 text-sm font-bold">
+            Telefono partecipante referente
+            <span class="text-red-500">*</span>
+            <input
+              type="tel"
+              required
+              name="captain_contact"
+              [(ngModel)]="form.captain_contact"
+              placeholder="Es. 3331234567"
+              class="rounded-lg border border-soft bg-surface-muted px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"
+            />
+          </label>
+
+          <label class="grid gap-1 text-sm font-bold">
             Vice capitano
             <input
               type="text"
               name="vice_captain_name"
               [(ngModel)]="form.vice_captain_name"
+              class="rounded-lg border border-soft bg-surface-muted px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"
+            />
+          </label>
+
+          <label class="grid gap-1 text-sm font-bold">
+            Telefono vice capitano
+            <input
+              type="tel"
+              name="vice_captain_contact"
+              [(ngModel)]="form.vice_captain_contact"
+              placeholder="Es. 3331234567"
               class="rounded-lg border border-soft bg-surface-muted px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"
             />
           </label>
