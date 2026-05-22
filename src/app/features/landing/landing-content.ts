@@ -224,12 +224,12 @@ export const SPONSOR_TIERS: SponsorTier[] = [
     ],
   },
   {
-    name: "Gold",
+    name: "Oro",
     color: "#ffd400",
     description:
       "Il pacchetto avanzato per aumentare la presenza del brand sui canali ufficiali e negli spazi evento.",
     perks: [
-      "Tutti i vantaggi del pacchetto Silver",
+      "Tutti i vantaggi del pacchetto Argento",
       "Maggiore visibilità all'interno del sito",
       "Logo sulla maglia staff lato retro in formato ridotto",
       "Gadget personalizzati",
@@ -237,7 +237,7 @@ export const SPONSOR_TIERS: SponsorTier[] = [
     ],
   },
   {
-    name: "Silver",
+    name: "Argento",
     color: "#c8c8c8",
     description:
       "La soluzione intermedia con presenza dedicata su social, materiali fisici e touchpoint digitali.",

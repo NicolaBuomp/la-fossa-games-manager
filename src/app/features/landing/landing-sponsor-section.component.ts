@@ -31,9 +31,9 @@ import { SPONSOR_TIERS } from "./landing-content";
           </div>
           <div class="max-w-xl">
             <p class="text-base font-semibold leading-7 text-white/68">
-              Un impianto chiaro, tre livelli e una presenza visiva curata: il
-              tuo brand entra nel ritmo dell'evento con spazio reale, online e
-              sul campo.
+              Un impianto chiaro, quattro livelli e una presenza visiva curata:
+              il tuo brand entra nel ritmo dell'evento con spazio reale, online
+              e sul campo.
             </p>
             <a
               href="#partecipa"
@@ -52,7 +52,7 @@ import { SPONSOR_TIERS } from "./landing-content";
             <p
               class="font-display text-3xl leading-none text-accent sm:text-4xl"
             >
-              3
+              4
             </p>
             <p
               class="mt-1 text-[0.68rem] font-black uppercase tracking-[0.18em] text-white/58 sm:text-xs"
@@ -95,32 +95,37 @@ import { SPONSOR_TIERS } from "./landing-content";
             <article
               class="card-lift relative rounded-lg border p-5 shadow-2xl transition sm:p-6"
               [class]="
-                tier.name === 'Gold'
-                  ? 'border-[#ffd400]/55 bg-[#ffd400]/[0.08] ring-1 ring-[#ffd400]/30 shadow-[0_0_42px_rgba(255,212,0,0.09)] md:col-span-2 lg:col-span-1'
-                  : tier.name === 'Silver'
-                    ? 'border-white/15 bg-white/[0.06]'
-                    : 'border-[#d98945]/30 bg-[#d98945]/[0.06]'
+                tier.name === 'Platino'
+                  ? 'border-[#e5e4e2]/40 bg-[#e5e4e2]/[0.06] ring-1 ring-[#e5e4e2]/20 shadow-[0_0_42px_rgba(229,228,226,0.07)]'
+                  : tier.name === 'Oro'
+                    ? 'border-[#ffd400]/55 bg-[#ffd400]/[0.08] ring-1 ring-[#ffd400]/30 shadow-[0_0_42px_rgba(255,212,0,0.09)] md:col-span-2 lg:col-span-1'
+                    : tier.name === 'Argento'
+                      ? 'border-white/15 bg-white/[0.06]'
+                      : 'border-[#d98945]/30 bg-[#d98945]/[0.06]'
               "
             >
-              @if (tier.name === "Gold") {
+              @if (tier.name === "Platino" || tier.name === "Oro") {
                 <span
-                  class="absolute -top-3 left-5 rounded-full bg-[#ffd400] px-3 py-0.5 text-[0.65rem] font-black uppercase tracking-[0.18em] text-black"
+                  class="absolute -top-3 left-5 rounded-full px-3 py-0.5 text-[0.65rem] font-black uppercase tracking-[0.18em] text-black"
+                  [class]="tier.name === 'Platino' ? 'bg-[#e5e4e2]' : 'bg-[#ffd400]'"
                 >
-                  Visibilità massima
+                  {{ tier.name === "Platino" ? "Top di gamma" : "Più equilibrato" }}
                 </span>
               }
               <div class="flex items-center gap-4">
                 <div
                   class="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border text-3xl font-black"
                   [class]="
-                    tier.name === 'Gold'
-                      ? 'shadow-[0_0_20px_rgba(255,212,0,0.35)]'
-                      : ''
+                    tier.name === 'Platino'
+                      ? 'shadow-[0_0_20px_rgba(229,228,226,0.40)]'
+                      : tier.name === 'Oro'
+                        ? 'shadow-[0_0_20px_rgba(255,212,0,0.35)]'
+                        : ''
                   "
                   [style.border-color]="tier.color"
                   [style.color]="tier.color"
                 >
-                  ★
+                  {{ tierIcon[tier.name] }}
                 </div>
                 <div class="min-w-0">
                   <h3
@@ -177,19 +182,19 @@ import { SPONSOR_TIERS } from "./landing-content";
               </div>
             </div>
 
-            @if (mainSponsors.length) {
+            @if (platinumSponsors.length) {
               <div class="mt-7">
                 <div
                   class="mb-3 flex items-center justify-between gap-3 text-xs font-black uppercase tracking-[0.22em]"
                 >
-                  <p class="text-accent">Main sponsor</p>
+                  <p class="text-accent">Platino</p>
                 </div>
                 <div
                   class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3"
                 >
-                  @for (logo of mainSponsors; track logo.src) {
+                  @for (logo of platinumSponsors; track logo.src) {
                     <article
-                      class="sponsor-logo-card flex min-h-52 items-center justify-center rounded-md border border-accent/30 bg-white px-5 py-6 shadow-[0_18px_40px_rgba(0,0,0,0.2)] lg:min-h-72 lg:p-6"
+                      class="sponsor-logo-card flex min-h-52 flex-col items-center justify-center rounded-md border border-accent/30 bg-white px-5 py-6 shadow-[0_18px_40px_rgba(0,0,0,0.2)] transition-all duration-300 hover:-translate-y-0.5 hover:border-[#ffd400]/60 hover:shadow-[0_0_28px_rgba(255,212,0,0.35)] lg:min-h-72 lg:p-6"
                     >
                       <div
                         class="flex h-40 w-full items-center justify-center lg:h-56"
@@ -201,25 +206,57 @@ import { SPONSOR_TIERS } from "./landing-content";
                           loading="lazy"
                         />
                       </div>
+                      <p class="mt-3 text-center text-[0.6rem] font-black uppercase tracking-widest text-black/40">{{ logo.name }}</p>
                     </article>
                   }
                 </div>
               </div>
             }
 
-            @if (mediumSponsors.length) {
+            @if (goldSponsors.length) {
               <div class="mt-6">
                 <div
                   class="mb-3 flex items-center justify-between gap-3 text-xs font-black uppercase tracking-[0.22em]"
                 >
-                  <p class="text-white/42">Altri Sponsor</p>
+                  <p style="color: #ffd400">Sponsor Oro</p>
+                </div>
+                <div
+                  class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3"
+                >
+                  @for (logo of goldSponsors; track logo.src) {
+                    <article
+                      class="sponsor-logo-card flex min-h-44 flex-col items-center justify-center rounded-md border border-[#ffd400]/25 bg-white px-4 py-5 transition-all duration-300 hover:-translate-y-0.5 hover:border-[#ffd400]/55 hover:shadow-[0_0_24px_rgba(255,212,0,0.30)] lg:min-h-56 lg:p-6"
+                    >
+                      <div
+                        class="flex h-32 w-full items-center justify-center lg:h-44"
+                      >
+                        <img
+                          [src]="logo.src"
+                          [alt]="logo.name"
+                          class="h-full w-full object-contain object-center lg:scale-110"
+                          loading="lazy"
+                        />
+                      </div>
+                      <p class="mt-3 text-center text-[0.6rem] font-black uppercase tracking-widest text-black/40">{{ logo.name }}</p>
+                    </article>
+                  }
+                </div>
+              </div>
+            }
+
+            @if (silverSponsors.length) {
+              <div class="mt-6">
+                <div
+                  class="mb-3 flex items-center justify-between gap-3 text-xs font-black uppercase tracking-[0.22em]"
+                >
+                  <p style="color: #c8c8c8">Sponsor Argento</p>
                 </div>
                 <div
                   class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4"
                 >
-                  @for (logo of mediumSponsors; track logo.src) {
+                  @for (logo of silverSponsors; track logo.src) {
                     <article
-                      class="sponsor-logo-card flex min-h-36 items-center justify-center rounded-md border border-white/10 bg-white px-3 py-4 lg:min-h-48 lg:px-4 lg:py-5"
+                      class="sponsor-logo-card flex min-h-36 flex-col items-center justify-center rounded-md border border-white/10 bg-white px-3 py-4 transition-all duration-300 hover:-translate-y-0.5 hover:border-[#c8c8c8]/50 hover:shadow-[0_0_24px_rgba(200,200,200,0.30)] lg:min-h-48 lg:px-4 lg:py-5"
                     >
                       <div
                         class="flex h-28 w-full items-center justify-center lg:h-40"
@@ -231,23 +268,26 @@ import { SPONSOR_TIERS } from "./landing-content";
                           loading="lazy"
                         />
                       </div>
+                      <p class="mt-2 text-center text-[0.6rem] font-black uppercase tracking-widest text-black/40">{{ logo.name }}</p>
                     </article>
                   }
                 </div>
               </div>
             }
 
-            @if (baseSponsors.length) {
+            @if (bronzeSponsors.length) {
               <div class="mt-5">
                 <div
                   class="mb-2 flex items-center justify-between gap-3 text-xs font-black uppercase tracking-[0.22em]"
-                ></div>
+                >
+                  <p style="color: #d98945">Sponsor Bronzo</p>
+                </div>
                 <div
                   class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5"
                 >
-                  @for (logo of baseSponsors; track logo.src) {
+                  @for (logo of bronzeSponsors; track logo.src) {
                     <article
-                      class="sponsor-logo-card flex min-h-28 items-center justify-center rounded-md border border-white/10 bg-white px-2 py-3 lg:min-h-36 lg:px-3"
+                      class="sponsor-logo-card flex min-h-28 flex-col items-center justify-center rounded-md border border-white/10 bg-white px-2 py-3 transition-all duration-300 hover:-translate-y-0.5 hover:border-[#d98945]/40 hover:shadow-[0_0_20px_rgba(217,137,69,0.25)] lg:min-h-36 lg:px-3"
                     >
                       <div
                         class="flex h-20 w-full items-center justify-center lg:h-28"
@@ -259,6 +299,7 @@ import { SPONSOR_TIERS } from "./landing-content";
                           loading="lazy"
                         />
                       </div>
+                      <p class="mt-2 text-center text-[0.55rem] font-black uppercase tracking-widest text-black/40">{{ logo.name }}</p>
                     </article>
                   }
                 </div>
@@ -283,17 +324,25 @@ import { SPONSOR_TIERS } from "./landing-content";
 export class LandingSponsorSectionComponent {
   @Output() sponsorContact = new EventEmitter<MouseEvent>();
 
+  protected readonly tierIcon: Record<string, string> = {
+    Platino: "✦",
+    Oro: "★",
+    Argento: "◆",
+    Bronzo: "●",
+  };
+
   protected readonly sponsorTiers = SPONSOR_TIERS;
-  protected readonly mainSponsors = SPONSOR_ASSETS.filter((sponsor) =>
-    sponsor.src.startsWith("/assets/sponsor/main/"),
+  protected readonly platinumSponsors = SPONSOR_ASSETS.filter(
+    (s) => s.category === "platino",
   );
-  protected readonly mediumSponsors: SponsorAsset[] = SPONSOR_ASSETS.filter(
-    (sponsor) =>
-      !sponsor.src.startsWith("/assets/sponsor/main/") &&
-      !sponsor.src.startsWith("/assets/sponsor/base/"),
+  protected readonly goldSponsors: SponsorAsset[] = SPONSOR_ASSETS.filter(
+    (s) => s.category === "oro",
   );
-  protected readonly baseSponsors: SponsorAsset[] = SPONSOR_ASSETS.filter(
-    (sponsor) => sponsor.src.startsWith("/assets/sponsor/base/"),
+  protected readonly silverSponsors: SponsorAsset[] = SPONSOR_ASSETS.filter(
+    (s) => s.category === "argento",
+  );
+  protected readonly bronzeSponsors: SponsorAsset[] = SPONSOR_ASSETS.filter(
+    (s) => s.category === "bronzo",
   );
   protected readonly hasSponsorLogos = SPONSOR_ASSETS.length > 0;
 }

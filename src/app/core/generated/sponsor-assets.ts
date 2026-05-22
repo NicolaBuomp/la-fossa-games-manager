@@ -1,4 +1,4 @@
-export type SponsorCategory = 'gold' | 'silver' | 'bronzo';
+export type SponsorCategory ='platino' | 'oro' | 'argento' | 'bronzo';
 
 export type SponsorAsset = {
   name: string;
@@ -9,57 +9,62 @@ export type SponsorAsset = {
 export const SPONSOR_ASSETS: SponsorAsset[] = [
   {
     "name": "VETERFARM",
-    "src": "/assets/sponsor/main/VETERFARM_LOGO_PREMIUM.png",
-    "category": "gold"
+    "src": "/assets/sponsor/platino/VETERFARM_LOGO_PREMIUM.png",
+    "category": "platino"
   },
   {
-    "name": "Regno Regno Dei Mazzoni",
-    "src": "/assets/sponsor/medium/regno_regno_dei_mazzoni.jpeg",
-    "category": "silver"
+    "name": "Regno Dei Mazzoni",
+    "src": "/assets/sponsor/argento/regno_regno_dei_mazzoni.jpeg",
+    "category": "argento"
+  },
+  {
+    "name": "Autofficina Gazzillo",
+    "src": "/assets/sponsor/bronzo/autofficina gazzillo.jpeg",
+    "category": "bronzo"
+  },
+  {
+    "name": "Azienda Zootecnica Bufalina Della Vecchia",
+    "src": "/assets/sponsor/bronzo/Azienda Zootecnica Bufalina Della Vecchia.jpeg",
+    "category": "bronzo"
   },
   {
     "name": "Bellanca",
-    "src": "/assets/sponsor/base/bellanca.jpeg",
+    "src": "/assets/sponsor/bronzo/bellanca.jpeg",
     "category": "bronzo"
   },
   {
-    "name": "Gazzillo",
-    "src": "/assets/sponsor/base/gazzillo.jpeg",
+    "name": "Centro Shopping Zio Teofilo",
+    "src": "/assets/sponsor/bronzo/centro shopping zio teofilo.jpeg",
     "category": "bronzo"
   },
   {
-    "name": "Gs Autofficina 2025 Page 0001",
-    "src": "/assets/sponsor/base/gs_autofficina_2025_page-0001.jpg",
+    "name": "Gs Autofficina",
+    "src": "/assets/sponsor/bronzo/Gs Autofficina.jpg",
     "category": "bronzo"
   },
   {
-    "name": "Lacasertana",
-    "src": "/assets/sponsor/base/lacasertana.jpg",
+    "name": "La Casertana",
+    "src": "/assets/sponsor/bronzo/La Casertana.jpg",
     "category": "bronzo"
   },
   {
-    "name": "Onoranzefunebripalazzo",
-    "src": "/assets/sponsor/base/onoranzefunebripalazzo.jpeg",
+    "name": "Onoranze Funebri Palazzo",
+    "src": "/assets/sponsor/bronzo/onoranze funebri palazzo.jpeg",
     "category": "bronzo"
   },
   {
-    "name": "SALVATORE CEPPARULO",
-    "src": "/assets/sponsor/base/SALVATORE_CEPPARULO_LOGO_BASE.png",
+    "name": "Soccer Royal Betting Di Salvatore Cepparulo",
+    "src": "/assets/sponsor/bronzo/Soccer Royal Betting di Salvatore Cepparulo.png",
     "category": "bronzo"
   },
   {
-    "name": "Tabacchin1",
-    "src": "/assets/sponsor/base/tabacchin1.jpeg",
+    "name": "Tabacchi N1",
+    "src": "/assets/sponsor/bronzo/tabacchi n1.jpeg",
     "category": "bronzo"
   },
   {
-    "name": "Teofilo",
-    "src": "/assets/sponsor/base/teofilo.jpeg",
-    "category": "bronzo"
-  },
-  {
-    "name": "Zootecnica Bufalina",
-    "src": "/assets/sponsor/base/zootecnica_bufalina.jpeg",
+    "name": "ZIO TEOFILO BAR TABACCHI",
+    "src": "/assets/sponsor/bronzo/ZIO TEOFILO - BAR - TABACCHI.jpg",
     "category": "bronzo"
   }
 ];
