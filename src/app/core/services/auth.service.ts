@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { Session, User } from '@supabase/supabase-js';
 import { SupabaseService } from './supabase.service';
 import { Profile } from '../types/models';
+import { SUPABASE_RPC, SUPABASE_TABLE, USER_ROLE } from '../types/constants';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -17,9 +18,9 @@ export class AuthService {
   readonly loading = this.loadingState.asReadonly();
   readonly user = computed<User | null>(() => this.sessionState()?.user ?? null);
   readonly isAuthenticated = computed(() => !!this.sessionState());
-  readonly isAdmin = computed(() => this.profileState()?.roles?.includes('admin') ?? false);
-  readonly isOwner = computed(() => this.profileState()?.roles?.includes('owner') ?? false);
-  readonly isTreasurer = computed(() => this.profileState()?.roles?.includes('tesoriere') ?? false);
+  readonly isAdmin = computed(() => this.profileState()?.roles?.includes(USER_ROLE.Admin) ?? false);
+  readonly isOwner = computed(() => this.profileState()?.roles?.includes(USER_ROLE.Owner) ?? false);
+  readonly isTreasurer = computed(() => this.profileState()?.roles?.includes(USER_ROLE.Treasurer) ?? false);
   readonly isActive = computed(() => this.profileState()?.active === true);
   readonly canAccessTreasury = computed(() => this.isOwner() || this.isTreasurer());
 
@@ -67,7 +68,7 @@ export class AuthService {
   }
 
   private async emailForUsername(username: string): Promise<string> {
-    const { data, error } = await this.supabase.client.rpc('username_login_email', {
+    const { data, error } = await this.supabase.client.rpc(SUPABASE_RPC.UsernameLoginEmail, {
       login_username: username
     });
     if (error) throw error;
@@ -112,7 +113,7 @@ export class AuthService {
     }
 
     const { data, error } = await this.supabase.client
-      .from('profiles')
+      .from(SUPABASE_TABLE.Profiles)
       .select('*')
       .eq('id', user.id)
       .maybeSingle();

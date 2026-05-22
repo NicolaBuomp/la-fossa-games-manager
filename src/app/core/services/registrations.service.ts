@@ -6,36 +6,21 @@ import {
   Registration,
   TeamParticipant,
   Tournament,
-  TournamentSport,
   TournamentTeam,
   TournamentWithTeams,
 } from "../types/models";
+import {
+  DEFAULT_TOURNAMENTS,
+  DEFAULT_TOURNAMENT_CODES,
+  PARTICIPANT_GENDER,
+  SUPABASE_TABLE,
+  TOURNAMENT_PUBLIC_STATUS,
+  TOURNAMENT_SPORT,
+  TOURNAMENT_STATUS,
+} from "../types/constants";
 import { SupabaseService } from "./supabase.service";
 
-export const DEFAULT_TOURNAMENT_CODES: string[] = [
-  "calcio-a-5",
-  "calcio-a-5-under-15",
-  "pallavolo",
-  "briscola",
-  "fifa",
-  "ping-pong",
-  "calcio-balilla",
-];
-
-const DEFAULT_TOURNAMENTS: {
-  code: string;
-  name: string;
-  sport: TournamentSport;
-  fee?: number;
-}[] = [
-  { code: "calcio-a-5", name: "Calcio a 5", sport: "calcio" },
-  { code: "calcio-a-5-under-15", name: "Calcio a 5 Under 15", sport: "calcio" },
-  { code: "pallavolo", name: "Green Volley", sport: "pallavolo", fee: 50 },
-  { code: "briscola", name: "Briscola", sport: "altro" },
-  { code: "fifa", name: "Fifa", sport: "altro" },
-  { code: "ping-pong", name: "Ping Pong", sport: "altro" },
-  { code: "calcio-balilla", name: "Calcio Balilla", sport: "altro" },
-];
+export { DEFAULT_TOURNAMENT_CODES };
 
 @Injectable({ providedIn: "root" })
 export class RegistrationsService {
@@ -67,7 +52,7 @@ export class RegistrationsService {
   async listTournaments(): Promise<TournamentWithTeams[]> {
     await this.ensureDefaultTournaments();
     const { data, error } = await this.supabase.client
-      .from("tournaments")
+      .from(SUPABASE_TABLE.Tournaments)
       .select("*, tournament_teams(*, team_participants(*))")
       .in(
         "code",
@@ -90,7 +75,7 @@ export class RegistrationsService {
 
   async createTournament(payload: InsertTournament): Promise<Tournament> {
     const { data, error } = await this.supabase.client
-      .from("tournaments")
+      .from(SUPABASE_TABLE.Tournaments)
       .insert(payload)
       .select()
       .single();
@@ -105,8 +90,8 @@ export class RegistrationsService {
         name: tournament.name,
         sport: tournament.sport,
         fee: tournament.fee ?? 0,
-        status: "registrations_open",
-        public_status: "registrations_open",
+        status: TOURNAMENT_STATUS.RegistrationsOpen,
+        public_status: TOURNAMENT_PUBLIC_STATUS.RegistrationsOpen,
       })),
       { onConflict: "code", ignoreDuplicates: true },
     );
@@ -118,10 +103,10 @@ export class RegistrationsService {
   ): TournamentWithTeams {
     return {
       ...tournament,
-      sport: tournament.sport ?? "altro",
+      sport: tournament.sport ?? TOURNAMENT_SPORT.Other,
       fee: Number(tournament.fee || 0),
-      status: tournament.status ?? "registrations_open",
-      public_status: tournament.public_status ?? "registrations_open",
+      status: tournament.status ?? TOURNAMENT_STATUS.RegistrationsOpen,
+      public_status: tournament.public_status ?? TOURNAMENT_PUBLIC_STATUS.RegistrationsOpen,
       published_at: tournament.published_at ?? null,
       tournament_teams: [...(tournament.tournament_teams ?? [])]
         .sort((a, b) => a.name.localeCompare(b.name, "it"))
@@ -135,7 +120,7 @@ export class RegistrationsService {
           team_participants: [...(team.team_participants ?? [])]
             .map((participant) => ({
               ...participant,
-              gender: participant.gender ?? "uomo",
+              gender: participant.gender ?? PARTICIPANT_GENDER.Male,
               registered: Boolean(participant.registered),
             }))
             .sort((a, b) =>
@@ -153,7 +138,7 @@ export class RegistrationsService {
     payload: Partial<InsertTournament>,
   ): Promise<Tournament> {
     const { data, error } = await this.supabase.client
-      .from("tournaments")
+      .from(SUPABASE_TABLE.Tournaments)
       .update(payload)
       .eq("id", id)
       .select()
@@ -164,7 +149,7 @@ export class RegistrationsService {
 
   async removeTournament(id: string): Promise<void> {
     const { error } = await this.supabase.client
-      .from("tournaments")
+      .from(SUPABASE_TABLE.Tournaments)
       .delete()
       .eq("id", id);
     if (error) throw error;
@@ -172,7 +157,7 @@ export class RegistrationsService {
 
   async createTeam(payload: InsertTournamentTeam): Promise<TournamentTeam> {
     const { data, error } = await this.supabase.client
-      .from("tournament_teams")
+      .from(SUPABASE_TABLE.TournamentTeams)
       .insert(payload)
       .select()
       .single();
@@ -185,7 +170,7 @@ export class RegistrationsService {
     payload: Partial<InsertTournamentTeam>,
   ): Promise<TournamentTeam> {
     const { data, error } = await this.supabase.client
-      .from("tournament_teams")
+      .from(SUPABASE_TABLE.TournamentTeams)
       .update(payload)
       .eq("id", id)
       .select()
@@ -196,7 +181,7 @@ export class RegistrationsService {
 
   async removeTeam(id: string): Promise<void> {
     const { error } = await this.supabase.client
-      .from("tournament_teams")
+      .from(SUPABASE_TABLE.TournamentTeams)
       .delete()
       .eq("id", id);
     if (error) throw error;
@@ -206,7 +191,7 @@ export class RegistrationsService {
     payload: InsertTeamParticipant,
   ): Promise<TeamParticipant> {
     const { data, error } = await this.supabase.client
-      .from("team_participants")
+      .from(SUPABASE_TABLE.TeamParticipants)
       .insert(payload)
       .select()
       .single();
@@ -219,7 +204,7 @@ export class RegistrationsService {
     payload: Partial<InsertTeamParticipant>,
   ): Promise<TeamParticipant> {
     const { data, error } = await this.supabase.client
-      .from("team_participants")
+      .from(SUPABASE_TABLE.TeamParticipants)
       .update(payload)
       .eq("id", id)
       .select()
@@ -230,7 +215,7 @@ export class RegistrationsService {
 
   async removeParticipant(id: string): Promise<void> {
     const { error } = await this.supabase.client
-      .from("team_participants")
+      .from(SUPABASE_TABLE.TeamParticipants)
       .delete()
       .eq("id", id);
     if (error) throw error;

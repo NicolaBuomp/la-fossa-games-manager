@@ -1,5 +1,9 @@
 import { Component, EventEmitter, Input, Output } from "@angular/core";
 import { TournamentWithTeams } from "../../../core/types/models";
+import {
+  TOURNAMENT_STATUS,
+  TOURNAMENT_STATUSES,
+} from "../../../core/types/constants";
 
 @Component({
   selector: "lfg-tournament-selector",
@@ -40,22 +44,13 @@ export class TournamentSelectorComponent {
   @Output() selectTournament = new EventEmitter<string>();
 
   statusLabel(status: string): string {
-    const map: Record<string, string> = {
-      draft: "Bozza",
-      registrations_open: "Aperto",
-      registrations_closed: "Chiuso",
-      groups_generated: "Gironi",
-      in_progress: "In corso",
-      completed: "Completato",
-      archived: "Archiviato",
-    };
-    return map[status] ?? status;
+    return TOURNAMENT_STATUSES.find((item) => item.id === status)?.label ?? status;
   }
 
   statusBadgeClass(status: string): string {
-    if (status === "registrations_open") return "bg-green-100 text-green-800";
-    if (status === "in_progress") return "bg-blue-100 text-blue-800";
-    if (status === "completed" || status === "archived") return "bg-surface-muted text-muted";
+    if (status === TOURNAMENT_STATUS.RegistrationsOpen) return "bg-green-100 text-green-800";
+    if (status === TOURNAMENT_STATUS.InProgress) return "bg-blue-100 text-blue-800";
+    if (status === TOURNAMENT_STATUS.Completed || status === TOURNAMENT_STATUS.Archived) return "bg-surface-muted text-muted";
     return "bg-amber-100 text-amber-800";
   }
 }

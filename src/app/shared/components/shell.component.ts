@@ -4,12 +4,17 @@ import { AuthService } from "../../core/services/auth.service";
 import { LoadingService } from "../../core/services/loading.service";
 import { RequestBadgesService } from "../../core/services/request-badges.service";
 import { ThemeMode, ThemeService } from "../../core/services/theme.service";
+import {
+  SHELL_BADGE,
+  SHELL_NAV_ITEMS,
+  THEME_MODE_OPTIONS,
+} from "../../core/types/constants";
 
 interface NavItem {
   path: string;
   label: string;
   short: string;
-  badge?: "tournamentRequests" | "sponsorRequests";
+  badge?: (typeof SHELL_BADGE)[keyof typeof SHELL_BADGE];
   adminOnly?: boolean;
   treasuryOnly?: boolean;
   group?: string;
@@ -294,24 +299,8 @@ interface NavItem {
 })
 export class ShellComponent implements OnInit, OnDestroy {
   readonly mobileMenuOpen = signal(false);
-  readonly themeModes: { id: ThemeMode; label: string }[] = [
-    { id: "system", label: "Auto" },
-    { id: "light", label: "Chiaro" },
-    { id: "dark", label: "Scuro" },
-  ];
-
-  readonly nav: NavItem[] = [
-    { path: "/app/dashboard", label: "Home", short: "H", group: "Gestionale" },
-    { path: "/app/registrations", label: "Iscritti", short: "I", group: "Gestionale" },
-    { path: "/app/tournaments", label: "Tornei", short: "T", group: "Gestionale" },
-    { path: "/app/participation-requests", label: "Richieste", short: "R", badge: "tournamentRequests", group: "Gestionale" },
-    { path: "/app/sponsors", label: "Sponsor", short: "S", badge: "sponsorRequests", group: "Gestionale" },
-    { path: "/app/transazioni", label: "Transazioni", short: "$", group: "Finanze" },
-    { path: "/app/tesoreria", label: "Tesoriere", short: "T", treasuryOnly: true, group: "Finanze" },
-    { path: "/app/profile", label: "Profilo", short: "P", group: "Account" },
-    { path: "/app/users", label: "Utenti", short: "U", adminOnly: true, group: "Admin" },
-    { path: "/app/audit", label: "Audit", short: "A", adminOnly: true, group: "Admin" },
-  ];
+  readonly themeModes = THEME_MODE_OPTIONS;
+  readonly nav: readonly NavItem[] = SHELL_NAV_ITEMS;
 
   readonly visibleNav = computed(() =>
     this.nav.filter((item) => {
@@ -355,10 +344,10 @@ export class ShellComponent implements OnInit, OnDestroy {
   }
 
   badgeCount(item: NavItem): number {
-    if (item.badge === "tournamentRequests") {
+    if (item.badge === SHELL_BADGE.TournamentRequests) {
       return this.badges.tournamentRequests();
     }
-    if (item.badge === "sponsorRequests") {
+    if (item.badge === SHELL_BADGE.SponsorRequests) {
       return this.badges.sponsorRequests();
     }
     return 0;

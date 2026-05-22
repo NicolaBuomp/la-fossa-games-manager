@@ -7,9 +7,14 @@ import { RequestBadgesService } from "../../core/services/request-badges.service
 import { SnackbarService } from "../../core/services/snackbar.service";
 import { SponsorsService } from "../../core/services/sponsors.service";
 import {
+  FILTER_ALL,
   PAYMENT_METHODS,
+  PAYMENT_METHOD,
+  SPONSOR_CATEGORY,
   SPONSOR_CATEGORIES,
+  SPONSOR_STATUS,
   SPONSOR_STATUSES,
+  SPONSOR_TYPE,
 } from "../../core/types/constants";
 import {
   InsertSponsor,
@@ -348,7 +353,7 @@ export class SponsorsComponent implements OnInit {
   editing = signal<Sponsor | null>(null);
   saving = signal(false);
   updatingSponsorId = signal<string | null>(null);
-  statusFilter = signal<SponsorStatus | "all">("all");
+  statusFilter = signal<SponsorStatus | typeof FILTER_ALL>(FILTER_ALL);
   searchQuery = signal("");
   compactView = signal(false);
   confirmPending = signal<(() => Promise<void>) | null>(null);
@@ -356,7 +361,7 @@ export class SponsorsComponent implements OnInit {
   private readonly snackbar = inject(SnackbarService);
   statuses = SPONSOR_STATUSES;
   statusFilterOptions = computed<FilterOption[]>(() => [
-    { label: "Tutti", value: "all", active: this.statusFilter() === "all" },
+    { label: "Tutti", value: FILTER_ALL, active: this.statusFilter() === FILTER_ALL },
     ...this.statuses.map((status) => ({
       label: status.label,
       value: status.id,
@@ -494,7 +499,7 @@ export class SponsorsComponent implements OnInit {
     this.form.value = 0;
     this.form.promised_amount = 0;
     this.form.received_amount = 0;
-    this.form.status = "contattato";
+    this.form.status = SPONSOR_STATUS.Contacted;
     this.form.notes = "Lead sponsor da ricontattare.";
   }
 
@@ -503,14 +508,14 @@ export class SponsorsComponent implements OnInit {
     this.editing.set(item);
     this.form = {
       company_name: item.company_name,
-      category: item.category ?? "bronzo",
+      category: item.category ?? SPONSOR_CATEGORY.Bronze,
       contact_name: item.contact_name,
       contact_info: item.contact_info,
       type: item.type,
       value: item.value,
       promised_amount: Number(item.promised_amount ?? item.value ?? 0),
       received_amount: Number(
-        item.received_amount ?? (item.status === "pagato" ? item.value : 0),
+        item.received_amount ?? (item.status === SPONSOR_STATUS.Paid ? item.value : 0),
       ),
       payment_method: item.payment_method ?? this.sponsorTypeLabel(item.type),
       responsible_user_id: item.responsible_user_id,
@@ -560,7 +565,7 @@ export class SponsorsComponent implements OnInit {
     this.updatingSponsorId.set(item.id);
     try {
       const payload: Partial<InsertSponsor> = { status };
-      if (status === "pagato" && Number(item.received_amount || 0) === 0) {
+      if (status === SPONSOR_STATUS.Paid && Number(item.received_amount || 0) === 0) {
         payload.received_amount = Number(
           item.promised_amount || item.value || 0,
         );
@@ -599,15 +604,15 @@ export class SponsorsComponent implements OnInit {
     );
   }
   contactTotal(): number {
-    return this.items().filter((item) => item.status === "contattato").length;
+    return this.items().filter((item) => item.status === SPONSOR_STATUS.Contacted).length;
   }
   negotiatingTotal(): number {
-    return this.items().filter((item) => item.status === "in_trattativa")
+    return this.items().filter((item) => item.status === SPONSOR_STATUS.Negotiating)
       .length;
   }
   promisedTotal(): number {
     return this.items()
-      .filter((i) => i.status === "confermato" || i.status === "pagato")
+      .filter((i) => i.status === SPONSOR_STATUS.Confirmed || i.status === SPONSOR_STATUS.Paid)
       .reduce((s, i) => s + Number(i.promised_amount ?? i.value ?? 0), 0);
   }
   receivedTotal(): number {
@@ -615,13 +620,13 @@ export class SponsorsComponent implements OnInit {
   }
   confirmedPaidCount(): number {
     return this.items().filter(
-      (i) => i.status === "confermato" || i.status === "pagato",
+      (i) => i.status === SPONSOR_STATUS.Confirmed || i.status === SPONSOR_STATUS.Paid,
     ).length;
   }
   filteredItems(): Sponsor[] {
     const status = this.statusFilter();
     const q = this.searchQuery().toLowerCase().trim();
-    let items = status === "all" ? this.items() : this.items().filter((i) => i.status === status);
+    let items = status === FILTER_ALL ? this.items() : this.items().filter((i) => i.status === status);
     if (q) {
       items = items.filter(
         (i) =>
@@ -632,7 +637,7 @@ export class SponsorsComponent implements OnInit {
     return items;
   }
   setStatusFilter(value: string): void {
-    this.statusFilter.set(value as SponsorStatus | "all");
+    this.statusFilter.set(value as SponsorStatus | typeof FILTER_ALL);
   }
   updateForm(patch: Record<string, unknown>): void {
     this.form = { ...this.form, ...patch };
@@ -645,10 +650,10 @@ export class SponsorsComponent implements OnInit {
     return this.statuses.find((item) => item.id === status)?.className ?? "";
   }
   sponsorTypeLabel(type: SponsorType): string {
-    return type === "bonifico" ? "Bonifico" : "Cash";
+    return type === SPONSOR_TYPE.BankTransfer ? PAYMENT_METHOD.BankTransfer : "Cash";
   }
   sponsorTypeForMethod(method: string | null): SponsorType {
-    return method === "Bonifico" ? "bonifico" : "cash";
+    return method === PAYMENT_METHOD.BankTransfer ? SPONSOR_TYPE.BankTransfer : SPONSOR_TYPE.Cash;
   }
   categoryLabel(category: SponsorCategory): string {
     return (
@@ -683,16 +688,16 @@ export class SponsorsComponent implements OnInit {
   emptyForm(): SponsorForm {
     return {
       company_name: "",
-      category: "bronzo",
+      category: SPONSOR_CATEGORY.Bronze,
       contact_name: "",
       contact_info: "",
-      type: "cash" as SponsorType,
+      type: SPONSOR_TYPE.Cash,
       value: 0,
       promised_amount: 0,
       received_amount: 0,
       payment_method: PAYMENT_METHODS[0],
       responsible_user_id: null,
-      status: "contattato",
+      status: SPONSOR_STATUS.Contacted,
       deliverables: "",
       notes: "",
       withoutPromisedAmount: true,

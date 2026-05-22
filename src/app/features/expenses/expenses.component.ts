@@ -6,6 +6,7 @@ import { ProfileService } from "../../core/services/profile.service";
 import { SnackbarService } from "../../core/services/snackbar.service";
 import {
   EXPENSE_CATEGORIES,
+  EXPENSE_STATUS,
   EXPENSE_STATUSES,
   PAYMENT_METHODS,
 } from "../../core/types/constants";
@@ -376,7 +377,7 @@ export class ExpensesComponent implements OnInit {
       description: "",
       category: EXPENSE_CATEGORIES[0],
       amount: 0,
-      status: "pagata",
+      status: EXPENSE_STATUS.Paid,
       paid_by: "",
       payment_method: PAYMENT_METHODS[0],
       notes: "",

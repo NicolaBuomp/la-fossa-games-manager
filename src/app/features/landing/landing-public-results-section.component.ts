@@ -1,4 +1,8 @@
 import { PublicTournamentMatch } from "../../core/services/tournaments.service";
+import {
+  TOURNAMENT_MATCH_STATUS,
+  TOURNAMENT_MATCH_STATUSES,
+} from "../../core/types/constants";
 import { PublicMatchGroup } from "./landing.models";
 import { Component, Input } from "@angular/core";
 
@@ -71,7 +75,7 @@ import { Component, Input } from "@angular/core";
                         @for (match of group.matches; track match.id) {
                           <article
                             class="rounded-lg border border-white/10 bg-white/[0.04] p-4"
-                            [class.border-accent]="match.status === 'live'"
+                            [class.border-accent]="match.status === matchStatus.Live"
                           >
                             <div
                               class="flex flex-wrap items-center justify-between gap-2"
@@ -148,13 +152,14 @@ export class LandingPublicResultsSectionComponent {
   @Input({ required: true }) resultsError!: () => string;
 
   protected statusLabel(status: PublicTournamentMatch["status"]): string {
-    return ({ scheduled: "Programmata", live: "Live", completed: "Finale", cancelled: "Annullata" } satisfies Record<PublicTournamentMatch["status"], string>)[status];
+    if (status === TOURNAMENT_MATCH_STATUS.Completed) return "Finale";
+    return TOURNAMENT_MATCH_STATUSES.find((item) => item.id === status)?.label ?? status;
   }
 
   protected badgeClass(status: PublicTournamentMatch["status"]): string {
-    if (status === "live") return "border-accent bg-accent text-on-accent";
-    if (status === "completed") return "border-emerald-400/35 bg-emerald-400/10 text-emerald-100";
-    if (status === "cancelled") return "border-red-400/35 bg-red-400/10 text-red-100";
+    if (status === TOURNAMENT_MATCH_STATUS.Live) return "border-accent bg-accent text-on-accent";
+    if (status === TOURNAMENT_MATCH_STATUS.Completed) return "border-emerald-400/35 bg-emerald-400/10 text-emerald-100";
+    if (status === TOURNAMENT_MATCH_STATUS.Cancelled) return "border-red-400/35 bg-red-400/10 text-red-100";
     return "border-white/15 text-white/70";
   }
 
@@ -164,4 +169,6 @@ export class LandingPublicResultsSectionComponent {
     }
     return match.field_label ? `Campo ${match.field_label}` : "Orario da definire";
   }
+
+  protected readonly matchStatus = TOURNAMENT_MATCH_STATUS;
 }

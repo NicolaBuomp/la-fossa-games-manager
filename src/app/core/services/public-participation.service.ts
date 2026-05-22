@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 import { InsertParticipationRequest, InsertSponsor, PublicTournament } from '../types/models';
+import { SUPABASE_TABLE, TOURNAMENT_PUBLIC_STATUS } from '../types/constants';
 
 @Injectable({ providedIn: 'root' })
 export class PublicParticipationService {
@@ -8,9 +9,9 @@ export class PublicParticipationService {
 
   async listAvailableTournaments(): Promise<PublicTournament[]> {
     const { data, error } = await this.supabase.client
-      .from('tournaments')
+      .from(SUPABASE_TABLE.Tournaments)
       .select('id, name, sport, fee, date, public_status')
-      .neq('public_status', 'hidden')
+      .neq('public_status', TOURNAMENT_PUBLIC_STATUS.Hidden)
       .order('name', { ascending: true });
 
     if (error) throw error;
@@ -21,12 +22,12 @@ export class PublicParticipationService {
   }
 
   async createRequest(payload: InsertParticipationRequest): Promise<void> {
-    const { error } = await this.supabase.client.from('participation_requests').insert(payload);
+    const { error } = await this.supabase.client.from(SUPABASE_TABLE.ParticipationRequests).insert(payload);
     if (error) throw error;
   }
 
   async createSponsorLead(payload: InsertSponsor): Promise<void> {
-    const { error } = await this.supabase.client.from('sponsors').insert(payload);
+    const { error } = await this.supabase.client.from(SUPABASE_TABLE.Sponsors).insert(payload);
     if (error) throw error;
   }
 }

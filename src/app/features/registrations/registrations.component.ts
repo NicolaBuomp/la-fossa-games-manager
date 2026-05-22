@@ -13,6 +13,14 @@ import {
   TournamentWithTeams,
 } from "../../core/types/models";
 import {
+  DIRECT_TOURNAMENT_CODES,
+  DUO_TOURNAMENT_CODES,
+  FILTER_ALL,
+  PARTICIPANT_GENDER,
+  TOURNAMENT_MIN_PARTICIPANTS_BY_CODE,
+  TOURNAMENT_SPORT,
+} from "../../core/types/constants";
+import {
   FilterOption,
   StatusFilterPillsComponent,
 } from "../../shared/components/status-filter-pills.component";
@@ -31,7 +39,7 @@ import { TournamentModalComponent } from "./components/tournament-modal.componen
 import { TournamentSelectorComponent } from "./components/tournament-selector.component";
 
 type ModalMode = "tournament" | "team" | "participant" | "direct" | null;
-type PaymentFilter = "all" | "paid" | "pending";
+type PaymentFilter = typeof FILTER_ALL | "paid" | "pending";
 type DirectPerson = { first_name: string; last_name: string; contact: string };
 type DirectForm = {
   tournament_id: string;
@@ -39,10 +47,6 @@ type DirectForm = {
   person1: DirectPerson;
   person2: DirectPerson;
 };
-
-const SOLO_CODES = ["fifa", "ping-pong"];
-const DUO_CODES = ["briscola", "calcio-balilla"];
-const DIRECT_CODES = [...SOLO_CODES, ...DUO_CODES];
 
 @Component({
   selector: "lfg-registrations",
@@ -181,7 +185,7 @@ const DIRECT_CODES = [...SOLO_CODES, ...DUO_CODES];
     <!-- Participant Modal -->
     <lfg-participant-modal
       [open]="() => modalMode() === 'participant'"
-      [isFipavSport]="() => selectedParticipantSport() === 'pallavolo'"
+      [isFipavSport]="() => selectedParticipantSport() === tournamentSport.Volleyball"
       [formValue]="participantForm"
       [editing]="!!editingParticipant()"
       [loading]="saving"
@@ -221,7 +225,7 @@ export class RegistrationsComponent implements OnInit {
   // State
   tournaments = signal<TournamentWithTeams[]>([]);
   selectedTournamentId = signal<string | null>(null);
-  paymentFilter = signal<PaymentFilter>("all");
+  paymentFilter = signal<PaymentFilter>(FILTER_ALL);
   searchQuery = signal("");
   modalMode = signal<ModalMode>(null);
   saving = signal(false);
@@ -275,7 +279,7 @@ export class RegistrationsComponent implements OnInit {
   });
 
   paymentFilterOptions = computed<FilterOption[]>(() => [
-    { label: "Tutte", value: "all", active: this.paymentFilter() === "all" },
+    { label: "Tutte", value: FILTER_ALL, active: this.paymentFilter() === FILTER_ALL },
     { label: "Pagate", value: "paid", active: this.paymentFilter() === "paid" },
     {
       label: "Da pagare",
@@ -501,7 +505,7 @@ export class RegistrationsComponent implements OnInit {
       first_name: participant.first_name,
       last_name: participant.last_name,
       contact: participant.contact || "",
-      gender: participant.gender || "uomo",
+      gender: participant.gender || PARTICIPANT_GENDER.Male,
       registered: participant.registered || false,
     };
     this.modalMode.set("participant");
@@ -550,7 +554,7 @@ export class RegistrationsComponent implements OnInit {
             participant.registered && participant.id !== current?.id,
         ).length ?? 0;
       if (
-        tournament?.sport === "pallavolo" &&
+        tournament?.sport === TOURNAMENT_SPORT.Volleyball &&
         payload.registered &&
         registeredCount >= 1
       ) {
@@ -564,7 +568,7 @@ export class RegistrationsComponent implements OnInit {
         last_name: payload.last_name.trim(),
         contact: payload.contact?.trim() || null,
         registered:
-          tournament?.sport === "pallavolo"
+          tournament?.sport === TOURNAMENT_SPORT.Volleyball
             ? Boolean(payload.registered)
             : false,
       };
@@ -643,7 +647,7 @@ export class RegistrationsComponent implements OnInit {
               first_name: p1.first_name,
               last_name: p1.last_name,
               contact: p1.contact,
-              gender: "uomo",
+              gender: PARTICIPANT_GENDER.Male,
               registered: false,
             },
           );
@@ -657,7 +661,7 @@ export class RegistrationsComponent implements OnInit {
               first_name: p2.first_name,
               last_name: p2.last_name,
               contact: p2.contact,
-              gender: "uomo",
+              gender: PARTICIPANT_GENDER.Male,
               registered: false,
             },
           );
@@ -680,7 +684,7 @@ export class RegistrationsComponent implements OnInit {
           first_name: p1.first_name,
           last_name: p1.last_name,
           contact: p1.contact,
-          gender: "uomo",
+          gender: PARTICIPANT_GENDER.Male,
           registered: false,
         });
 
@@ -690,7 +694,7 @@ export class RegistrationsComponent implements OnInit {
             first_name: p2.first_name,
             last_name: p2.last_name,
             contact: p2.contact,
-            gender: "uomo",
+            gender: PARTICIPANT_GENDER.Male,
             registered: false,
           });
         }
@@ -801,7 +805,7 @@ export class RegistrationsComponent implements OnInit {
   }
 
   isDirect(t: TournamentWithTeams): boolean {
-    return DIRECT_CODES.includes(t.code || "");
+    return DIRECT_TOURNAMENT_CODES.includes(t.code || "");
   }
 
   async togglePaid(team: TournamentTeamWithParticipants): Promise<void> {
@@ -814,7 +818,7 @@ export class RegistrationsComponent implements OnInit {
   }
 
   isDuoTournament(t: TournamentWithTeams): boolean {
-    return DUO_CODES.includes(t.code || "");
+    return DUO_TOURNAMENT_CODES.includes(t.code || "");
   }
 
   private filterTeamsByPayment(
@@ -830,16 +834,7 @@ export class RegistrationsComponent implements OnInit {
     tournament: TournamentWithTeams,
     team: TournamentTeamWithParticipants,
   ): boolean {
-    const limit =
-      (
-        {
-          pallavolo: 5,
-          briscola: 2,
-          fifa: 1,
-          "ping-pong": 1,
-          "calcio-balilla": 2,
-        } as Record<string, number>
-      )[tournament.code ?? ""] ?? null;
+    const limit = TOURNAMENT_MIN_PARTICIPANTS_BY_CODE[tournament.code ?? ""] ?? null;
     return !limit || team.team_participants.length < limit;
   }
 
@@ -901,7 +896,7 @@ export class RegistrationsComponent implements OnInit {
       first_name: "",
       last_name: "",
       contact: "",
-      gender: "uomo",
+      gender: PARTICIPANT_GENDER.Male,
       registered: false,
     };
   }
@@ -933,4 +928,6 @@ export class RegistrationsComponent implements OnInit {
       currency: "EUR",
     }).format(value);
   }
+
+  protected readonly tournamentSport = TOURNAMENT_SPORT;
 }

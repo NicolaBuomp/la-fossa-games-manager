@@ -10,18 +10,17 @@ import {
   UserRole,
 } from "../../core/types/models";
 import {
+  ASSIGNABLE_ROLES,
+  USER_ROLE,
+  USER_ROLE_BADGE_CLASSES,
+} from "../../core/types/constants";
+import {
   ConfirmModalComponent,
   EmptyStateComponent,
   StatusBadgeComponent,
 } from "../../shared/components/ui.component";
 
-type AssignableRole = Exclude<UserRole, 'owner'>;
-
-const ASSIGNABLE_ROLES: { value: AssignableRole; label: string }[] = [
-  { value: "staff", label: "Staff" },
-  { value: "admin", label: "Admin" },
-  { value: "tesoriere", label: "Tesoriere" },
-];
+type AssignableRole = Exclude<UserRole, typeof USER_ROLE.Owner>;
 
 @Component({
   standalone: true,
@@ -297,7 +296,7 @@ export class UsersComponent implements OnInit {
     firstName: "",
     lastName: "",
     username: "",
-    roles: ["staff"] as UserRole[],
+    roles: [USER_ROLE.Staff] as UserRole[],
   };
 
   constructor(private readonly profiles: ProfileService) {}
@@ -323,9 +322,9 @@ export class UsersComponent implements OnInit {
     }
   }
 
-  async toggleUserRole(item: Profile, role: Exclude<UserRole, 'owner'>): Promise<void> {
+  async toggleUserRole(item: Profile, role: AssignableRole): Promise<void> {
     if (this.updatingUserId()) return;
-    const current = item.roles.filter((r): r is Exclude<UserRole, 'owner'> => r !== 'owner');
+    const current = item.roles.filter((r): r is AssignableRole => r !== USER_ROLE.Owner);
     const newRoles: UserRole[] = current.includes(role)
       ? current.filter((r) => r !== role)
       : [...current, role];
@@ -357,7 +356,7 @@ export class UsersComponent implements OnInit {
       const created = await this.profiles.createUser(this.form);
       this.createdUser.set(created);
       this.snackbar.success(`Utente ${created.username} creato.`);
-      this.form = { firstName: "", lastName: "", username: "", roles: ["staff"] };
+      this.form = { firstName: "", lastName: "", username: "", roles: [USER_ROLE.Staff] };
       await this.load();
     } catch (error) {
       this.setError(this.message(error));
@@ -367,12 +366,7 @@ export class UsersComponent implements OnInit {
   }
 
   roleBadgeClass(role: UserRole): string {
-    switch (role) {
-      case 'owner': return 'border-accent bg-accent text-on-accent';
-      case 'admin': return 'border-accent bg-accent text-on-accent';
-      case 'tesoriere': return 'state-warning';
-      default: return 'state-neutral';
-    }
+    return USER_ROLE_BADGE_CLASSES[role];
   }
 
   copyPassword(): void {

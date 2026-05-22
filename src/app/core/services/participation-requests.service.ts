@@ -5,6 +5,10 @@ import {
   ParticipationRequest,
   ParticipationRequestWithTournament,
 } from "../types/models";
+import {
+  PARTICIPATION_REQUEST_STATUS,
+  SUPABASE_TABLE,
+} from "../types/constants";
 import { SupabaseService } from "./supabase.service";
 
 type RequestStatus = ParticipationRequest["status"];
@@ -30,11 +34,11 @@ export class ParticipationRequestsService {
 
   async list(): Promise<ParticipationRequestWithTournament[]> {
     const { data, error } = await this.supabase.client
-      .from("participation_requests")
+      .from(SUPABASE_TABLE.ParticipationRequests)
       .select(
         "*, tournaments(name, code, sport, fee), participation_request_notes(*, profiles(full_name, email))",
       )
-      .neq("status", "trasferita")
+      .neq("status", PARTICIPATION_REQUEST_STATUS.Transferred)
       .order("created_at", { ascending: false });
 
     if (!error) {
@@ -43,9 +47,9 @@ export class ParticipationRequestsService {
 
     // Staff may not have access to related profiles; fallback keeps requests visible.
     const fallback = await this.supabase.client
-      .from("participation_requests")
+      .from(SUPABASE_TABLE.ParticipationRequests)
       .select("*, tournaments(name, code, sport, fee), participation_request_notes(*)")
-      .neq("status", "trasferita")
+      .neq("status", PARTICIPATION_REQUEST_STATUS.Transferred)
       .order("created_at", { ascending: false });
 
     if (!fallback.error) {
@@ -54,9 +58,9 @@ export class ParticipationRequestsService {
 
     // Last fallback: if notes are blocked by RLS, keep the base requests visible.
     const baseOnly = await this.supabase.client
-      .from("participation_requests")
+      .from(SUPABASE_TABLE.ParticipationRequests)
       .select("*, tournaments(name, code, sport, fee)")
-      .neq("status", "trasferita")
+      .neq("status", PARTICIPATION_REQUEST_STATUS.Transferred)
       .order("created_at", { ascending: false });
 
     if (baseOnly.error) throw error;
@@ -71,16 +75,16 @@ export class ParticipationRequestsService {
 
   async pendingCount(): Promise<number> {
     const { count, error } = await this.supabase.client
-      .from("participation_requests")
+      .from(SUPABASE_TABLE.ParticipationRequests)
       .select("id", { count: "exact", head: true })
-      .eq("status", "nuova");
+      .eq("status", PARTICIPATION_REQUEST_STATUS.New);
     if (error) throw error;
     return count ?? 0;
   }
 
   async updateStatus(id: string, status: RequestStatus): Promise<void> {
     const { error } = await this.supabase.client
-      .from("participation_requests")
+      .from(SUPABASE_TABLE.ParticipationRequests)
       .update({ status })
       .eq("id", id);
     if (error) throw error;
@@ -106,7 +110,7 @@ export class ParticipationRequestsService {
 
     try {
       const { data: team, error: teamError } = await this.supabase.client
-        .from("tournament_teams")
+        .from(SUPABASE_TABLE.TournamentTeams)
         .insert(teamPayload)
         .select("id")
         .single();
@@ -115,7 +119,7 @@ export class ParticipationRequestsService {
 
       if (payload.participants.length) {
         const { error: participantsError } = await this.supabase.client
-          .from("team_participants")
+          .from(SUPABASE_TABLE.TeamParticipants)
           .insert(
             payload.participants.map((participant) => ({
               ...participant,
@@ -125,12 +129,12 @@ export class ParticipationRequestsService {
         if (participantsError) throw participantsError;
       }
 
-      await this.updateStatus(request.id, "trasferita");
+      await this.updateStatus(request.id, PARTICIPATION_REQUEST_STATUS.Transferred);
       completed = true;
     } finally {
       if (createdTeamId && !completed) {
         await this.supabase.client
-          .from("tournament_teams")
+          .from(SUPABASE_TABLE.TournamentTeams)
           .delete()
           .eq("id", createdTeamId);
       }
@@ -145,14 +149,14 @@ export class ParticipationRequestsService {
     if (userError) throw userError;
 
     const { error } = await this.supabase.client
-      .from("participation_request_notes")
+      .from(SUPABASE_TABLE.ParticipationRequestNotes)
       .insert({ request_id: requestId, note, created_by: user?.id ?? null });
     if (error) throw error;
   }
 
   async remove(id: string): Promise<void> {
     const { error } = await this.supabase.client
-      .from("participation_requests")
+      .from(SUPABASE_TABLE.ParticipationRequests)
       .delete()
       .eq("id", id);
     if (error) throw error;

@@ -7,6 +7,7 @@ import {
 import { ProfileService } from "../../core/services/profile.service";
 import { SnackbarService } from "../../core/services/snackbar.service";
 import { AuditLog, Profile } from "../../core/types/models";
+import { AUDIT_ACTIONS, FILTER_ALL } from "../../core/types/constants";
 import { EmptyStateComponent } from "../../shared/components/ui.component";
 import { AuditActivityListComponent } from "./components/audit-activity-list.component";
 import { buildAuditActivities } from "./components/audit-activity-builder";
@@ -69,10 +70,10 @@ import { AuditDetailModalComponent } from "./components/audit-detail-modal.compo
               [ngModel]="action()"
               (ngModelChange)="setAction($event)"
             >
-              <option value="all">Tutte</option>
-              <option value="insert">Inserimenti</option>
-              <option value="update">Modifiche</option>
-              <option value="delete">Eliminazioni</option>
+              <option [value]="filterAll">Tutte</option>
+              @for (actionOption of auditActions; track actionOption.id) {
+                <option [value]="actionOption.id">{{ actionOption.label }}</option>
+              }
             </select>
           </label>
 
@@ -149,7 +150,7 @@ export class AuditComponent implements OnInit {
   total = signal(0);
   page = signal(1);
   pageSize = signal(20);
-  action = signal<AuditActionFilter>("all");
+  action = signal<AuditActionFilter>(FILTER_ALL);
   changedBy = signal("");
   selectedActivity = signal<AuditActivityItem | null>(null);
   loading = signal(false);
@@ -208,7 +209,7 @@ export class AuditComponent implements OnInit {
   }
 
   resetFilters(): void {
-    this.action.set("all");
+    this.action.set(FILTER_ALL);
     this.changedBy.set("");
     this.page.set(1);
     void this.load();
@@ -253,4 +254,7 @@ export class AuditComponent implements OnInit {
     this.error.set(message);
     this.snackbar.error(message);
   }
+
+  protected readonly auditActions = AUDIT_ACTIONS;
+  protected readonly filterAll = FILTER_ALL;
 }

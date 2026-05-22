@@ -1,6 +1,10 @@
 import { Component, EventEmitter, Input, Output, signal } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { InsertTeamParticipant } from "../../../core/types/models";
+import {
+  PARTICIPANT_GENDER,
+  PARTICIPANT_GENDER_OPTIONS,
+} from "../../../core/types/constants";
 import { ModalComponent } from "../../../shared/components/ui.component";
 
 @Component({
@@ -56,8 +60,9 @@ import { ModalComponent } from "../../../shared/components/ui.component";
               [(ngModel)]="form.gender"
               class="rounded-lg border border-soft bg-surface-muted px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"
             >
-              <option value="uomo">Uomo</option>
-              <option value="donna">Donna</option>
+              @for (gender of genderOptions; track gender.id) {
+                <option [value]="gender.id">{{ gender.label }}</option>
+              }
             </select>
           </label>
 
@@ -120,8 +125,10 @@ export class ParticipantModalComponent {
       first_name: "",
       last_name: "",
       contact: "",
-      gender: "uomo",
+      gender: PARTICIPANT_GENDER.Male,
       registered: false,
     };
   }
+
+  protected readonly genderOptions = PARTICIPANT_GENDER_OPTIONS;
 }

@@ -17,6 +17,14 @@ import {
   TournamentsService,
 } from "../../core/services/tournaments.service";
 import { PublicTournament } from "../../core/types/models";
+import {
+  PAYMENT_METHOD,
+  PUBLIC_SPONSOR_LEAD_DELIVERABLES,
+  SPONSOR_CATEGORY,
+  SPONSOR_STATUS,
+  SPONSOR_TYPE,
+  TOURNAMENT_MATCH_STATUS,
+} from "../../core/types/constants";
 import { LANDING_GAMES } from "./landing-content";
 import {
   ContactReason,
@@ -260,7 +268,7 @@ export class LandingComponent implements OnInit, OnDestroy, AfterViewInit {
     this.groupPublicMatches(this.publicMatches()),
   );
   protected readonly livePublicMatches = computed(() =>
-    this.publicMatches().filter((match) => match.status === "live"),
+    this.publicMatches().filter((match) => match.status === TOURNAMENT_MATCH_STATUS.Live),
   );
   protected readonly publicResultsUpdatedAt = signal<string | null>(null);
   private readonly heroParallaxOffset = signal(0);
@@ -437,15 +445,15 @@ export class LandingComponent implements OnInit, OnDestroy, AfterViewInit {
           company_name: this.participationForm.company_name.trim(),
           contact_name: `${this.participationForm.first_name.trim()} ${this.participationForm.last_name.trim()}`,
           contact_info: normalizedPhone,
-          category: "bronzo",
-          type: "cash",
+          category: SPONSOR_CATEGORY.Bronze,
+          type: SPONSOR_TYPE.Cash,
           value: 0,
           promised_amount: 0,
           received_amount: 0,
-          payment_method: "Contanti",
+          payment_method: PAYMENT_METHOD.Cash,
           responsible_user_id: null,
-          status: "contattato",
-          deliverables: "Richiesta informazioni sponsor dal sito pubblico",
+          status: SPONSOR_STATUS.Contacted,
+          deliverables: PUBLIC_SPONSOR_LEAD_DELIVERABLES,
           notes:
             "Lead sponsor generato dal form pubblico. Ricontattare via WhatsApp.",
         });

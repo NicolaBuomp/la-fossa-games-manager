@@ -23,6 +23,8 @@ export type TournamentMatchStatus =
   | 'completed'
   | 'cancelled';
 export type ParticipantGender = 'uomo' | 'donna';
+export type ParticipationRequestStatus = 'nuova' | 'in_gestione' | 'contattata' | 'archiviata' | 'trasferita';
+export type AuditAction = 'insert' | 'update' | 'delete';
 
 export interface Profile {
   id: string;
@@ -287,7 +289,7 @@ export interface ParticipationRequest {
   privacy_accepted: boolean;
   whatsapp_accepted: boolean;
   rules_accepted: boolean;
-  status: 'nuova' | 'in_gestione' | 'contattata' | 'archiviata' | 'trasferita';
+  status: ParticipationRequestStatus;
   updated_by: string | null;
   created_at: string;
   updated_at: string;
@@ -314,7 +316,7 @@ export interface AuditLog {
   id: string;
   table_name: string;
   record_id: string;
-  action: 'insert' | 'update' | 'delete';
+  action: AuditAction;
   changed_by: string | null;
   changed_by_name: string | null;
   changed_at: string;

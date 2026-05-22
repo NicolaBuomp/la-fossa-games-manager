@@ -1,4 +1,5 @@
 import { AuditLog, Registration } from "../../../core/types/models";
+import { AUDIT_ACTION, SUPABASE_TABLE } from "../../../core/types/constants";
 import { AuditActivityItem } from "./audit-activity.model";
 import {
   actionLabel,
@@ -32,13 +33,13 @@ export function buildAuditActivities(
       }
     }
 
-    if (log.action === "insert" && log.table_name === "tournament_teams") {
+    if (log.action === AUDIT_ACTION.Insert && log.table_name === SUPABASE_TABLE.TournamentTeams) {
       consumed.add(log.id);
       const relatedParticipants = logs.filter(
         (candidate) =>
           !consumed.has(candidate.id) &&
-          candidate.action === "insert" &&
-          candidate.table_name === "team_participants" &&
+          candidate.action === AUDIT_ACTION.Insert &&
+          candidate.table_name === SUPABASE_TABLE.TeamParticipants &&
           candidate.new_data?.["team_id"] === log.record_id &&
           candidate.changed_by === log.changed_by &&
           secondsBetween(candidate.changed_at, log.changed_at) <= 10,
@@ -90,17 +91,17 @@ function operationActivity(
   registrations: Registration[],
 ): AuditActivityItem {
   const [first] = logs;
-  const teamLog = logs.find((log) => log.table_name === "tournament_teams");
+  const teamLog = logs.find((log) => log.table_name === SUPABASE_TABLE.TournamentTeams);
   if (teamLog) {
     return teamInsertActivity(
       teamLog,
-      logs.filter((log) => log.table_name === "team_participants"),
+      logs.filter((log) => log.table_name === SUPABASE_TABLE.TeamParticipants),
       registrations,
     );
   }
 
   const participantLogs = logs.filter(
-    (log) => log.table_name === "team_participants",
+    (log) => log.table_name === SUPABASE_TABLE.TeamParticipants,
   );
   if (participantLogs.length === logs.length) {
     return participantsInsertActivity(participantLogs, registrations);
@@ -123,7 +124,7 @@ function groupedActivity(
   registrations: Registration[],
 ): AuditActivityItem {
   const [first] = logs;
-  if (first.action === "insert" && first.table_name === "team_participants") {
+  if (first.action === AUDIT_ACTION.Insert && first.table_name === SUPABASE_TABLE.TeamParticipants) {
     return participantsInsertActivity(logs, registrations);
   }
 

@@ -12,6 +12,16 @@ import {
   TournamentTeamWithParticipants,
   UpdateTournamentPublication,
 } from "../types/models";
+import {
+  SUPABASE_RPC,
+  SUPABASE_TABLE,
+  TOURNAMENT_MATCH_STATUS,
+  TOURNAMENT_MATCH_STATUSES,
+  TOURNAMENT_PUBLIC_STATUS,
+  TOURNAMENT_PUBLIC_STATUSES,
+  TOURNAMENT_STATUS,
+  TOURNAMENT_STATUSES,
+} from "../types/constants";
 import { SupabaseService } from "./supabase.service";
 
 export interface GenerateGroupStageResult {
@@ -95,7 +105,7 @@ export class TournamentsService {
 
   async listOperational(): Promise<OperationalTournament[]> {
     const { data, error } = await this.supabase.client
-      .from("tournaments")
+      .from(SUPABASE_TABLE.Tournaments)
       .select(TOURNAMENT_SELECT)
       .order("name", { ascending: true });
     if (error) throw error;
@@ -110,7 +120,7 @@ export class TournamentsService {
     seededTeamIds: string[] = [],
   ): Promise<GenerateGroupStageResult> {
     const { data, error } = await this.supabase.client.rpc(
-      "generate_group_stage",
+      SUPABASE_RPC.GenerateGroupStage,
       {
         p_tournament_id: tournamentId,
         p_group_count: Math.max(1, Math.floor(groupCount || 1)),
@@ -125,7 +135,7 @@ export class TournamentsService {
     tournamentId: string,
   ): Promise<ResetTournamentScheduleResult> {
     const { data, error } = await this.supabase.client.rpc(
-      "reset_tournament_schedule",
+      SUPABASE_RPC.ResetTournamentSchedule,
       { p_tournament_id: tournamentId },
     );
     if (error) throw error;
@@ -138,7 +148,7 @@ export class TournamentsService {
     }
 
     const { data, error } = await this.supabase.client
-      .from("tournament_matches")
+      .from(SUPABASE_TABLE.TournamentMatches)
       .update({
         home_score: Math.floor(input.homeScore),
         away_score: Math.floor(input.awayScore),
@@ -153,7 +163,7 @@ export class TournamentsService {
 
     if (input.groupId) {
       const { error: recalcError } = await this.supabase.client.rpc(
-        "recalculate_group_standings",
+        SUPABASE_RPC.RecalculateGroupStandings,
         { p_group_id: input.groupId },
       );
       if (recalcError) throw recalcError;
@@ -167,7 +177,7 @@ export class TournamentsService {
     payload: UpdateTournamentPublication,
   ): Promise<void> {
     const { error } = await this.supabase.client
-      .from("tournaments")
+      .from(SUPABASE_TABLE.Tournaments)
       .update(payload)
       .eq("id", tournamentId);
     if (error) throw error;
@@ -177,7 +187,7 @@ export class TournamentsService {
     tournamentId?: string,
   ): Promise<PublicTournamentMatch[]> {
     let query = this.supabase.client
-      .from("public_tournament_matches")
+      .from(SUPABASE_TABLE.PublicTournamentMatches)
       .select("*")
       .order("starts_at", { ascending: true });
     if (tournamentId) {
@@ -196,7 +206,7 @@ export class TournamentsService {
     tournamentId?: string,
   ): Promise<PublicTournamentStanding[]> {
     let query = this.supabase.client
-      .from("public_tournament_standings")
+      .from(SUPABASE_TABLE.PublicTournamentStandings)
       .select("*")
       .order("rank", { ascending: true });
     if (tournamentId) {
@@ -233,7 +243,7 @@ export class TournamentsService {
         {
           event: "*",
           schema: "public",
-          table: "tournament_matches",
+          table: SUPABASE_TABLE.TournamentMatches,
           ...(tournamentId ? { filter: `tournament_id=eq.${tournamentId}` } : {}),
         },
         onChange,
@@ -360,41 +370,23 @@ export class TournamentsService {
   }
 
   private normalizeTournamentStatus(value: unknown): TournamentStatus {
-    const allowed: TournamentStatus[] = [
-      "draft",
-      "registrations_open",
-      "registrations_closed",
-      "groups_generated",
-      "in_progress",
-      "completed",
-      "archived",
-    ];
+    const allowed = TOURNAMENT_STATUSES.map((status) => status.id);
     return allowed.includes(value as TournamentStatus)
       ? (value as TournamentStatus)
-      : "registrations_open";
+      : TOURNAMENT_STATUS.RegistrationsOpen;
   }
 
   private normalizePublicStatus(value: unknown): TournamentPublicStatus {
-    const allowed: TournamentPublicStatus[] = [
-      "hidden",
-      "registrations_open",
-      "published",
-      "results_published",
-    ];
+    const allowed = TOURNAMENT_PUBLIC_STATUSES.map((status) => status.id);
     return allowed.includes(value as TournamentPublicStatus)
       ? (value as TournamentPublicStatus)
-      : "hidden";
+      : TOURNAMENT_PUBLIC_STATUS.Hidden;
   }
 
   private normalizeMatchStatus(value: unknown): TournamentMatchStatus {
-    const allowed: TournamentMatchStatus[] = [
-      "scheduled",
-      "live",
-      "completed",
-      "cancelled",
-    ];
+    const allowed = TOURNAMENT_MATCH_STATUSES.map((status) => status.id);
     return allowed.includes(value as TournamentMatchStatus)
       ? (value as TournamentMatchStatus)
-      : "scheduled";
+      : TOURNAMENT_MATCH_STATUS.Scheduled;
   }
 }

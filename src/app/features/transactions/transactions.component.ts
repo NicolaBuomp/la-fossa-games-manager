@@ -15,9 +15,15 @@ import { SnackbarService } from "../../core/services/snackbar.service";
 import { TransactionsService } from "../../core/services/transactions.service";
 import {
   EXPENSE_CATEGORIES,
+  EXPENSE_STATUS,
   EXPENSE_STATUSES,
+  DELIVERY_STATUS,
+  DeliveryStatusFilter,
+  FILTER_ALL,
   INCOME_CATEGORIES,
   PAYMENT_METHODS,
+  TRANSACTION_SOURCE_TABLE,
+  TRANSACTION_TYPE,
 } from "../../core/types/constants";
 import {
   Expense,
@@ -27,6 +33,7 @@ import {
   InsertIncome,
   Profile,
   Transaction,
+  TransactionType,
 } from "../../core/types/models";
 import {
   CrudFormField,
@@ -134,7 +141,7 @@ import {
           [options]="typeFilterOptions"
           (filterChange)="setTypeFilter($event)"
         />
-        @if (typeFilter() !== 'expense') {
+        @if (typeFilter() !== transactionType.Expense) {
           <lfg-status-filter-pills
             [options]="deliveryFilterOptions"
             (filterChange)="setDeliveryFilter($event)"
@@ -160,17 +167,17 @@ import {
                   <div class="flex flex-wrap items-center gap-2">
                     <span
                       class="shrink-0 text-xs font-black uppercase"
-                      [class.text-positive]="item.type === 'income'"
-                      [class.text-negative]="item.type === 'expense'"
+                      [class.text-positive]="item.type === transactionType.Income"
+                      [class.text-negative]="item.type === transactionType.Expense"
                     >
-                      {{ item.type === 'income' ? '↑ Entrata' : '↓ Spesa' }}
+                      {{ item.type === transactionType.Income ? '↑ Entrata' : '↓ Spesa' }}
                     </span>
                     <!-- Badge fonte automatica -->
-                    @if (item.source_table === 'tournament_teams') {
+                    @if (item.source_table === transactionSourceTable.TournamentTeams) {
                       <span class="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-blue-700">
                         Iscrizione torneo
                       </span>
-                    } @else if (item.source_table === 'sponsors') {
+                    } @else if (item.source_table === transactionSourceTable.Sponsors) {
                       <span class="rounded-full bg-purple-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-purple-700">
                         Sponsor
                       </span>
@@ -189,7 +196,7 @@ import {
                     }
                   </p>
 
-                  @if (item.type === 'expense' && item.expense_status) {
+                  @if (item.type === transactionType.Expense && item.expense_status) {
                     <div class="mt-2">
                       <lfg-status-badge
                         [label]="expenseStatusLabel(item.expense_status)"
@@ -198,7 +205,7 @@ import {
                     </div>
                   }
 
-                  @if (item.type === 'income') {
+                  @if (item.type === transactionType.Income) {
                     <div class="mt-2">
                       @if (item.delivered_to_treasurer) {
                         <span class="inline-flex items-center gap-1 rounded-full border border-green-200 bg-green-50 px-2 py-0.5 text-xs font-semibold text-green-700">
@@ -218,15 +225,15 @@ import {
                 </div>
                 <p
                   class="shrink-0 text-lg font-black"
-                  [class.text-positive]="item.type === 'income'"
-                  [class.text-negative]="item.type === 'expense'"
+                  [class.text-positive]="item.type === transactionType.Income"
+                  [class.text-negative]="item.type === transactionType.Expense"
                 >
-                  {{ item.type === 'income' ? '+' : '−' }}{{ eur(item.amount) }}
+                  {{ item.type === transactionType.Income ? '+' : '−' }}{{ eur(item.amount) }}
                 </p>
               </div>
 
               <!-- Azioni: solo per righe modificabili (incomes/expenses manuali) -->
-              @if (item.source_table === 'incomes' || item.source_table === 'expenses') {
+              @if (item.source_table === transactionSourceTable.Incomes || item.source_table === transactionSourceTable.Expenses) {
                 <div class="mt-4 flex justify-end gap-2 border-t border-soft pt-3">
                   <button
                     class="rounded-md bg-surface-muted px-3 py-1.5 text-xs font-bold uppercase"
@@ -246,14 +253,14 @@ import {
               } @else {
                 <!-- Per le righe automatiche: link alla pagina sorgente -->
                 <div class="mt-4 flex justify-end gap-2 border-t border-soft pt-3">
-                  @if (item.source_table === 'tournament_teams') {
+                  @if (item.source_table === transactionSourceTable.TournamentTeams) {
                     <a
                       routerLink="/app/registrations"
                       class="rounded-md bg-surface-muted px-3 py-1.5 text-xs font-bold uppercase"
                     >
                       Vai a Iscritti →
                     </a>
-                  } @else if (item.source_table === 'sponsors') {
+                  } @else if (item.source_table === transactionSourceTable.Sponsors) {
                     <a
                       routerLink="/app/sponsors"
                       class="rounded-md bg-surface-muted px-3 py-1.5 text-xs font-bold uppercase"
@@ -318,25 +325,25 @@ export class TransactionsComponent implements OnInit {
   editingExpense = signal<Expense | null>(null);
   expenseForm: InsertExpense = this.emptyExpenseForm();
 
-  typeFilter = signal<"all" | "income" | "expense">("all");
-  deliveryFilter = signal<"all" | "pending" | "delivered">("all");
+  typeFilter = signal<typeof FILTER_ALL | TransactionType>(FILTER_ALL);
+  deliveryFilter = signal<DeliveryStatusFilter>(FILTER_ALL);
   searchQuery = signal("");
 
   private readonly snackbar = inject(SnackbarService);
 
   get typeFilterOptions(): () => FilterOption[] {
     return () => [
-      { label: "Tutte", value: "all", active: this.typeFilter() === "all" },
-      { label: "Entrate", value: "income", active: this.typeFilter() === "income" },
-      { label: "Spese", value: "expense", active: this.typeFilter() === "expense" },
+      { label: "Tutte", value: FILTER_ALL, active: this.typeFilter() === FILTER_ALL },
+      { label: "Entrate", value: TRANSACTION_TYPE.Income, active: this.typeFilter() === TRANSACTION_TYPE.Income },
+      { label: "Spese", value: TRANSACTION_TYPE.Expense, active: this.typeFilter() === TRANSACTION_TYPE.Expense },
     ];
   }
 
   get deliveryFilterOptions(): () => FilterOption[] {
     return () => [
-      { label: "Tutti gli stati", value: "all", active: this.deliveryFilter() === "all" },
-      { label: "Da consegnare", value: "pending", active: this.deliveryFilter() === "pending" },
-      { label: "Consegnati", value: "delivered", active: this.deliveryFilter() === "delivered" },
+      { label: "Tutti gli stati", value: FILTER_ALL, active: this.deliveryFilter() === FILTER_ALL },
+      { label: "Da consegnare", value: DELIVERY_STATUS.Pending, active: this.deliveryFilter() === DELIVERY_STATUS.Pending },
+      { label: "Consegnati", value: DELIVERY_STATUS.Delivered, active: this.deliveryFilter() === DELIVERY_STATUS.Delivered },
     ];
   }
 
@@ -346,13 +353,13 @@ export class TransactionsComponent implements OnInit {
     const delivery = this.deliveryFilter();
     const q = this.searchQuery().toLowerCase().trim();
 
-    if (type !== "all") {
+    if (type !== FILTER_ALL) {
       result = result.filter((i) => i.type === type);
     }
-    if (delivery !== "all") {
+    if (delivery !== FILTER_ALL) {
       result = result.filter((i) => {
-        if (i.type !== "income") return true;
-        return delivery === "pending"
+        if (i.type !== TRANSACTION_TYPE.Income) return true;
+        return delivery === DELIVERY_STATUS.Pending
           ? !i.delivered_to_treasurer
           : i.delivered_to_treasurer;
       });
@@ -367,24 +374,24 @@ export class TransactionsComponent implements OnInit {
 
   readonly totalIncomes = computed(() =>
     this.items()
-      .filter((i) => i.type === "income")
+      .filter((i) => i.type === TRANSACTION_TYPE.Income)
       .reduce((s, i) => s + Number(i.amount || 0), 0),
   );
   readonly totalExpenses = computed(() =>
     this.items()
-      .filter((i) => i.type === "expense")
+      .filter((i) => i.type === TRANSACTION_TYPE.Expense)
       .reduce((s, i) => s + Number(i.amount || 0), 0),
   );
   readonly balance = computed(() => this.totalIncomes() - this.totalExpenses());
-  readonly incomeCount = computed(() => this.items().filter((i) => i.type === "income").length);
-  readonly expenseCount = computed(() => this.items().filter((i) => i.type === "expense").length);
+  readonly incomeCount = computed(() => this.items().filter((i) => i.type === TRANSACTION_TYPE.Income).length);
+  readonly expenseCount = computed(() => this.items().filter((i) => i.type === TRANSACTION_TYPE.Expense).length);
   readonly pendingDelivery = computed(() =>
     this.items()
-      .filter((i) => i.type === "income" && !i.delivered_to_treasurer)
+      .filter((i) => i.type === TRANSACTION_TYPE.Income && !i.delivered_to_treasurer)
       .reduce((s, i) => s + Number(i.amount || 0), 0),
   );
   readonly pendingDeliveryCount = computed(() =>
-    this.items().filter((i) => i.type === "income" && !i.delivered_to_treasurer).length,
+    this.items().filter((i) => i.type === TRANSACTION_TYPE.Income && !i.delivered_to_treasurer).length,
   );
 
   readonly incomeFormFields = computed<CrudFormField[]>(() => [
@@ -487,11 +494,11 @@ export class TransactionsComponent implements OnInit {
   }
 
   setTypeFilter(value: string): void {
-    this.typeFilter.set(value as "all" | "income" | "expense");
+    this.typeFilter.set(value as typeof FILTER_ALL | TransactionType);
   }
 
   setDeliveryFilter(value: string): void {
-    this.deliveryFilter.set(value as "all" | "pending" | "delivered");
+    this.deliveryFilter.set(value as DeliveryStatusFilter);
   }
 
   newIncome(): void {
@@ -510,7 +517,7 @@ export class TransactionsComponent implements OnInit {
 
   edit(item: Transaction): void {
     this.error.set("");
-    if (item.source_table === "incomes") {
+    if (item.source_table === TRANSACTION_SOURCE_TABLE.Incomes) {
       this.editingIncome.set({ id: item.source_id } as Income);
       this.incomeForm = {
         date: item.date,
@@ -522,14 +529,14 @@ export class TransactionsComponent implements OnInit {
         notes: null,
       };
       this.incomeModalOpen.set(true);
-    } else if (item.source_table === "expenses") {
+    } else if (item.source_table === TRANSACTION_SOURCE_TABLE.Expenses) {
       this.editingExpense.set({ id: item.source_id } as Expense);
       this.expenseForm = {
         date: item.date,
         description: item.description,
         category: item.category,
         amount: item.amount,
-        status: (item.expense_status as ExpenseStatus) ?? "pagata",
+        status: (item.expense_status as ExpenseStatus) ?? EXPENSE_STATUS.Paid,
         paid_by: item.person ?? null,
         payment_method: item.payment_method,
         notes: null,
@@ -584,12 +591,12 @@ export class TransactionsComponent implements OnInit {
 
   askRemove(item: Transaction): void {
     this.confirmMessage.set(
-      `Eliminare la ${item.type === "income" ? "entrata" : "spesa"} "${item.description}"?`,
+      `Eliminare la ${item.type === TRANSACTION_TYPE.Income ? "entrata" : "spesa"} "${item.description}"?`,
     );
     this.confirmPending.set(async () => {
       try {
-        if (item.source_table === "incomes") await this.incomesService.remove(item.source_id);
-        else if (item.source_table === "expenses") await this.expensesService.remove(item.source_id);
+        if (item.source_table === TRANSACTION_SOURCE_TABLE.Incomes) await this.incomesService.remove(item.source_id);
+        else if (item.source_table === TRANSACTION_SOURCE_TABLE.Expenses) await this.expensesService.remove(item.source_id);
         await this.load();
       } catch (e) {
         this.setError(this.message(e));
@@ -659,7 +666,7 @@ export class TransactionsComponent implements OnInit {
       description: "",
       category: EXPENSE_CATEGORIES[0],
       amount: 0,
-      status: "pagata",
+      status: EXPENSE_STATUS.Paid,
       paid_by: "",
       payment_method: PAYMENT_METHODS[0],
       notes: "",
@@ -674,4 +681,7 @@ export class TransactionsComponent implements OnInit {
     this.error.set(message);
     this.snackbar.error(message);
   }
+
+  protected readonly transactionType = TRANSACTION_TYPE;
+  protected readonly transactionSourceTable = TRANSACTION_SOURCE_TABLE;
 }

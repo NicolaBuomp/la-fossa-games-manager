@@ -4,6 +4,10 @@ import {
   TournamentTeamWithParticipants,
   TournamentWithTeams,
 } from "../../../core/types/models";
+import {
+  TOURNAMENT_MIN_PARTICIPANTS_BY_CODE,
+  TOURNAMENT_SPORT,
+} from "../../../core/types/constants";
 import { StatusBadgeComponent } from "../../../shared/components/ui.component";
 
 @Component({
@@ -173,17 +177,8 @@ export class RegistrationsTableComponent {
 
   canAddParticipant(team: TournamentTeamWithParticipants): boolean {
     const tournament = this.tournament();
-    if (!tournament || tournament.sport === "calcio") return false;
-    const limit =
-      (
-        {
-          pallavolo: 5,
-          briscola: 2,
-          fifa: 1,
-          "ping-pong": 1,
-          "calcio-balilla": 2,
-        } as Record<string, number>
-      )[tournament.code ?? ""] ?? null;
+    if (!tournament || tournament.sport === TOURNAMENT_SPORT.Football) return false;
+    const limit = TOURNAMENT_MIN_PARTICIPANTS_BY_CODE[tournament.code ?? ""] ?? null;
     return !limit || team.team_participants.length < limit;
   }
 }

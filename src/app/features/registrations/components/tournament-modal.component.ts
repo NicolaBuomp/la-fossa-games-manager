@@ -1,6 +1,10 @@
 import { Component, EventEmitter, Input, Output, signal } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { InsertTournament, Tournament } from "../../../core/types/models";
+import {
+  TOURNAMENT_SPORT,
+  TOURNAMENT_SPORT_OPTIONS,
+} from "../../../core/types/constants";
 import { ModalComponent } from "../../../shared/components/ui.component";
 
 @Component({
@@ -34,9 +38,9 @@ import { ModalComponent } from "../../../shared/components/ui.component";
               [(ngModel)]="form.sport"
               class="rounded-lg border border-soft bg-surface-muted px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"
             >
-              <option value="calcio">Calcio</option>
-              <option value="pallavolo">Pallavolo</option>
-              <option value="altro">Altro</option>
+              @for (sport of sportOptions; track sport.id) {
+                <option [value]="sport.id">{{ sport.label }}</option>
+              }
             </select>
           </label>
 
@@ -135,11 +139,13 @@ export class TournamentModalComponent {
   private emptyForm(): InsertTournament {
     return {
       name: "",
-      sport: "calcio",
+      sport: TOURNAMENT_SPORT.Football,
       fee: 0,
       date: "",
       code: null,
       notes: "",
     };
   }
+
+  protected readonly sportOptions = TOURNAMENT_SPORT_OPTIONS;
 }

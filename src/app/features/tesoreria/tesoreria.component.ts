@@ -3,7 +3,14 @@ import { Component, OnInit, computed, inject, signal } from "@angular/core";
 import { AuthService } from "../../core/services/auth.service";
 import { SnackbarService } from "../../core/services/snackbar.service";
 import { TransactionsService } from "../../core/services/transactions.service";
-import { INCOME_CATEGORIES } from "../../core/types/constants";
+import {
+  DELIVERY_STATUS,
+  DeliveryStatusFilter,
+  FILTER_ALL,
+  INCOME_CATEGORIES,
+  TRANSACTION_SOURCE_TABLE,
+  TRANSACTION_TYPE,
+} from "../../core/types/constants";
 import { DeliveryItem, Transaction } from "../../core/types/models";
 import {
   FilterOption,
@@ -99,7 +106,7 @@ import {
           />
         </div>
       } @else {
-        @if (deliveryFilter() === 'pending' && filteredItems().length > 0) {
+        @if (deliveryFilter() === deliveryStatus.Pending && filteredItems().length > 0) {
           <div class="flex items-center gap-3">
             <button
               class="text-xs font-bold text-muted underline hover:text-primary"
@@ -123,7 +130,7 @@ import {
           <table class="w-full text-sm">
             <thead>
               <tr class="border-b border-soft bg-surface-muted">
-                @if (deliveryFilter() === 'pending') {
+                @if (deliveryFilter() === deliveryStatus.Pending) {
                   <th class="w-10 px-4 py-3">
                     <span class="sr-only">Seleziona</span>
                   </th>
@@ -142,7 +149,7 @@ import {
                   class="border-b border-soft transition last:border-0"
                   [class.bg-amber-50]="isSelected(item)"
                 >
-                  @if (deliveryFilter() === 'pending') {
+                  @if (deliveryFilter() === deliveryStatus.Pending) {
                     <td class="px-4 py-3">
                       <input
                         type="checkbox"
@@ -177,7 +184,7 @@ import {
               [class.bg-amber-50]="isSelected(item)"
             >
               <div class="flex items-start gap-3">
-                @if (deliveryFilter() === 'pending') {
+                @if (deliveryFilter() === deliveryStatus.Pending) {
                   <input
                     type="checkbox"
                     class="mt-1 h-5 w-5 flex-shrink-0 cursor-pointer rounded border-soft accent-amber-600"
@@ -210,9 +217,9 @@ import {
 
     <!-- Template badge fonte -->
     <ng-template #sourceBadge let-item>
-      @if (item.source_table === 'tournament_teams') {
+      @if (item.source_table === transactionSourceTable.TournamentTeams) {
         <span class="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-blue-700">Iscrizione</span>
-      } @else if (item.source_table === 'sponsors') {
+      } @else if (item.source_table === transactionSourceTable.Sponsors) {
         <span class="rounded-full bg-purple-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-purple-700">Sponsor</span>
       } @else {
         <span class="rounded-full bg-surface-muted px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-muted">Manuale</span>
@@ -244,8 +251,8 @@ import {
 })
 export class TesoreriaComponent implements OnInit {
   allItems = signal<Transaction[]>([]);
-  deliveryFilter = signal<"pending" | "delivered" | "all">("pending");
-  categoryFilter = signal<string>("all");
+  deliveryFilter = signal<DeliveryStatusFilter>(DELIVERY_STATUS.Pending);
+  categoryFilter = signal<string>(FILTER_ALL);
   selectedItems = signal<DeliveryItem[]>([]);
   delivering = signal(false);
   error = signal("");
@@ -253,10 +260,10 @@ export class TesoreriaComponent implements OnInit {
   private readonly snackbar = inject(SnackbarService);
 
   readonly pendingItems = computed(() =>
-    this.allItems().filter((i) => i.type === "income" && !i.delivered_to_treasurer),
+    this.allItems().filter((i) => i.type === TRANSACTION_TYPE.Income && !i.delivered_to_treasurer),
   );
   readonly deliveredItems = computed(() =>
-    this.allItems().filter((i) => i.type === "income" && i.delivered_to_treasurer),
+    this.allItems().filter((i) => i.type === TRANSACTION_TYPE.Income && i.delivered_to_treasurer),
   );
   readonly pendingTotal = computed(() =>
     this.pendingItems().reduce((s, i) => s + Number(i.amount || 0), 0),
@@ -276,13 +283,13 @@ export class TesoreriaComponent implements OnInit {
   });
 
   readonly filteredItems = computed(() => {
-    let items = this.allItems().filter((i) => i.type === "income");
-    if (this.deliveryFilter() === "pending") {
+    let items = this.allItems().filter((i) => i.type === TRANSACTION_TYPE.Income);
+    if (this.deliveryFilter() === DELIVERY_STATUS.Pending) {
       items = items.filter((i) => !i.delivered_to_treasurer);
-    } else if (this.deliveryFilter() === "delivered") {
+    } else if (this.deliveryFilter() === DELIVERY_STATUS.Delivered) {
       items = items.filter((i) => i.delivered_to_treasurer);
     }
-    if (this.categoryFilter() !== "all") {
+    if (this.categoryFilter() !== FILTER_ALL) {
       items = items.filter((i) => i.category === this.categoryFilter());
     }
     return items;
@@ -296,15 +303,15 @@ export class TesoreriaComponent implements OnInit {
 
   get deliveryFilterOptions(): () => FilterOption[] {
     return () => [
-      { label: "Da consegnare", value: "pending", active: this.deliveryFilter() === "pending" },
-      { label: "Consegnati", value: "delivered", active: this.deliveryFilter() === "delivered" },
-      { label: "Tutti", value: "all", active: this.deliveryFilter() === "all" },
+      { label: "Da consegnare", value: DELIVERY_STATUS.Pending, active: this.deliveryFilter() === DELIVERY_STATUS.Pending },
+      { label: "Consegnati", value: DELIVERY_STATUS.Delivered, active: this.deliveryFilter() === DELIVERY_STATUS.Delivered },
+      { label: "Tutti", value: FILTER_ALL, active: this.deliveryFilter() === FILTER_ALL },
     ];
   }
 
   get categoryFilterOptions(): () => FilterOption[] {
     return () => [
-      { label: "Tutte le categorie", value: "all", active: this.categoryFilter() === "all" },
+      { label: "Tutte le categorie", value: FILTER_ALL, active: this.categoryFilter() === FILTER_ALL },
       ...INCOME_CATEGORIES.map((c) => ({
         label: c,
         value: c,
@@ -333,7 +340,7 @@ export class TesoreriaComponent implements OnInit {
   }
 
   setDeliveryFilter(value: string): void {
-    this.deliveryFilter.set(value as "pending" | "delivered" | "all");
+    this.deliveryFilter.set(value as DeliveryStatusFilter);
     this.selectedItems.set([]);
   }
 
@@ -412,4 +419,7 @@ export class TesoreriaComponent implements OnInit {
     this.error.set(message);
     this.snackbar.error(message);
   }
+
+  protected readonly deliveryStatus = DELIVERY_STATUS;
+  protected readonly transactionSourceTable = TRANSACTION_SOURCE_TABLE;
 }

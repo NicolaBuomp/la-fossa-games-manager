@@ -12,6 +12,15 @@ import {
   ParticipationRequestWithTournament,
 } from "../../core/types/models";
 import {
+  DIRECT_TOURNAMENT_CODES,
+  DUO_TOURNAMENT_CODES,
+  FILTER_ALL,
+  PARTICIPANT_GENDER,
+  PARTICIPATION_REQUEST_STATUS,
+  PARTICIPATION_REQUEST_STATUSES,
+  TOURNAMENT_SPORT,
+} from "../../core/types/constants";
+import {
   ConfirmModalComponent,
   EmptyStateComponent,
   KpiPanelComponent,
@@ -41,10 +50,6 @@ type TransferForm = {
   person2: TransferPerson;
   notes: string;
 };
-
-const SOLO_CODES = ["fifa", "ping-pong"];
-const DUO_CODES = ["briscola", "calcio-balilla"];
-const DIRECT_CODES = [...SOLO_CODES, ...DUO_CODES];
 
 @Component({
   standalone: true,
@@ -186,34 +191,34 @@ const DIRECT_CODES = [...SOLO_CODES, ...DUO_CODES];
                   class="bg-strong text-on-strong rounded-lg px-4 py-2 text-xs font-bold uppercase disabled:cursor-not-allowed disabled:opacity-60"
                   (click)="openTransferModal(request)"
                 >
-                  {{ request.status === "nuova" ? "Accetta" : "Trasferisci" }}
+                  {{ request.status === requestStatus.New ? "Accetta" : "Trasferisci" }}
                 </button>
 
                 <!-- Azioni secondarie desktop: sempre visibili -->
                 <div class="hidden flex-wrap gap-2 sm:flex">
-                  @if (request.status !== "contattata") {
+                  @if (request.status !== requestStatus.Contacted) {
                     <button
                       [disabled]="updatingRequestId() === request.id"
                       class="state-success rounded-lg border px-4 py-2 text-xs font-bold uppercase disabled:cursor-not-allowed disabled:opacity-60"
-                      (click)="setStatus(request, 'contattata')"
+                    (click)="setStatus(request, requestStatus.Contacted)"
                     >
                       Segna contattata
                     </button>
                   }
-                  @if (request.status !== "archiviata") {
+                  @if (request.status !== requestStatus.Archived) {
                     <button
                       [disabled]="updatingRequestId() === request.id"
                       class="state-neutral rounded-lg border px-4 py-2 text-xs font-bold uppercase disabled:cursor-not-allowed disabled:opacity-60"
-                      (click)="setStatus(request, 'archiviata')"
+                    (click)="setStatus(request, requestStatus.Archived)"
                     >
                       Archivia
                     </button>
                   }
-                  @if (request.status !== "nuova") {
+                  @if (request.status !== requestStatus.New) {
                     <button
                       [disabled]="updatingRequestId() === request.id"
                       class="state-warning rounded-lg border px-4 py-2 text-xs font-bold uppercase disabled:cursor-not-allowed disabled:opacity-60"
-                      (click)="setStatus(request, 'nuova')"
+                    (click)="setStatus(request, requestStatus.New)"
                     >
                       Riapri
                     </button>
@@ -231,25 +236,25 @@ const DIRECT_CODES = [...SOLO_CODES, ...DUO_CODES];
                       class="absolute left-0 top-full z-20 mt-1 flex min-w-[10rem] flex-col rounded-xl border border-soft bg-surface shadow-lg"
                       (click)="openActionsId.set(null)"
                     >
-                      @if (request.status !== "contattata") {
+                      @if (request.status !== requestStatus.Contacted) {
                         <button
                           [disabled]="updatingRequestId() === request.id"
                           class="px-4 py-3 text-left text-sm font-bold text-green-700 disabled:opacity-60"
-                          (click)="setStatus(request, 'contattata')"
+                          (click)="setStatus(request, requestStatus.Contacted)"
                         >Segna contattata</button>
                       }
-                      @if (request.status !== "archiviata") {
+                      @if (request.status !== requestStatus.Archived) {
                         <button
                           [disabled]="updatingRequestId() === request.id"
                           class="px-4 py-3 text-left text-sm font-bold disabled:opacity-60"
-                          (click)="setStatus(request, 'archiviata')"
+                          (click)="setStatus(request, requestStatus.Archived)"
                         >Archivia</button>
                       }
-                      @if (request.status !== "nuova") {
+                      @if (request.status !== requestStatus.New) {
                         <button
                           [disabled]="updatingRequestId() === request.id"
                           class="px-4 py-3 text-left text-sm font-bold text-amber-700 disabled:opacity-60"
-                          (click)="setStatus(request, 'nuova')"
+                          (click)="setStatus(request, requestStatus.New)"
                         >Riapri</button>
                       }
                     </div>
@@ -500,22 +505,16 @@ export class ParticipationRequestsComponent implements OnInit {
   savingNoteId = signal<string | null>(null);
   updatingRequestId = signal<string | null>(null);
   searchQuery = signal("");
-  statusFilter = signal<RequestStatus | "all">("all");
+  statusFilter = signal<RequestStatus | typeof FILTER_ALL>(FILTER_ALL);
   openActionsId = signal<string | null>(null);
   transferRequest = signal<ParticipationRequestWithTournament | null>(null);
   confirmPending = signal<(() => Promise<void>) | null>(null);
   confirmMessage = signal("");
   private readonly snackbar = inject(SnackbarService);
   transferForm: TransferForm = this.emptyTransferForm();
-  requestStatuses: Array<{ id: RequestStatus; label: string }> = [
-    { id: "nuova", label: "Nuove" },
-    { id: "in_gestione", label: "In gestione" },
-    { id: "contattata", label: "Contattate" },
-    { id: "archiviata", label: "Archiviate" },
-    { id: "trasferita", label: "Trasferite" },
-  ];
+  requestStatuses = PARTICIPATION_REQUEST_STATUSES;
   statusFilterOptions = computed<FilterOption[]>(() => [
-    { label: "Tutte", value: "all", active: this.statusFilter() === "all" },
+    { label: "Tutte", value: FILTER_ALL, active: this.statusFilter() === FILTER_ALL },
     ...this.requestStatuses.map((status) => ({
       label: status.label,
       value: status.id,
@@ -525,7 +524,7 @@ export class ParticipationRequestsComponent implements OnInit {
   filteredRequests = computed(() => {
     const status = this.statusFilter();
     const q = this.searchQuery().toLowerCase().trim();
-    let items = status === "all"
+    let items = status === FILTER_ALL
       ? this.requests()
       : this.requests().filter((r) => r.status === status);
     if (q) {
@@ -586,7 +585,7 @@ export class ParticipationRequestsComponent implements OnInit {
   }
 
   setStatusFilter(value: string): void {
-    this.statusFilter.set(value as RequestStatus | "all");
+    this.statusFilter.set(value as RequestStatus | typeof FILTER_ALL);
   }
 
   openTransferModal(request: ParticipationRequestWithTournament): void {
@@ -681,36 +680,24 @@ export class ParticipationRequestsComponent implements OnInit {
   }
 
   statusLabel(status: RequestStatus): string {
-    return {
-      nuova: "Nuova",
-      in_gestione: "In gestione",
-      contattata: "Contattata",
-      archiviata: "Archiviata",
-      trasferita: "Trasferita",
-    }[status];
+    return this.requestStatuses.find((item) => item.id === status)?.label ?? status;
   }
 
   statusClass(status: RequestStatus): string {
-    return {
-      nuova: "state-warning",
-      in_gestione: "state-info",
-      contattata: "state-success",
-      archiviata: "state-neutral",
-      trasferita: "state-success",
-    }[status];
+    return this.requestStatuses.find((item) => item.id === status)?.className ?? "state-neutral";
   }
 
   newCount(): number {
-    return this.requests().filter((r) => r.status === "nuova").length;
+    return this.requests().filter((r) => r.status === PARTICIPATION_REQUEST_STATUS.New).length;
   }
   managingCount(): number {
-    return this.requests().filter((r) => r.status === "in_gestione").length;
+    return this.requests().filter((r) => r.status === PARTICIPATION_REQUEST_STATUS.Managing).length;
   }
   contactedCount(): number {
-    return this.requests().filter((r) => r.status === "contattata").length;
+    return this.requests().filter((r) => r.status === PARTICIPATION_REQUEST_STATUS.Contacted).length;
   }
   archivedCount(): number {
-    return this.requests().filter((r) => r.status === "archiviata").length;
+    return this.requests().filter((r) => r.status === PARTICIPATION_REQUEST_STATUS.Archived).length;
   }
 
   formatDateTime(value: string): string {
@@ -736,19 +723,19 @@ export class ParticipationRequestsComponent implements OnInit {
   }
 
   isFootballRequest(request: ParticipationRequestWithTournament): boolean {
-    return request.tournaments?.sport === "calcio";
+    return request.tournaments?.sport === TOURNAMENT_SPORT.Football;
   }
 
   isVolleyballRequest(request: ParticipationRequestWithTournament): boolean {
-    return request.tournaments?.sport === "pallavolo";
+    return request.tournaments?.sport === TOURNAMENT_SPORT.Volleyball;
   }
 
   isDirectRequest(request: ParticipationRequestWithTournament): boolean {
-    return DIRECT_CODES.includes(request.tournaments?.code ?? "");
+    return DIRECT_TOURNAMENT_CODES.includes(request.tournaments?.code ?? "");
   }
 
   isDuoRequest(request: ParticipationRequestWithTournament): boolean {
-    return DUO_CODES.includes(request.tournaments?.code ?? "");
+    return DUO_TOURNAMENT_CODES.includes(request.tournaments?.code ?? "");
   }
 
   private transferPayload(
@@ -758,7 +745,7 @@ export class ParticipationRequestsComponent implements OnInit {
       first_name: this.namePart(request.first_name),
       last_name: this.namePart(request.last_name),
       contact: this.normalizePhone(request.phone) || null,
-      gender: "uomo" as const,
+      gender: PARTICIPANT_GENDER.Male,
       registered: this.isVolleyballRequest(request)
         ? this.transferForm.participant_registered
         : false,
@@ -773,7 +760,7 @@ export class ParticipationRequestsComponent implements OnInit {
                 {
                   ...person2,
                   contact: person2.contact || null,
-                  gender: "uomo" as const,
+                  gender: PARTICIPANT_GENDER.Male,
                   registered: false,
                 },
               ]
@@ -871,4 +858,5 @@ export class ParticipationRequestsComponent implements OnInit {
   }
 
   protected readonly String = String;
+  protected readonly requestStatus = PARTICIPATION_REQUEST_STATUS;
 }

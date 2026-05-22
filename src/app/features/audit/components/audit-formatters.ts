@@ -1,51 +1,36 @@
 import { AuditLog } from "../../../core/types/models";
+import {
+  AUDIT_ACTION,
+  AUDIT_ACTIONS,
+  AUDIT_TABLE_LABELS,
+  AUDIT_TABLE_PLURAL_LABELS,
+} from "../../../core/types/constants";
+
+const AUDIT_BADGE_BASE =
+  "w-fit rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase";
+
+function actionMeta(action: AuditLog["action"]): (typeof AUDIT_ACTIONS)[number] {
+  return AUDIT_ACTIONS.find((item) => item.id === action) ?? AUDIT_ACTIONS[2];
+}
 
 export function actionLabel(action: AuditLog["action"]): string {
-  if (action === "insert") return "Aggiunto";
-  if (action === "update") return "Modificato";
-  return "Eliminato";
+  return actionMeta(action).label;
 }
 
 export function actionPhrase(action: AuditLog["action"]): string {
-  if (action === "insert") return "inserito";
-  if (action === "update") return "modificato";
-  return "eliminato";
+  return actionMeta(action).phrase;
 }
 
 export function auditBadgeClass(action: AuditLog["action"]): string {
-  const base =
-    "w-fit rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase";
-  if (action === "insert") return `${base} state-success`;
-  if (action === "update") return `${base} state-info`;
-  return `${base} state-danger`;
+  return `${AUDIT_BADGE_BASE} ${actionMeta(action).className}`;
 }
 
 export function tableLabel(tableName: string): string {
-  return (
-    {
-      expenses: "spesa",
-      incomes: "entrata",
-      sponsors: "sponsor",
-      registrations: "iscrizione",
-      tournaments: "torneo",
-      tournament_teams: "squadra",
-      team_participants: "partecipante",
-    }[tableName] ?? tableName
-  );
+  return AUDIT_TABLE_LABELS[tableName] ?? tableName;
 }
 
 export function tablePluralLabel(tableName: string): string {
-  return (
-    {
-      expenses: "spese",
-      incomes: "entrate",
-      sponsors: "sponsor",
-      registrations: "iscrizioni",
-      tournaments: "tornei",
-      tournament_teams: "squadre",
-      team_participants: "partecipanti",
-    }[tableName] ?? tableName
-  );
+  return AUDIT_TABLE_PLURAL_LABELS[tableName] ?? tableName;
 }
 
 export function actorLabel(log: AuditLog): string {
@@ -66,7 +51,7 @@ export function recordLabel(log: AuditLog): string {
 }
 
 export function changedFields(log: AuditLog): string[] {
-  if (log.action !== "update" || !log.old_data || !log.new_data) return [];
+  if (log.action !== AUDIT_ACTION.Update || !log.old_data || !log.new_data) return [];
   const oldData = log.old_data;
   const newData = log.new_data;
   return Object.keys(newData).filter(

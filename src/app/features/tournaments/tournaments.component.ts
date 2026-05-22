@@ -16,6 +16,14 @@ import {
   TournamentStatus,
 } from "../../core/types/models";
 import {
+  TOURNAMENT_MATCH_STATUS,
+  TOURNAMENT_MATCH_STATUSES,
+  TOURNAMENT_PUBLIC_STATUS,
+  TOURNAMENT_PUBLIC_STATUSES,
+  TOURNAMENT_STATUS,
+  TOURNAMENT_STATUSES,
+} from "../../core/types/constants";
+import {
   ConfirmModalComponent,
   EmptyStateComponent,
   KpiPanelComponent,
@@ -134,8 +142,8 @@ type TournamentTab =
                     [className]="tournamentStatusClass(tournament.status)"
                   />
                   @if (
-                    tournament.public_status !== "registrations_open" ||
-                    tournament.status !== "registrations_open"
+                    tournament.public_status !== tournamentPublicStatus.RegistrationsOpen ||
+                    tournament.status !== tournamentStatus.RegistrationsOpen
                   ) {
                     <lfg-status-badge
                       [label]="publicStatusLabel(tournament.public_status)"
@@ -353,7 +361,7 @@ type TournamentTab =
                   <div class="mt-3 flex items-center gap-2">
                     <p class="min-w-0 flex-1 truncate text-sm font-black">{{ match.home_team?.name || "Casa" }}</p>
                     <span class="flex-shrink-0 text-xs font-black text-muted">
-                      @if (match.status === 'completed') {
+                      @if (match.status === tournamentMatchStatus.Completed) {
                         {{ match.home_score }} – {{ match.away_score }}
                       } @else {
                         vs
@@ -684,29 +692,9 @@ export class TournamentsComponent implements OnInit {
     { id: "publication", label: "Pubblicazione" },
   ];
 
-  readonly matchStatuses: { id: TournamentMatchStatus; label: string }[] = [
-    { id: "scheduled", label: "Programmata" },
-    { id: "live", label: "Live" },
-    { id: "completed", label: "Completata" },
-    { id: "cancelled", label: "Annullata" },
-  ];
-
-  readonly tournamentStatuses: { id: TournamentStatus; label: string }[] = [
-    { id: "draft", label: "Bozza" },
-    { id: "registrations_open", label: "Iscrizioni aperte" },
-    { id: "registrations_closed", label: "Iscrizioni chiuse" },
-    { id: "groups_generated", label: "Gironi generati" },
-    { id: "in_progress", label: "In corso" },
-    { id: "completed", label: "Completato" },
-    { id: "archived", label: "Archiviato" },
-  ];
-
-  readonly publicStatuses: { id: TournamentPublicStatus; label: string }[] = [
-    { id: "hidden", label: "Nascosto" },
-    { id: "registrations_open", label: "Iscrizioni aperte" },
-    { id: "published", label: "Pubblicato" },
-    { id: "results_published", label: "Risultati pubblici" },
-  ];
+  readonly matchStatuses = TOURNAMENT_MATCH_STATUSES;
+  readonly tournamentStatuses = TOURNAMENT_STATUSES;
+  readonly publicStatuses = TOURNAMENT_PUBLIC_STATUSES;
 
   tournaments = signal<OperationalTournament[]>([]);
   selectedTournamentId = signal<string | null>(null);
@@ -848,8 +836,8 @@ export class TournamentsComponent implements OnInit {
     this.error.set("");
     try {
       const publishedAt =
-        tournament.public_status === "published" ||
-        tournament.public_status === "results_published"
+        tournament.public_status === TOURNAMENT_PUBLIC_STATUS.Published ||
+        tournament.public_status === TOURNAMENT_PUBLIC_STATUS.ResultsPublished
           ? tournament.published_at ?? new Date().toISOString()
           : null;
       await this.service.updatePublication(tournament.id, {
@@ -930,7 +918,7 @@ export class TournamentsComponent implements OnInit {
       (sum, tournament) =>
         sum +
         tournament.tournament_matches.filter(
-          (match) => match.status === "completed",
+          (match) => match.status === TOURNAMENT_MATCH_STATUS.Completed,
         ).length,
       0,
     );
@@ -943,8 +931,8 @@ export class TournamentsComponent implements OnInit {
   publishedCount(): number {
     return this.tournaments().filter(
       (tournament) =>
-        tournament.public_status === "published" ||
-        tournament.public_status === "results_published",
+        tournament.public_status === TOURNAMENT_PUBLIC_STATUS.Published ||
+        tournament.public_status === TOURNAMENT_PUBLIC_STATUS.ResultsPublished,
     ).length;
   }
 
@@ -954,7 +942,7 @@ export class TournamentsComponent implements OnInit {
 
   completedFor(tournament: OperationalTournament): number {
     return tournament.tournament_matches.filter(
-      (match) => match.status === "completed",
+      (match) => match.status === TOURNAMENT_MATCH_STATUS.Completed,
     ).length;
   }
 
@@ -985,13 +973,9 @@ export class TournamentsComponent implements OnInit {
 
   matchStatusClass(status: TournamentMatchStatus): string {
     return (
-      {
-        scheduled: "state-neutral",
-        live: "state-warning",
-        completed: "state-success",
-        cancelled: "state-danger",
-      } satisfies Record<TournamentMatchStatus, string>
-    )[status];
+      this.matchStatuses.find((item) => item.id === status)?.className ??
+      "state-neutral"
+    );
   }
 
   tournamentStatusLabel(status: TournamentStatus): string {
@@ -1002,12 +986,10 @@ export class TournamentsComponent implements OnInit {
   }
 
   tournamentStatusClass(status: TournamentStatus): string {
-    if (status === "completed") return "state-success";
-    if (status === "in_progress" || status === "groups_generated") {
-      return "state-warning";
-    }
-    if (status === "archived") return "state-neutral";
-    return "state-info";
+    return (
+      this.tournamentStatuses.find((item) => item.id === status)?.className ??
+      "state-info"
+    );
   }
 
   publicStatusLabel(status: TournamentPublicStatus): string {
@@ -1018,9 +1000,10 @@ export class TournamentsComponent implements OnInit {
   }
 
   publicStatusClass(status: TournamentPublicStatus): string {
-    if (status === "hidden") return "state-neutral";
-    if (status === "results_published") return "state-success";
-    return "state-info";
+    return (
+      this.publicStatuses.find((item) => item.id === status)?.className ??
+      "state-info"
+    );
   }
 
   private setError(error: unknown): void {
@@ -1029,4 +1012,8 @@ export class TournamentsComponent implements OnInit {
     this.error.set(message);
     this.snackbar.error(message);
   }
+
+  protected readonly tournamentMatchStatus = TOURNAMENT_MATCH_STATUS;
+  protected readonly tournamentStatus = TOURNAMENT_STATUS;
+  protected readonly tournamentPublicStatus = TOURNAMENT_PUBLIC_STATUS;
 }

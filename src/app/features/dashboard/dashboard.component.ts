@@ -3,10 +3,7 @@ import { RouterLink } from "@angular/router";
 import { AuditLogService } from "../../core/services/audit-log.service";
 import { AuthService } from "../../core/services/auth.service";
 import { ExpensesService } from "../../core/services/expenses.service";
-import {
-  DEFAULT_TOURNAMENT_CODES,
-  RegistrationsService,
-} from "../../core/services/registrations.service";
+import { RegistrationsService } from "../../core/services/registrations.service";
 import { RequestBadgesService } from "../../core/services/request-badges.service";
 import { SnackbarService } from "../../core/services/snackbar.service";
 import { SponsorsService } from "../../core/services/sponsors.service";
@@ -17,6 +14,13 @@ import {
   Registration,
   Sponsor,
 } from "../../core/types/models";
+import {
+  AUDIT_ACTION,
+  DEFAULT_TOURNAMENT_CODES,
+  EXPENSE_STATUS,
+  SPONSOR_STATUS,
+  SUPABASE_RPC,
+} from "../../core/types/constants";
 
 interface DashboardFinancials {
   total_expenses: number;
@@ -487,7 +491,7 @@ export class DashboardComponent implements OnInit {
       }
 
       const [financialsResult, registrations, auditLogs] = await Promise.all([
-        this.supabase.client.rpc("get_dashboard_financials", {
+        this.supabase.client.rpc(SUPABASE_RPC.GetDashboardFinancials, {
           tournament_codes: DEFAULT_TOURNAMENT_CODES,
         }),
         this.registrationsService.list(),
@@ -658,7 +662,7 @@ export class DashboardComponent implements OnInit {
 
   ownConfirmedSponsors(): number {
     return this.ownSponsors().filter(
-      (item) => item.status === "confermato" || item.status === "pagato",
+      (item) => item.status === SPONSOR_STATUS.Confirmed || item.status === SPONSOR_STATUS.Paid,
     ).length;
   }
 
@@ -669,16 +673,16 @@ export class DashboardComponent implements OnInit {
   }
 
   ownExpensesToRefund(): number {
-    return this.ownExpenses().filter((item) => item.status === "da_rimborsare")
+    return this.ownExpenses().filter((item) => item.status === EXPENSE_STATUS.ToRefund)
       .length;
   }
 
   staffInsertCount(): number {
-    return this.auditLogs().filter((item) => item.action === "insert").length;
+    return this.auditLogs().filter((item) => item.action === AUDIT_ACTION.Insert).length;
   }
 
   staffUpdateCount(): number {
-    return this.auditLogs().filter((item) => item.action === "update").length;
+    return this.auditLogs().filter((item) => item.action === AUDIT_ACTION.Update).length;
   }
 
   totalStaffActions(): number {

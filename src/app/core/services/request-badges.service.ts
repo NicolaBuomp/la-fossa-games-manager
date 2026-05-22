@@ -4,6 +4,7 @@ import { AuthService } from "./auth.service";
 import { ParticipationRequestsService } from "./participation-requests.service";
 import { SponsorsService } from "./sponsors.service";
 import { SupabaseService } from "./supabase.service";
+import { SUPABASE_TABLE } from "../types/constants";
 
 @Injectable({ providedIn: "root" })
 export class RequestBadgesService {
@@ -35,7 +36,7 @@ export class RequestBadgesService {
       .channel("badge-participation-requests")
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "participation_requests" },
+        { event: "*", schema: "public", table: SUPABASE_TABLE.ParticipationRequests },
         () => void this.fetchParticipationCount(),
       )
       .subscribe();
@@ -44,7 +45,7 @@ export class RequestBadgesService {
       .channel("badge-sponsors")
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "sponsors" },
+        { event: "*", schema: "public", table: SUPABASE_TABLE.Sponsors },
         () => void this.fetchSponsorCount(),
       )
       .subscribe();

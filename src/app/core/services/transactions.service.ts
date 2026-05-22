@@ -1,11 +1,19 @@
 import { Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
-import { DeliveryItem, Transaction } from '../types/models';
+import { DeliveryItem, Transaction, TransactionType } from '../types/models';
+import {
+  DELIVERY_STATUS,
+  DeliveryStatusFilter,
+  FILTER_ALL,
+  SUPABASE_RPC,
+  SUPABASE_TABLE,
+  TRANSACTION_TYPE,
+} from '../types/constants';
 
 export interface TransactionFilters {
-  type?: 'income' | 'expense' | 'all';
+  type?: TransactionType | typeof FILTER_ALL;
   category?: string;
-  deliveryStatus?: 'pending' | 'delivered' | 'all';
+  deliveryStatus?: DeliveryStatusFilter;
   dateFrom?: string;
   dateTo?: string;
 }
@@ -16,21 +24,21 @@ export class TransactionsService {
 
   async list(filters: TransactionFilters = {}): Promise<Transaction[]> {
     let query = this.supabase.client
-      .from('transactions_view')
+      .from(SUPABASE_TABLE.TransactionsView)
       .select('*')
       .order('date', { ascending: false })
       .order('created_at', { ascending: false });
 
-    if (filters.type && filters.type !== 'all') {
+    if (filters.type && filters.type !== FILTER_ALL) {
       query = query.eq('type', filters.type);
     }
     if (filters.category) {
       query = query.eq('category', filters.category);
     }
-    if (filters.deliveryStatus === 'pending') {
-      query = query.eq('delivered_to_treasurer', false).eq('type', 'income');
-    } else if (filters.deliveryStatus === 'delivered') {
-      query = query.eq('delivered_to_treasurer', true).eq('type', 'income');
+    if (filters.deliveryStatus === DELIVERY_STATUS.Pending) {
+      query = query.eq('delivered_to_treasurer', false).eq('type', TRANSACTION_TYPE.Income);
+    } else if (filters.deliveryStatus === DELIVERY_STATUS.Delivered) {
+      query = query.eq('delivered_to_treasurer', true).eq('type', TRANSACTION_TYPE.Income);
     }
     if (filters.dateFrom) {
       query = query.gte('date', filters.dateFrom);
@@ -45,7 +53,7 @@ export class TransactionsService {
   }
 
   async markDelivered(items: DeliveryItem[], deliveredBy: string): Promise<void> {
-    const { error } = await this.supabase.client.rpc('mark_transaction_delivered', {
+    const { error } = await this.supabase.client.rpc(SUPABASE_RPC.MarkTransactionDelivered, {
       p_items: items,
       p_delivered_by: deliveredBy,
     });

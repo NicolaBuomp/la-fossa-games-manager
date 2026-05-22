@@ -1,8 +1,9 @@
 import { Injectable } from "@angular/core";
 import { AuditLog } from "../types/models";
+import { FILTER_ALL, SUPABASE_TABLE } from "../types/constants";
 import { SupabaseService } from "./supabase.service";
 
-export type AuditActionFilter = AuditLog["action"] | "all";
+export type AuditActionFilter = AuditLog["action"] | typeof FILTER_ALL;
 
 export interface AuditLogQuery {
   page: number;
@@ -22,7 +23,7 @@ export class AuditLogService {
 
   async recent(limit = 30): Promise<AuditLog[]> {
     const { data, error } = await this.supabase.client
-      .from("audit_logs")
+      .from(SUPABASE_TABLE.AuditLogs)
       .select("*")
       .order("changed_at", { ascending: false })
       .limit(limit);
@@ -37,12 +38,12 @@ export class AuditLogService {
     const to = from + pageSize - 1;
 
     let request = this.supabase.client
-      .from("audit_logs")
+      .from(SUPABASE_TABLE.AuditLogs)
       .select("*", { count: "exact" })
       .order("changed_at", { ascending: false })
       .range(from, to);
 
-    if (query.action && query.action !== "all") {
+    if (query.action && query.action !== FILTER_ALL) {
       request = request.eq("action", query.action);
     }
 
