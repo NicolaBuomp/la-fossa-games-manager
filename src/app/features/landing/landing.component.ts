@@ -445,7 +445,7 @@ export class LandingComponent implements OnInit, OnDestroy, AfterViewInit {
           company_name: this.participationForm.company_name.trim(),
           contact_name: `${this.participationForm.first_name.trim()} ${this.participationForm.last_name.trim()}`,
           contact_info: normalizedPhone,
-          category: SPONSOR_CATEGORY.Bronze,
+          category: SPONSOR_CATEGORY.Bronzo,
           type: SPONSOR_TYPE.Cash,
           value: 0,
           promised_amount: 0,

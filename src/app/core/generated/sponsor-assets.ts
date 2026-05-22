@@ -1,4 +1,4 @@
-export type SponsorCategory ='platino' | 'oro' | 'argento' | 'bronzo';
+export type SponsorCategory = 'platino' | 'oro' | 'argento' | 'bronzo';
 
 export type SponsorAsset = {
   name: string;
@@ -14,7 +14,7 @@ export const SPONSOR_ASSETS: SponsorAsset[] = [
   },
   {
     "name": "Regno Dei Mazzoni",
-    "src": "/assets/sponsor/argento/regno_regno_dei_mazzoni.jpeg",
+    "src": "/assets/sponsor/argento/regno_dei_mazzoni.jpeg",
     "category": "argento"
   },
   {

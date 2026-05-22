@@ -57,9 +57,10 @@ export const SPONSOR_TYPE = {
 } as const satisfies Record<string, SponsorType>;
 
 export const SPONSOR_CATEGORY = {
-  Bronze: "bronzo",
-  Silver: "silver",
-  Gold: "gold",
+  Bronzo: "bronzo",
+  Argento: "argento",
+  Oro: "oro",
+  Platino: "platino",
 } as const satisfies Record<string, SponsorCategory>;
 
 export const EXPENSE_STATUS = {
@@ -304,9 +305,10 @@ export const EXPENSE_STATUSES = [
 ] as const satisfies ReadonlyArray<StatusOption<ExpenseStatus>>;
 
 export const SPONSOR_CATEGORIES = [
-  { id: SPONSOR_CATEGORY.Bronze, label: "Bronzo" },
-  { id: SPONSOR_CATEGORY.Silver, label: "Silver" },
-  { id: SPONSOR_CATEGORY.Gold, label: "Gold" },
+  { id: SPONSOR_CATEGORY.Bronzo, label: "Bronzo" },
+  { id: SPONSOR_CATEGORY.Argento, label: "Argento" },
+  { id: SPONSOR_CATEGORY.Oro, label: "Oro" },
+  { id: SPONSOR_CATEGORY.Platino, label: "Platino" },
 ] as const satisfies ReadonlyArray<Option<SponsorCategory>>;
 
 export const SPONSOR_STATUSES = [

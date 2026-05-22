@@ -1,7 +1,7 @@
 export type UserRole = 'staff' | 'admin' | 'owner' | 'tesoriere';
 export type SponsorStatus = 'contattato' | 'in_trattativa' | 'confermato' | 'pagato';
 export type SponsorType = 'cash' | 'bonifico';
-export type SponsorCategory = 'bronzo' | 'silver' | 'gold';
+export type SponsorCategory = 'bronzo' | 'argento' | 'oro' | 'platino';
 export type ExpenseStatus = 'pagata' | 'da_rimborsare' | 'rimborsata';
 export type TournamentSport = 'calcio' | 'pallavolo' | 'altro';
 export type TournamentStatus =

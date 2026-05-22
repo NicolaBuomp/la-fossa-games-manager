@@ -82,12 +82,6 @@ type SponsorForm = InsertSponsor & { withoutPromisedAmount: boolean };
             CSV
           </button>
           <button
-            class="rounded-lg bg-surface px-4 py-2 text-sm font-bold ring-1 ring-black/15"
-            (click)="newLead()"
-          >
-            Nuovo lead
-          </button>
-          <button
             class="bg-strong text-on-strong rounded-lg px-4 py-2 text-sm font-bold"
             (click)="newItem()"
           >
@@ -192,108 +186,75 @@ type SponsorForm = InsertSponsor & { withoutPromisedAmount: boolean };
           "
         >
           @for (item of items(); track item.id) {
-            <article
-              class="rounded-lg border border-soft bg-surface"
-              [class.p-2]="compactView()"
-              [class.p-4]="!compactView()"
-            >
-
-              <div
-                class="flex flex-wrap items-start justify-between"
-                [class.gap-2]="compactView()"
-                [class.gap-3]="!compactView()"
-              >
-                <div class="min-w-0">
-                  <h2
-                    class="truncate font-bold"
-                    [class.text-sm]="compactView()"
-                    [class.text-base]="!compactView()"
-                  >
-                    {{ item.company_name }}
-                  </h2>
-                  @if (!compactView()) {
-                    <p class="mt-1 text-xs text-muted">
-                      {{ item.contact_name || "Referente non indicato" }}
-                      @if (item.contact_info) {
-                        · {{ item.contact_info }}
+            @if (compactView()) {
+              <!-- COMPACT VIEW -->
+              <article class="flex items-center justify-between gap-3 rounded-lg border border-soft bg-surface px-3 py-2">
+                <div class="flex min-w-0 flex-1 items-center gap-2">
+                  <lfg-status-badge [label]="statusLabel(item.status)" [className]="statusClass(item.status)" />
+                  <h2 class="truncate text-sm font-bold">{{ item.company_name }}</h2>
+                </div>
+                <div class="flex flex-shrink-0 items-center gap-2">
+                  <span class="text-sm font-black">{{ promisedAmountLabel(item) }}</span>
+                  <button class="rounded-md bg-surface-muted px-2 py-1 text-[10px] font-bold uppercase" (click)="edit(item)">Modifica</button>
+                  @if (auth.isAdmin()) {
+                    <button class="rounded-md bg-red-50 px-2 py-1 text-[10px] font-bold uppercase text-red-600" (click)="askRemove(item)">Elimina</button>
+                  }
+                </div>
+              </article>
+            } @else {
+              <!-- FULL VIEW -->
+              <article class="overflow-hidden rounded-xl border border-soft bg-surface">
+                <!-- Body -->
+                <div class="p-4">
+                  <div class="flex items-start justify-between gap-4">
+                    <!-- Left: identity -->
+                    <div class="min-w-0 flex-1">
+                      <div class="flex flex-wrap items-center gap-2">
+                        <h2 class="text-base font-bold leading-tight">{{ item.company_name }}</h2>
+                        <lfg-status-badge [label]="statusLabel(item.status)" [className]="statusClass(item.status)" />
+                      </div>
+                      <p class="mt-1.5 text-xs text-muted">
+                        {{ item.contact_name || "Referente non indicato" }}
+                        @if (item.contact_info) { · {{ item.contact_info }} }
+                      </p>
+                      <p class="mt-0.5 text-[11px] text-muted">{{ insertMeta(item) }}</p>
+                      <p class="mt-0.5 text-[11px] text-muted">{{ assignmentMeta(item) }}</p>
+                    </div>
+                    <!-- Right: amount block -->
+                    <div class="flex-shrink-0 rounded-lg bg-surface-muted px-3 py-2 text-right">
+                      @if (item.received_amount > 0) {
+                        <p class="text-[10px] font-bold uppercase tracking-wide text-muted">Incassato</p>
+                        <p class="text-positive mt-0.5 text-lg font-black leading-tight">{{ eur(item.received_amount) }}</p>
+                        @if (item.promised_amount > item.received_amount) {
+                          <p class="mt-1 text-[11px] text-muted">Promesso {{ eur(item.promised_amount) }}</p>
+                        }
+                      } @else if (item.promised_amount > 0) {
+                        <p class="text-[10px] font-bold uppercase tracking-wide text-muted">Promesso</p>
+                        <p class="mt-0.5 text-lg font-black leading-tight">{{ eur(item.promised_amount) }}</p>
+                      } @else {
+                        <p class="text-[10px] font-bold uppercase tracking-wide text-muted">Importo assente</p>
+                        <p class="mt-0.5 text-base font-black leading-tight text-muted">Nessun importo</p>
                       }
-                    </p>
-                    <p class="mt-1 text-xs font-semibold text-muted">
-                      {{ insertMeta(item) }}
-                    </p>
-                    <p class="mt-1 text-xs font-semibold text-muted">
-                      {{ assignmentMeta(item) }}
-                    </p>
+                    </div>
+                  </div>
+                  <!-- Tags -->
+                  <div class="mt-3 flex flex-wrap gap-1.5">
+                    <span class="rounded-full bg-surface-muted px-2.5 py-1 text-[10px] font-bold uppercase">{{ categoryLabel(item.category) }}</span>
+                    <span class="rounded-full bg-surface-muted px-2.5 py-1 text-[10px] font-bold uppercase">{{ item.payment_method || sponsorTypeLabel(item.type) }}</span>
+                  </div>
+                  @if (item.notes) {
+                    <p class="mt-2.5 text-sm italic text-muted">{{ item.notes }}</p>
                   }
                 </div>
-                <div class="text-right">
-                  @if (!compactView()) {
-                    <p class="text-[10px] font-bold uppercase text-muted">
-                      {{
-                        item.promised_amount > 0
-                          ? "Promesso"
-                          : "Importo assente"
-                      }}
-                    </p>
-                  }
-                  <p class="font-black" [class.text-sm]="compactView()">
-                    {{ promisedAmountLabel(item) }}
-                  </p>
-                  @if (!compactView() && item.received_amount > 0) {
-                    <p class="text-positive mt-1 text-xs font-bold">
-                      Incassato {{ eur(item.received_amount) }}
-                    </p>
-                  }
-                  @if (
-                    !compactView() &&
-                    item.promised_amount > item.received_amount
-                  ) {
-                    <p class="mt-1 text-xs font-semibold text-muted">
-                      Residuo
-                      {{ eur(item.promised_amount - item.received_amount) }}
-                    </p>
-                  }
-                </div>
-              </div>
-              <div
-                class="flex flex-wrap gap-2"
-                [class.mt-2]="compactView()"
-                [class.mt-3]="!compactView()"
-              >
-                <lfg-status-badge
-                  [label]="statusLabel(item.status)"
-                  [className]="statusClass(item.status)"
-                />
-                @if (!compactView()) {
-                  <span
-                    class="rounded-full bg-surface-muted px-2.5 py-1 text-[10px] font-bold uppercase"
-                    >{{ categoryLabel(item.category) }}</span
-                  >
-                  <span
-                    class="rounded-full bg-surface-muted px-2.5 py-1 text-[10px] font-bold uppercase"
-                    >{{
-                      item.payment_method || sponsorTypeLabel(item.type)
-                    }}</span
-                  >
-                }
-              </div>
-              @if (!compactView() && item.notes) {
-                <p class="mt-2 text-sm text-muted">{{ item.notes }}</p>
-              }
-              <div
-                class="flex flex-wrap justify-between gap-2 border-t border-soft"
-                [class.mt-2]="compactView()"
-                [class.pt-2]="compactView()"
-                [class.mt-4]="!compactView()"
-                [class.pt-3]="!compactView()"
-              >
-                @if (!compactView()) {
-                  <div class="flex flex-wrap gap-2">
+                <!-- Footer -->
+                <div class="flex flex-wrap items-center justify-between gap-2 border-t border-soft bg-surface-muted/50 px-4 py-2.5">
+                  <!-- Status transitions -->
+                  <div class="flex flex-wrap gap-1.5">
                     @for (status of statuses; track status.id) {
                       @if (status.id !== item.status) {
                         <button
                           [disabled]="updatingSponsorId() === item.id"
-                          class="rounded-md bg-surface-muted px-2.5 py-1.5 text-[10px] font-bold uppercase disabled:cursor-not-allowed disabled:opacity-60"
+                          class="rounded-md border border-soft bg-surface px-2.5 py-1.5 text-[10px] font-bold uppercase transition hover:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-50"
                           (click)="setStatus(item, status.id)"
                         >
                           {{ status.label }}
@@ -301,29 +262,26 @@ type SponsorForm = InsertSponsor & { withoutPromisedAmount: boolean };
                       }
                     }
                   </div>
-                }
-                <div class="flex gap-2">
-                  <button
-                    class="rounded-md bg-surface-muted px-3 py-1.5 text-xs font-bold uppercase"
-                    [class.px-2]="compactView()"
-                    [class.py-1]="compactView()"
-                    (click)="edit(item)"
-                  >
-                    Modifica
-                  </button>
-                  @if (auth.isAdmin()) {
+                  <!-- Actions -->
+                  <div class="flex gap-2">
                     <button
-                      class="rounded-md bg-red-50 px-3 py-1.5 text-xs font-bold uppercase text-red-700"
-                      [class.px-2]="compactView()"
-                      [class.py-1]="compactView()"
-                      (click)="askRemove(item)"
+                      class="rounded-md bg-surface px-3 py-1.5 text-xs font-bold uppercase ring-1 ring-black/10 transition hover:bg-surface-muted"
+                      (click)="edit(item)"
                     >
-                      Elimina
+                      Modifica
                     </button>
-                  }
+                    @if (auth.isAdmin()) {
+                      <button
+                        class="rounded-md bg-red-50 px-3 py-1.5 text-xs font-bold uppercase text-red-600 transition hover:bg-red-100"
+                        (click)="askRemove(item)"
+                      >
+                        Elimina
+                      </button>
+                    }
+                  </div>
                 </div>
-              </div>
-            </article>
+              </article>
+            }
           }
         </div>
         <lfg-pagination
@@ -543,22 +501,12 @@ export class SponsorsComponent implements OnInit {
     this.modalOpen.set(true);
   }
 
-  newLead(): void {
-    this.newItem();
-    this.form.withoutPromisedAmount = true;
-    this.form.value = 0;
-    this.form.promised_amount = 0;
-    this.form.received_amount = 0;
-    this.form.status = SPONSOR_STATUS.Contacted;
-    this.form.notes = "Lead sponsor da ricontattare.";
-  }
-
   edit(item: Sponsor): void {
     this.error.set("");
     this.editing.set(item);
     this.form = {
       company_name: item.company_name,
-      category: item.category ?? SPONSOR_CATEGORY.Bronze,
+      category: item.category ?? SPONSOR_CATEGORY.Bronzo,
       contact_name: item.contact_name,
       contact_info: item.contact_info,
       type: item.type,
@@ -687,6 +635,15 @@ export class SponsorsComponent implements OnInit {
   updateForm(patch: Record<string, unknown>): void {
     this.form = { ...this.form, ...patch };
     this.syncValueMode();
+    const received = Number(this.form.received_amount || 0);
+    const promised = Number(this.form.promised_amount || 0);
+    if (received > promised) {
+      this.form.promised_amount = received;
+      this.form.value = received;
+    }
+    if (received > 0) {
+      this.form.status = SPONSOR_STATUS.Paid;
+    }
   }
   statusLabel(status: SponsorStatus): string {
     return this.statuses.find((item) => item.id === status)?.label ?? status;
@@ -733,7 +690,7 @@ export class SponsorsComponent implements OnInit {
   emptyForm(): SponsorForm {
     return {
       company_name: "",
-      category: SPONSOR_CATEGORY.Bronze,
+      category: SPONSOR_CATEGORY.Bronzo,
       contact_name: "",
       contact_info: "",
       type: SPONSOR_TYPE.Cash,
