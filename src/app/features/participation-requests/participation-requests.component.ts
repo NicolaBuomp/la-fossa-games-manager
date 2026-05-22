@@ -558,7 +558,6 @@ export class ParticipationRequestsComponent implements OnInit {
       this.noteDrafts.set(
         Object.fromEntries(requests.map((r) => [r.id, existing[r.id] ?? ""])),
       );
-      await this.badges.refresh();
     } catch (error) {
       this.setError(this.message(error));
     } finally {
@@ -579,7 +578,6 @@ export class ParticipationRequestsComponent implements OnInit {
           item.id === request.id ? { ...item, status } : item,
         ),
       );
-      await this.badges.refresh();
     } catch (error) {
       this.setError(this.message(error));
     } finally {
@@ -658,7 +656,6 @@ export class ParticipationRequestsComponent implements OnInit {
         this.requests.update((requests) =>
           requests.filter((item) => item.id !== request.id),
         );
-        await this.badges.refresh();
       } catch (error) {
         this.setError(this.message(error));
       }

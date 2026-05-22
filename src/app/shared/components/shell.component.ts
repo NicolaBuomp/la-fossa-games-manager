@@ -1,12 +1,5 @@
-import { Component, OnInit, computed, signal } from "@angular/core";
-import {
-  NavigationEnd,
-  Router,
-  RouterLink,
-  RouterLinkActive,
-  RouterOutlet,
-} from "@angular/router";
-import { filter } from "rxjs";
+import { Component, OnDestroy, OnInit, computed, signal } from "@angular/core";
+import { RouterLink, RouterLinkActive, RouterOutlet } from "@angular/router";
 import { AuthService } from "../../core/services/auth.service";
 import { LoadingService } from "../../core/services/loading.service";
 import { RequestBadgesService } from "../../core/services/request-badges.service";
@@ -299,7 +292,7 @@ interface NavItem {
     </div>
   `,
 })
-export class ShellComponent implements OnInit {
+export class ShellComponent implements OnInit, OnDestroy {
   readonly mobileMenuOpen = signal(false);
   readonly themeModes: { id: ThemeMode; label: string }[] = [
     { id: "system", label: "Auto" },
@@ -343,21 +336,18 @@ export class ShellComponent implements OnInit {
     readonly theme: ThemeService,
     readonly globalLoading: LoadingService,
     private readonly badges: RequestBadgesService,
-    private readonly router: Router,
   ) {}
 
   ngOnInit(): void {
-    void this.refreshBadges();
-    this.router.events
-      .pipe(filter((event) => event instanceof NavigationEnd))
-      .subscribe(() => {
-        void this.refreshBadges();
-      });
+    void this.badges.startWatching();
+  }
+
+  ngOnDestroy(): void {
+    void this.badges.stopWatching();
   }
 
   openMobileMenu(): void {
     this.mobileMenuOpen.set(true);
-    void this.refreshBadges();
   }
 
   closeMobileMenu(): void {
@@ -378,16 +368,4 @@ export class ShellComponent implements OnInit {
     this.theme.setMode(mode);
   }
 
-  private async refreshBadges(): Promise<void> {
-    if (!this.auth.isAdmin()) {
-      this.badges.clear();
-      return;
-    }
-
-    try {
-      await this.badges.refresh();
-    } catch {
-      this.badges.clear();
-    }
-  }
 }

@@ -48,9 +48,8 @@ describe("ParticipationRequestsComponent", () => {
     service.addNote.and.resolveTo();
     service.remove.and.resolveTo();
     badges = jasmine.createSpyObj<RequestBadgesService>("RequestBadgesService", [
-      "refresh",
+      "clear",
     ]);
-    badges.refresh.and.resolveTo();
     snackbar = jasmine.createSpyObj<SnackbarService>("SnackbarService", [
       "error",
       "success",

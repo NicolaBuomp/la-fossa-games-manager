@@ -3,18 +3,33 @@ import { RouterLink } from "@angular/router";
 import { AuditLogService } from "../../core/services/audit-log.service";
 import { AuthService } from "../../core/services/auth.service";
 import { ExpensesService } from "../../core/services/expenses.service";
-import { IncomesService } from "../../core/services/incomes.service";
-import { RegistrationsService } from "../../core/services/registrations.service";
+import {
+  DEFAULT_TOURNAMENT_CODES,
+  RegistrationsService,
+} from "../../core/services/registrations.service";
 import { RequestBadgesService } from "../../core/services/request-badges.service";
 import { SnackbarService } from "../../core/services/snackbar.service";
 import { SponsorsService } from "../../core/services/sponsors.service";
+import { SupabaseService } from "../../core/services/supabase.service";
 import {
   AuditLog,
   Expense,
-  Income,
   Registration,
   Sponsor,
 } from "../../core/types/models";
+
+interface DashboardFinancials {
+  total_expenses: number;
+  total_incomes: number;
+  sponsor_paid: number;
+  sponsor_confirmed: number;
+  sponsor_negotiating: number;
+  sponsor_paid_count: number;
+  reg_paid_amount: number;
+  reg_pending_amount: number;
+  reg_paid_count: number;
+  reg_pending_count: number;
+}
 import {
   KpiPanelComponent,
   SummaryCardComponent,
@@ -437,8 +452,8 @@ import { AuditDetailModalComponent } from "../audit/components/audit-detail-moda
   `,
 })
 export class DashboardComponent implements OnInit {
+  financials = signal<DashboardFinancials | null>(null);
   expenses = signal<Expense[]>([]);
-  incomes = signal<Income[]>([]);
   sponsors = signal<Sponsor[]>([]);
   registrations = signal<Registration[]>([]);
   auditLogs = signal<AuditLog[]>([]);
@@ -450,11 +465,11 @@ export class DashboardComponent implements OnInit {
   constructor(
     readonly auth: AuthService,
     private readonly expensesService: ExpensesService,
-    private readonly incomesService: IncomesService,
     private readonly sponsorsService: SponsorsService,
     private readonly registrationsService: RegistrationsService,
     private readonly auditLogService: AuditLogService,
     private readonly badges: RequestBadgesService,
+    private readonly supabase: SupabaseService,
   ) {}
 
   ngOnInit(): void {
@@ -471,20 +486,18 @@ export class DashboardComponent implements OnInit {
         return;
       }
 
-      const [expenses, incomes, sponsors, registrations, auditLogs] =
-        await Promise.all([
-          this.expensesService.list(),
-          this.incomesService.list(),
-          this.sponsorsService.list(),
-          this.registrationsService.list(),
-          this.auditLogService.recent(),
-        ]);
-      this.expenses.set(expenses);
-      this.incomes.set(incomes);
-      this.sponsors.set(sponsors);
+      const [financialsResult, registrations, auditLogs] = await Promise.all([
+        this.supabase.client.rpc("get_dashboard_financials", {
+          tournament_codes: DEFAULT_TOURNAMENT_CODES,
+        }),
+        this.registrationsService.list(),
+        this.auditLogService.recent(),
+      ]);
+      this.financials.set(
+        (financialsResult.data as DashboardFinancials[] | null)?.[0] ?? null,
+      );
       this.registrations.set(registrations);
       this.auditLogs.set(auditLogs);
-      await this.badges.refresh();
     } catch (error) {
       this.setError(
         error instanceof Error ? error.message : "Errore nel caricamento dati.",
@@ -500,7 +513,7 @@ export class DashboardComponent implements OnInit {
   }
 
   private async loadStaffHome(): Promise<void> {
-    this.incomes.set([]);
+    this.financials.set(null);
     this.badges.clear();
     const [expenses, sponsors, registrations] = await Promise.all([
       this.expensesService.list(),
@@ -530,21 +543,19 @@ export class DashboardComponent implements OnInit {
   }
 
   totalExpenses(): number {
-    return this.expenses().reduce(
-      (sum, item) => sum + Number(item.amount || 0),
-      0,
-    );
+    return Number(this.financials()?.total_expenses ?? 0);
   }
 
   totalIncome(): number {
-    return this.recordedIncome() + this.sponsorPaid() + this.regPaidAmount();
+    return (
+      Number(this.financials()?.total_incomes ?? 0) +
+      this.sponsorPaid() +
+      this.regPaidAmount()
+    );
   }
 
   recordedIncome(): number {
-    return this.incomes().reduce(
-      (sum, item) => sum + Number(item.amount || 0),
-      0,
-    );
+    return Number(this.financials()?.total_incomes ?? 0);
   }
 
   balance(): number {
@@ -552,21 +563,11 @@ export class DashboardComponent implements OnInit {
   }
 
   sponsorConfirmed(): number {
-    return this.sponsors()
-      .filter((item) => item.status === "confermato")
-      .reduce(
-        (sum, item) => sum + Number(item.promised_amount ?? item.value ?? 0),
-        0,
-      );
+    return Number(this.financials()?.sponsor_confirmed ?? 0);
   }
 
   sponsorNegotiating(): number {
-    return this.sponsors()
-      .filter((item) => item.status === "in_trattativa")
-      .reduce(
-        (sum, item) => sum + Number(item.promised_amount ?? item.value ?? 0),
-        0,
-      );
+    return Number(this.financials()?.sponsor_negotiating ?? 0);
   }
 
   probableBalance(): number {
@@ -579,34 +580,27 @@ export class DashboardComponent implements OnInit {
   }
 
   sponsorPaid(): number {
-    return this.sponsors().reduce(
-      (sum, item) => sum + Number(item.received_amount || 0),
-      0,
-    );
+    return Number(this.financials()?.sponsor_paid ?? 0);
   }
 
   sponsorPaidCount(): number {
-    return this.sponsors().filter((item) => item.status === "pagato").length;
+    return Number(this.financials()?.sponsor_paid_count ?? 0);
   }
 
   regPaidCount(): number {
-    return this.registrations().filter((item) => item.paid).length;
+    return Number(this.financials()?.reg_paid_count ?? 0);
   }
 
   regPendingCount(): number {
-    return this.registrations().filter((item) => !item.paid).length;
+    return Number(this.financials()?.reg_pending_count ?? 0);
   }
 
   regPaidAmount(): number {
-    return this.registrations()
-      .filter((item) => item.paid)
-      .reduce((sum, item) => sum + Number(item.fee || 0), 0);
+    return Number(this.financials()?.reg_paid_amount ?? 0);
   }
 
   regPendingAmount(): number {
-    return this.registrations()
-      .filter((item) => !item.paid)
-      .reduce((sum, item) => sum + Number(item.fee || 0), 0);
+    return Number(this.financials()?.reg_pending_amount ?? 0);
   }
 
   regTotalCount(): number {

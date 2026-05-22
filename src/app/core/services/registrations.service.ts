@@ -12,6 +12,16 @@ import {
 } from "../types/models";
 import { SupabaseService } from "./supabase.service";
 
+export const DEFAULT_TOURNAMENT_CODES: string[] = [
+  "calcio-a-5",
+  "calcio-a-5-under-15",
+  "pallavolo",
+  "briscola",
+  "fifa",
+  "ping-pong",
+  "calcio-balilla",
+];
+
 const DEFAULT_TOURNAMENTS: {
   code: string;
   name: string;

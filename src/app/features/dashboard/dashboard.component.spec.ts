@@ -2,12 +2,12 @@ import { TestBed } from "@angular/core/testing";
 import { AuditLogService } from "../../core/services/audit-log.service";
 import { AuthService } from "../../core/services/auth.service";
 import { ExpensesService } from "../../core/services/expenses.service";
-import { IncomesService } from "../../core/services/incomes.service";
 import { RegistrationsService } from "../../core/services/registrations.service";
 import { RequestBadgesService } from "../../core/services/request-badges.service";
 import { SnackbarService } from "../../core/services/snackbar.service";
 import { SponsorsService } from "../../core/services/sponsors.service";
-import { Expense, Income, Registration, Sponsor } from "../../core/types/models";
+import { SupabaseService } from "../../core/services/supabase.service";
+import { Expense, Registration, Sponsor } from "../../core/types/models";
 import { DashboardComponent } from "./dashboard.component";
 
 describe("DashboardComponent", () => {
@@ -21,21 +21,6 @@ describe("DashboardComponent", () => {
     amount,
     status: "pagata",
     paid_by: null,
-    payment_method: null,
-    notes: null,
-    created_by: null,
-    updated_by: null,
-    created_at: "2026-05-01T10:00:00Z",
-    updated_at: "2026-05-01T10:00:00Z",
-  });
-
-  const income = (amount: number): Income => ({
-    id: `income-${amount}`,
-    date: "2026-05-01",
-    source: "Income",
-    category: "General",
-    amount,
-    received_by: null,
     payment_method: null,
     notes: null,
     created_by: null,
@@ -94,40 +79,38 @@ describe("DashboardComponent", () => {
               email: "staff@example.com",
               username: "staff",
               full_name: "Staff User",
-              role: "admin",
+              roles: ["admin"],
               active: true,
               created_at: "2026-05-01T10:00:00Z",
             }),
             user: () => ({ id: "user-1", email: "staff@example.com" }),
           } as unknown as AuthService,
           {} as ExpensesService,
-          {} as IncomesService,
           {} as SponsorsService,
           {} as RegistrationsService,
           {} as AuditLogService,
           {
-            refresh: jasmine.createSpy().and.resolveTo(),
             tournamentRequests: () => 2,
             sponsorRequests: () => 1,
           } as unknown as RequestBadgesService,
+          {} as SupabaseService,
         ),
     );
   });
 
-  it("computes financial totals and probable balance", () => {
-    component.expenses.set([expense(100), expense(50)]);
-    component.incomes.set([income(200)]);
-    component.sponsors.set([
-      sponsor("pagato", 300),
-      sponsor("confermato", 150),
-      sponsor("in_trattativa", 75),
-      sponsor("contattato", 40),
-    ]);
-    component.registrations.set([
-      registration(true, 50),
-      registration(false, 20),
-      registration(false, 30),
-    ]);
+  it("computes financial totals and probable balance from financials signal", () => {
+    component.financials.set({
+      total_expenses: 150,
+      total_incomes: 200,
+      sponsor_paid: 300,
+      sponsor_confirmed: 150,
+      sponsor_negotiating: 75,
+      sponsor_paid_count: 1,
+      reg_paid_amount: 50,
+      reg_pending_amount: 50,
+      reg_paid_count: 1,
+      reg_pending_count: 2,
+    });
 
     expect(component.totalExpenses()).toBe(150);
     expect(component.recordedIncome()).toBe(200);
@@ -140,12 +123,19 @@ describe("DashboardComponent", () => {
     expect(component.probableBalance()).toBe(675);
   });
 
-  it("computes registration counters and payment rate", () => {
-    component.registrations.set([
-      registration(true, 50),
-      registration(true, 20),
-      registration(false, 30),
-    ]);
+  it("computes registration counters and payment rate from financials signal", () => {
+    component.financials.set({
+      total_expenses: 0,
+      total_incomes: 0,
+      sponsor_paid: 0,
+      sponsor_confirmed: 0,
+      sponsor_negotiating: 0,
+      sponsor_paid_count: 0,
+      reg_paid_amount: 70,
+      reg_pending_amount: 30,
+      reg_paid_count: 2,
+      reg_pending_count: 1,
+    });
 
     expect(component.regPaidCount()).toBe(2);
     expect(component.regPendingCount()).toBe(1);

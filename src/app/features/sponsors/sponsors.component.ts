@@ -474,11 +474,6 @@ export class SponsorsComponent implements OnInit {
           ...assignableProfiles.map((profile) => profile.id),
         ]),
       );
-      if (this.auth.isAdmin()) {
-        await this.badges.refresh();
-      } else {
-        this.badges.clear();
-      }
     } catch (e) {
       this.setError(this.message(e));
     } finally {
