@@ -37,17 +37,26 @@ export const routes: Routes = [
       },
       {
         path: "expenses",
-        loadComponent: () =>
-          import("./features/expenses/expenses.component").then(
-            (m) => m.ExpensesComponent,
-          ),
+        redirectTo: "transazioni",
+        pathMatch: "full",
       },
       {
         path: "incomes",
-        canActivate: [adminGuard],
+        redirectTo: "transazioni",
+        pathMatch: "full",
+      },
+      {
+        path: "transazioni",
         loadComponent: () =>
-          import("./features/incomes/incomes.component").then(
-            (m) => m.IncomesComponent,
+          import("./features/transactions/transactions.component").then(
+            (m) => m.TransactionsComponent,
+          ),
+      },
+      {
+        path: "tesoreria",
+        loadComponent: () =>
+          import("./features/tesoreria/tesoreria.component").then(
+            (m) => m.TesoreriaComponent,
           ),
       },
       {

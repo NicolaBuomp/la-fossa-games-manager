@@ -1,0 +1,351 @@
+import { Component, OnInit, computed, inject, signal } from "@angular/core";
+import { AuthService } from "../../core/services/auth.service";
+import { SnackbarService } from "../../core/services/snackbar.service";
+import { TransactionsService } from "../../core/services/transactions.service";
+import { INCOME_CATEGORIES } from "../../core/types/constants";
+import { DeliveryItem, Transaction } from "../../core/types/models";
+import {
+  FilterOption,
+  StatusFilterPillsComponent,
+} from "../../shared/components/status-filter-pills.component";
+import {
+  EmptyStateComponent,
+  KpiPanelComponent,
+  SummaryCardComponent,
+} from "../../shared/components/ui.component";
+
+@Component({
+  standalone: true,
+  imports: [
+    EmptyStateComponent,
+    KpiPanelComponent,
+    SummaryCardComponent,
+    StatusFilterPillsComponent,
+  ],
+  template: `
+    <section class="space-y-5">
+      <div class="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <p class="text-xs font-bold uppercase tracking-[0.18em] text-muted">
+            Modulo tesoriere
+          </p>
+          <h1 class="font-display text-3xl uppercase">Tesoriere</h1>
+        </div>
+        @if (selectedItems().length > 0) {
+          <div class="flex items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2">
+            <span class="text-sm font-bold text-amber-800">
+              {{ selectedItems().length }} selezionate — {{ eur(selectedTotal()) }}
+            </span>
+            <button
+              class="rounded-lg bg-amber-600 px-4 py-2 text-sm font-bold text-white transition hover:bg-amber-700 disabled:opacity-60"
+              [disabled]="delivering()"
+              (click)="deliverSelected()"
+            >
+              {{ delivering() ? 'Consegna in corso…' : 'Consegna al tesoriere →' }}
+            </button>
+          </div>
+        }
+      </div>
+
+      <lfg-kpi-panel title="KPI tesoriere" storageKey="tesoreria">
+        <section class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <lfg-summary-card
+            label="Da consegnare"
+            [value]="eur(pendingTotal())"
+            tone="warning"
+            [hint]="pendingItems().length + ' entrate'"
+          />
+          <lfg-summary-card
+            label="Consegnato questo mese"
+            [value]="eur(deliveredThisMonth())"
+            tone="income"
+            hint="Mese corrente"
+          />
+          <lfg-summary-card
+            label="Totale consegnato"
+            [value]="eur(deliveredTotal())"
+            tone="income"
+            [hint]="deliveredItems().length + ' entrate'"
+          />
+        </section>
+      </lfg-kpi-panel>
+
+      @if (error()) {
+        <p class="rounded-lg bg-red-50 p-3 text-sm text-red-700">
+          {{ error() }}
+        </p>
+      }
+
+      <div class="space-y-3">
+        <lfg-status-filter-pills
+          [options]="deliveryFilterOptions"
+          (filterChange)="setDeliveryFilter($event)"
+        />
+        <lfg-status-filter-pills
+          [options]="categoryFilterOptions"
+          (filterChange)="setCategoryFilter($event)"
+        />
+      </div>
+
+      @if (!filteredItems().length) {
+        <div class="mt-6">
+          <lfg-empty-state
+            title="Nessuna entrata trovata"
+            text="Tutte le entrate sono state consegnate al tesoriere."
+          />
+        </div>
+      } @else {
+        @if (deliveryFilter() === 'pending' && pendingItems().length > 0) {
+          <div class="flex items-center gap-3">
+            <button
+              class="text-xs font-bold text-muted underline hover:text-primary"
+              (click)="selectAll()"
+            >
+              Seleziona tutte ({{ pendingItems().length }})
+            </button>
+            @if (selectedItems().length > 0) {
+              <button
+                class="text-xs font-bold text-muted underline hover:text-primary"
+                (click)="deselectAll()"
+              >
+                Deseleziona
+              </button>
+            }
+          </div>
+        }
+
+        <div class="overflow-hidden rounded-lg border border-soft bg-surface">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-soft bg-surface-muted">
+                @if (deliveryFilter() === 'pending') {
+                  <th class="w-10 px-4 py-3">
+                    <span class="sr-only">Seleziona</span>
+                  </th>
+                }
+                <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide text-muted">Data</th>
+                <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide text-muted">Descrizione</th>
+                <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide text-muted">Categoria</th>
+                <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide text-muted">Fonte</th>
+                <th class="px-4 py-3 text-right text-xs font-bold uppercase tracking-wide text-muted">Importo</th>
+                <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide text-muted">Stato</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (item of filteredItems(); track item.source_id) {
+                <tr
+                  class="border-b border-soft transition last:border-0"
+                  [class.bg-amber-50]="isSelected(item)"
+                >
+                  @if (deliveryFilter() === 'pending') {
+                    <td class="px-4 py-3">
+                      <input
+                        type="checkbox"
+                        class="h-4 w-4 cursor-pointer rounded border-soft accent-amber-600"
+                        [checked]="isSelected(item)"
+                        (change)="toggleSelect(item)"
+                      />
+                    </td>
+                  }
+                  <td class="px-4 py-3 text-muted">{{ formatDate(item.date) }}</td>
+                  <td class="px-4 py-3 font-semibold">{{ item.description }}</td>
+                  <td class="px-4 py-3 text-muted">{{ item.category }}</td>
+                  <td class="px-4 py-3">
+                    @if (item.source_table === 'tournament_teams') {
+                      <span class="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-blue-700">Iscrizione</span>
+                    } @else if (item.source_table === 'sponsors') {
+                      <span class="rounded-full bg-purple-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-purple-700">Sponsor</span>
+                    } @else {
+                      <span class="rounded-full bg-surface-muted px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-muted">Manuale</span>
+                    }
+                  </td>
+                  <td class="px-4 py-3 text-right font-black text-positive">+{{ eur(item.amount) }}</td>
+                  <td class="px-4 py-3">
+                    @if (item.delivered_to_treasurer) {
+                      <span class="inline-flex items-center gap-1 rounded-full border border-green-200 bg-green-50 px-2 py-0.5 text-xs font-semibold text-green-700">
+                        ✓ {{ formatDate(item.delivered_at!) }}
+                      </span>
+                    } @else {
+                      <span class="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-700">
+                        Da consegnare
+                      </span>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>
+  `,
+})
+export class TesoreriaComponent implements OnInit {
+  allItems = signal<Transaction[]>([]);
+  deliveryFilter = signal<"pending" | "delivered" | "all">("pending");
+  categoryFilter = signal<string>("all");
+  selectedItems = signal<DeliveryItem[]>([]);
+  delivering = signal(false);
+  error = signal("");
+  private readonly snackbar = inject(SnackbarService);
+
+  readonly pendingItems = computed(() =>
+    this.allItems().filter((i) => i.type === "income" && !i.delivered_to_treasurer),
+  );
+  readonly deliveredItems = computed(() =>
+    this.allItems().filter((i) => i.type === "income" && i.delivered_to_treasurer),
+  );
+  readonly pendingTotal = computed(() =>
+    this.pendingItems().reduce((s, i) => s + Number(i.amount || 0), 0),
+  );
+  readonly deliveredTotal = computed(() =>
+    this.deliveredItems().reduce((s, i) => s + Number(i.amount || 0), 0),
+  );
+  readonly deliveredThisMonth = computed(() => {
+    const now = new Date();
+    return this.deliveredItems()
+      .filter((i) => {
+        if (!i.delivered_at) return false;
+        const d = new Date(i.delivered_at);
+        return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+      })
+      .reduce((s, i) => s + Number(i.amount || 0), 0);
+  });
+
+  readonly filteredItems = computed(() => {
+    let items = this.allItems().filter((i) => i.type === "income");
+    if (this.deliveryFilter() === "pending") {
+      items = items.filter((i) => !i.delivered_to_treasurer);
+    } else if (this.deliveryFilter() === "delivered") {
+      items = items.filter((i) => i.delivered_to_treasurer);
+    }
+    if (this.categoryFilter() !== "all") {
+      items = items.filter((i) => i.category === this.categoryFilter());
+    }
+    return items;
+  });
+
+  readonly selectedTotal = computed(() =>
+    this.filteredItems()
+      .filter((i) => this.isSelected(i))
+      .reduce((s, i) => s + Number(i.amount || 0), 0),
+  );
+
+  get deliveryFilterOptions(): () => FilterOption[] {
+    return () => [
+      { label: "Da consegnare", value: "pending", active: this.deliveryFilter() === "pending" },
+      { label: "Consegnati", value: "delivered", active: this.deliveryFilter() === "delivered" },
+      { label: "Tutti", value: "all", active: this.deliveryFilter() === "all" },
+    ];
+  }
+
+  get categoryFilterOptions(): () => FilterOption[] {
+    return () => [
+      { label: "Tutte le categorie", value: "all", active: this.categoryFilter() === "all" },
+      ...INCOME_CATEGORIES.map((c) => ({
+        label: c,
+        value: c,
+        active: this.categoryFilter() === c,
+      })),
+    ];
+  }
+
+  constructor(
+    readonly auth: AuthService,
+    private readonly txService: TransactionsService,
+  ) {}
+
+  ngOnInit(): void {
+    void this.load();
+  }
+
+  async load(): Promise<void> {
+    try {
+      const items = await this.txService.list();
+      this.allItems.set(items);
+      this.selectedItems.set([]);
+    } catch (e) {
+      this.setError(this.message(e));
+    }
+  }
+
+  setDeliveryFilter(value: string): void {
+    this.deliveryFilter.set(value as "pending" | "delivered" | "all");
+    this.selectedItems.set([]);
+  }
+
+  setCategoryFilter(value: string): void {
+    this.categoryFilter.set(value);
+  }
+
+  isSelected(item: Transaction): boolean {
+    return this.selectedItems().some(
+      (s) => s.source_table === item.source_table && s.source_id === item.source_id,
+    );
+  }
+
+  toggleSelect(item: Transaction): void {
+    const current = this.selectedItems();
+    if (this.isSelected(item)) {
+      this.selectedItems.set(
+        current.filter(
+          (s) => !(s.source_table === item.source_table && s.source_id === item.source_id),
+        ),
+      );
+    } else {
+      this.selectedItems.set([
+        ...current,
+        { source_table: item.source_table, source_id: item.source_id },
+      ]);
+    }
+  }
+
+  selectAll(): void {
+    this.selectedItems.set(
+      this.pendingItems().map((i) => ({
+        source_table: i.source_table,
+        source_id: i.source_id,
+      })),
+    );
+  }
+
+  deselectAll(): void {
+    this.selectedItems.set([]);
+  }
+
+  async deliverSelected(): Promise<void> {
+    const items = this.selectedItems();
+    if (!items.length || this.delivering()) return;
+    const userId = this.auth.profile()?.id;
+    if (!userId) return;
+
+    this.delivering.set(true);
+    this.error.set("");
+    try {
+      await this.txService.markDelivered(items, userId);
+      this.snackbar.success(`${items.length} entrate consegnate al tesoriere.`);
+      await this.load();
+    } catch (e) {
+      this.setError(this.message(e));
+    } finally {
+      this.delivering.set(false);
+    }
+  }
+
+  eur(value: number): string {
+    return new Intl.NumberFormat("it-IT", { style: "currency", currency: "EUR" }).format(value);
+  }
+
+  formatDate(value: string): string {
+    return new Intl.DateTimeFormat("it-IT").format(new Date(value));
+  }
+
+  private message(error: unknown): string {
+    return error instanceof Error ? error.message : "Operazione non riuscita.";
+  }
+
+  private setError(message: string): void {
+    this.error.set(message);
+    this.snackbar.error(message);
+  }
+}

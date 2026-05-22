@@ -488,6 +488,51 @@ $$;
 
 
 --
+-- Name: mark_incomes_delivered(uuid[], uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.mark_transaction_delivered(p_items jsonb, p_delivered_by uuid) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+declare
+  v_item jsonb;
+  v_table text;
+  v_id uuid;
+begin
+  if not public.is_active_member() then
+    raise exception 'Accesso non autorizzato.';
+  end if;
+
+  for v_item in select * from jsonb_array_elements(p_items)
+  loop
+    v_table := v_item->>'source_table';
+    v_id    := (v_item->>'source_id')::uuid;
+
+    if v_table = 'incomes' then
+      update public.incomes
+      set delivered_to_treasurer = true, delivered_at = now(),
+          delivered_by = p_delivered_by, updated_at = now(), updated_by = auth.uid()
+      where id = v_id and delivered_to_treasurer = false;
+
+    elsif v_table = 'tournament_teams' then
+      update public.tournament_teams
+      set delivered_to_treasurer = true, delivered_at = now(),
+          delivered_by = p_delivered_by, updated_at = now(), updated_by = auth.uid()
+      where id = v_id and delivered_to_treasurer = false;
+
+    elsif v_table = 'sponsors' then
+      update public.sponsors
+      set delivered_to_treasurer = true, delivered_at = now(),
+          delivered_by = p_delivered_by, updated_at = now(), updated_by = auth.uid()
+      where id = v_id and delivered_to_treasurer = false;
+    end if;
+  end loop;
+end;
+$$;
+
+
+--
 -- Name: recalculate_group_standings(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -2313,6 +2358,9 @@ CREATE TABLE public.incomes (
     received_by text,
     payment_method text,
     notes text,
+    delivered_to_treasurer boolean DEFAULT false NOT NULL,
+    delivered_at timestamp with time zone,
+    delivered_by uuid,
     created_by uuid,
     updated_by uuid,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
@@ -2425,6 +2473,9 @@ CREATE TABLE public.tournament_teams (
     fee numeric(10,2) DEFAULT 0 NOT NULL,
     paid boolean DEFAULT false NOT NULL,
     notes text,
+    delivered_to_treasurer boolean DEFAULT false NOT NULL,
+    delivered_at timestamp with time zone,
+    delivered_by uuid,
     created_by uuid,
     updated_by uuid,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
@@ -2558,6 +2609,9 @@ CREATE TABLE public.sponsors (
     status text DEFAULT 'contattato'::text NOT NULL,
     deliverables text,
     notes text,
+    delivered_to_treasurer boolean DEFAULT false NOT NULL,
+    delivered_at timestamp with time zone,
+    delivered_by uuid,
     created_by uuid,
     updated_by uuid,
     created_at timestamp with time zone DEFAULT now() NOT NULL,

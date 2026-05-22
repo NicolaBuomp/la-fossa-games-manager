@@ -79,6 +79,33 @@ export interface Income {
   received_by: string | null;
   payment_method: string | null;
   notes: string | null;
+  delivered_to_treasurer: boolean;
+  delivered_at: string | null;
+  delivered_by: string | null;
+  created_by: string | null;
+  updated_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export type TransactionType = 'income' | 'expense';
+export type TransactionSourceTable = 'incomes' | 'expenses' | 'tournament_teams' | 'sponsors';
+
+export interface Transaction {
+  id: string;
+  source_table: TransactionSourceTable;
+  source_id: string;
+  type: TransactionType;
+  date: string;
+  description: string;
+  category: string;
+  amount: number;
+  payment_method: string | null;
+  person: string | null;
+  expense_status: string | null;
+  delivered_to_treasurer: boolean;
+  delivered_at: string | null;
+  delivered_by: string | null;
   created_by: string | null;
   updated_by: string | null;
   created_at: string;
@@ -300,7 +327,12 @@ export interface AuditLog {
 }
 
 export type InsertExpense = Omit<Expense, 'id' | 'created_by' | 'updated_by' | 'created_at' | 'updated_at'>;
-export type InsertIncome = Omit<Income, 'id' | 'created_by' | 'updated_by' | 'created_at' | 'updated_at'>;
+export type InsertIncome = Omit<Income, 'id' | 'delivered_to_treasurer' | 'delivered_at' | 'delivered_by' | 'created_by' | 'updated_by' | 'created_at' | 'updated_at'>;
+
+export interface DeliveryItem {
+  source_table: TransactionSourceTable;
+  source_id: string;
+}
 export type InsertSponsor = Omit<Sponsor, 'id' | 'created_by' | 'updated_by' | 'created_at' | 'updated_at'>;
 export type InsertTournament = Omit<
   Tournament,
