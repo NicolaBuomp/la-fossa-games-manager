@@ -33,8 +33,11 @@ export class ProfileService {
     return data;
   }
 
-  async updateRole(id: string, role: UserRole): Promise<void> {
-    const { error } = await this.supabase.client.from('profiles').update({ role }).eq('id', id);
+  async updateRoles(id: string, roles: UserRole[]): Promise<void> {
+    const { error } = await this.supabase.client.rpc('update_user_roles', {
+      target_user_id: id,
+      new_roles: roles,
+    });
     if (error) throw error;
   }
 

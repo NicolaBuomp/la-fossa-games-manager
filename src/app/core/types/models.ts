@@ -1,4 +1,4 @@
-export type UserRole = 'staff' | 'admin';
+export type UserRole = 'staff' | 'admin' | 'owner' | 'tesoriere';
 export type SponsorStatus = 'contattato' | 'in_trattativa' | 'confermato' | 'pagato';
 export type SponsorType = 'cash' | 'bonifico';
 export type SponsorCategory = 'bronzo' | 'silver' | 'gold';
@@ -29,7 +29,7 @@ export interface Profile {
   email: string | null;
   username: string | null;
   full_name: string | null;
-  role: UserRole;
+  roles: UserRole[];
   active: boolean;
   created_at: string;
 }
@@ -38,7 +38,7 @@ export interface CreateUserInput {
   firstName: string;
   lastName: string;
   username: string;
-  role: UserRole;
+  roles: UserRole[];
 }
 
 export interface CreateUserResult {

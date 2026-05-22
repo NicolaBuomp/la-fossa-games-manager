@@ -1,5 +1,6 @@
-import { Component, OnInit, inject, signal } from "@angular/core";
+import { Component, OnInit, computed, inject, signal } from "@angular/core";
 import { FormsModule } from "@angular/forms";
+import { AuthService } from "../../core/services/auth.service";
 import { ProfileService } from "../../core/services/profile.service";
 import { SnackbarService } from "../../core/services/snackbar.service";
 import {
@@ -13,6 +14,14 @@ import {
   EmptyStateComponent,
   StatusBadgeComponent,
 } from "../../shared/components/ui.component";
+
+type AssignableRole = Exclude<UserRole, 'owner'>;
+
+const ASSIGNABLE_ROLES: { value: AssignableRole; label: string }[] = [
+  { value: "staff", label: "Staff" },
+  { value: "admin", label: "Admin" },
+  { value: "tesoriere", label: "Tesoriere" },
+];
 
 @Component({
   standalone: true,
@@ -134,7 +143,7 @@ import {
                 class="rounded-lg border border-soft bg-surface-muted px-3 py-3 font-normal outline-none disabled:cursor-not-allowed disabled:opacity-70"
               />
             </label>
-            <label class="grid gap-1 text-sm font-bold">
+            <label class="grid gap-1 text-sm font-bold sm:col-span-2">
               Username
               <input
                 name="username"
@@ -144,18 +153,26 @@ import {
                 class="rounded-lg border border-soft bg-surface-muted px-3 py-3 font-normal outline-none disabled:cursor-not-allowed disabled:opacity-70"
               />
             </label>
-            <label class="grid gap-1 text-sm font-bold">
-              Tipo utente
-              <select
-                name="role"
-                required
-                [(ngModel)]="form.role"
-                class="rounded-lg border border-soft bg-surface-muted px-3 py-3 font-normal outline-none disabled:cursor-not-allowed disabled:opacity-70"
-              >
-                <option value="staff">Staff</option>
-                <option value="admin">Admin</option>
-              </select>
-            </label>
+            <div class="grid gap-1 text-sm font-bold sm:col-span-2">
+              <span>Ruoli</span>
+              <div class="flex flex-wrap gap-2 pt-1">
+                @for (r of assignableRoles; track r.value) {
+                  <button
+                    type="button"
+                    class="rounded-full border px-4 py-2 text-xs font-bold uppercase tracking-wide transition"
+                    [class.bg-accent]="form.roles.includes(r.value)"
+                    [class.text-on-accent]="form.roles.includes(r.value)"
+                    [class.border-accent]="form.roles.includes(r.value)"
+                    [class.bg-surface-muted]="!form.roles.includes(r.value)"
+                    [class.text-muted]="!form.roles.includes(r.value)"
+                    [class.border-soft]="!form.roles.includes(r.value)"
+                    (click)="toggleFormRole(r.value)"
+                  >
+                    {{ r.label }}
+                  </button>
+                }
+              </div>
+            </div>
           </div>
           <div class="mt-4 flex justify-end">
             <button
@@ -185,15 +202,13 @@ import {
                     {{ item.username || item.email }}
                   </p>
                 </div>
-                <div class="flex gap-2">
-                  <lfg-status-badge
-                    [label]="item.role"
-                    [className]="
-                      item.role === 'admin'
-                        ? 'border-accent bg-accent text-on-accent'
-                        : 'state-neutral'
-                    "
-                  />
+                <div class="flex flex-wrap gap-2">
+                  @for (r of item.roles; track r) {
+                    <lfg-status-badge
+                      [label]="r"
+                      [className]="roleBadgeClass(r)"
+                    />
+                  }
                   <lfg-status-badge
                     [label]="item.active ? 'Attivo' : 'Disattivo'"
                     [className]="item.active ? 'state-success' : 'state-danger'"
@@ -201,17 +216,31 @@ import {
                 </div>
               </div>
               <div
-                class="mt-4 grid gap-2 border-t border-soft pt-3 sm:grid-cols-[1fr_auto]"
+                class="mt-4 grid gap-3 border-t border-soft pt-3"
               >
-                <select
-                  class="min-h-11 rounded-lg border border-soft bg-surface-muted px-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-70"
-                  [disabled]="updatingUserId() === item.id"
-                  [ngModel]="item.role"
-                  (ngModelChange)="setRole(item, $event)"
-                >
-                  <option value="staff">Staff</option>
-                  <option value="admin">Admin</option>
-                </select>
+                @if (isOwner()) {
+                  <div>
+                    <p class="mb-2 text-xs font-bold uppercase tracking-wide text-muted">Ruoli</p>
+                    <div class="flex flex-wrap gap-2">
+                      @for (r of assignableRoles; track r.value) {
+                        <button
+                          type="button"
+                          class="rounded-full border px-4 py-2 text-xs font-bold uppercase tracking-wide transition"
+                          [class.bg-accent]="item.roles.includes(r.value)"
+                          [class.text-on-accent]="item.roles.includes(r.value)"
+                          [class.border-accent]="item.roles.includes(r.value)"
+                          [class.bg-surface-muted]="!item.roles.includes(r.value)"
+                          [class.text-muted]="!item.roles.includes(r.value)"
+                          [class.border-soft]="!item.roles.includes(r.value)"
+                          [disabled]="updatingUserId() === item.id"
+                          (click)="toggleUserRole(item, r.value)"
+                        >
+                          {{ r.label }}
+                        </button>
+                      }
+                    </div>
+                  </div>
+                }
                 <div class="flex flex-wrap gap-2">
                   <button
                     class="min-h-11 rounded-lg bg-surface-muted px-4 text-sm font-bold uppercase tracking-wide disabled:cursor-not-allowed disabled:opacity-60"
@@ -257,12 +286,18 @@ export class UsersComponent implements OnInit {
   resetCopied = signal(false);
   confirmPending = signal<(() => Promise<void>) | null>(null);
   confirmMessage = signal("");
+
+  readonly assignableRoles = ASSIGNABLE_ROLES;
+
+  private readonly auth = inject(AuthService);
   private readonly snackbar = inject(SnackbarService);
+  readonly isOwner = computed(() => this.auth.isOwner());
+
   form = {
     firstName: "",
     lastName: "",
     username: "",
-    role: "staff" as UserRole,
+    roles: ["staff"] as UserRole[],
   };
 
   constructor(private readonly profiles: ProfileService) {}
@@ -279,13 +314,30 @@ export class UsersComponent implements OnInit {
     }
   }
 
-  async setRole(item: Profile, role: UserRole): Promise<void> {
+  toggleFormRole(role: UserRole): void {
+    const current = this.form.roles;
+    if (current.includes(role)) {
+      this.form.roles = current.filter((r) => r !== role);
+    } else {
+      this.form.roles = [...current, role];
+    }
+  }
+
+  async toggleUserRole(item: Profile, role: Exclude<UserRole, 'owner'>): Promise<void> {
     if (this.updatingUserId()) return;
+    const current = item.roles.filter((r): r is Exclude<UserRole, 'owner'> => r !== 'owner');
+    const newRoles: UserRole[] = current.includes(role)
+      ? current.filter((r) => r !== role)
+      : [...current, role];
+    if (!newRoles.length) {
+      this.snackbar.error("L'utente deve avere almeno un ruolo.");
+      return;
+    }
     this.updatingUserId.set(item.id);
     try {
-      await this.profiles.updateRole(item.id, role);
+      await this.profiles.updateRoles(item.id, newRoles);
       await this.load();
-      this.snackbar.success("Ruolo aggiornato.");
+      this.snackbar.success("Ruoli aggiornati.");
     } catch (error) {
       this.setError(this.message(error));
     } finally {
@@ -305,12 +357,21 @@ export class UsersComponent implements OnInit {
       const created = await this.profiles.createUser(this.form);
       this.createdUser.set(created);
       this.snackbar.success(`Utente ${created.username} creato.`);
-      this.form = { firstName: "", lastName: "", username: "", role: "staff" };
+      this.form = { firstName: "", lastName: "", username: "", roles: ["staff"] };
       await this.load();
     } catch (error) {
       this.setError(this.message(error));
     } finally {
       this.creating.set(false);
+    }
+  }
+
+  roleBadgeClass(role: UserRole): string {
+    switch (role) {
+      case 'owner': return 'border-accent bg-accent text-on-accent';
+      case 'admin': return 'border-accent bg-accent text-on-accent';
+      case 'tesoriere': return 'state-warning';
+      default: return 'state-neutral';
     }
   }
 

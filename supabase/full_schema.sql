@@ -439,13 +439,13 @@ CREATE FUNCTION public.handle_new_user() RETURNS trigger
     SET search_path TO 'public'
     AS $$
 begin
-  insert into public.profiles (id, email, username, full_name, role)
+  insert into public.profiles (id, email, username, full_name, roles)
   values (
     new.id,
     new.email,
     nullif(lower(trim(new.raw_user_meta_data ->> 'username')), ''),
     coalesce(new.raw_user_meta_data ->> 'full_name', new.raw_user_meta_data ->> 'name'),
-    coalesce(nullif(new.raw_user_meta_data ->> 'role', ''), 'staff')
+    ARRAY[coalesce(nullif(new.raw_user_meta_data ->> 'role', ''), 'staff')]
   )
   on conflict (id) do nothing;
   return new;
@@ -465,7 +465,7 @@ CREATE FUNCTION public.is_active_member() RETURNS boolean
     select 1 from public.profiles
     where id = auth.uid()
       and active = true
-      and role in ('staff', 'admin')
+      and array_length(roles, 1) > 0
   );
 $$;
 
@@ -482,8 +482,68 @@ CREATE FUNCTION public.is_admin() RETURNS boolean
     select 1 from public.profiles
     where id = auth.uid()
       and active = true
-      and role = 'admin'
+      and 'admin' = ANY(roles)
   );
+$$;
+
+
+--
+-- Name: is_owner(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.is_owner() RETURNS boolean
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+  select exists (
+    select 1 from public.profiles
+    where id = auth.uid()
+      and active = true
+      and 'owner' = ANY(roles)
+  );
+$$;
+
+
+--
+-- Name: is_treasurer(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.is_treasurer() RETURNS boolean
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+  select exists (
+    select 1 from public.profiles
+    where id = auth.uid()
+      and active = true
+      and ('tesoriere' = ANY(roles) OR 'owner' = ANY(roles))
+  );
+$$;
+
+
+--
+-- Name: update_user_roles(uuid, text[]); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.update_user_roles(target_user_id uuid, new_roles text[]) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+  BEGIN
+    IF NOT is_owner() THEN
+      RAISE EXCEPTION 'Solo l''owner può modificare i ruoli degli utenti';
+    END IF;
+    IF new_roles && ARRAY['owner'::text] THEN
+      RAISE EXCEPTION 'Il ruolo owner non può essere assegnato tramite questa funzione';
+    END IF;
+    IF NOT (new_roles <@ ARRAY['staff'::text, 'admin'::text, 'tesoriere'::text]) THEN
+      RAISE EXCEPTION 'Ruoli non validi: %', new_roles;
+    END IF;
+    UPDATE public.profiles SET roles = new_roles WHERE id = target_user_id;
+    IF NOT FOUND THEN
+      RAISE EXCEPTION 'Utente non trovato: %', target_user_id;
+    END IF;
+  END;
 $$;
 
 
@@ -2414,10 +2474,10 @@ CREATE TABLE public.profiles (
     email text,
     username text,
     full_name text,
-    role text DEFAULT 'staff'::text NOT NULL,
+    roles text[] DEFAULT ARRAY['staff'::text] NOT NULL,
     active boolean DEFAULT true NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
-    CONSTRAINT profiles_role_check CHECK ((role = ANY (ARRAY['staff'::text, 'admin'::text])))
+    CONSTRAINT profiles_roles_check CHECK ((roles <@ ARRAY['staff'::text, 'admin'::text, 'owner'::text, 'tesoriere'::text]))
 );
 
 
@@ -4815,6 +4875,20 @@ CREATE POLICY profiles_admin_insert ON public.profiles FOR INSERT WITH CHECK (pu
 --
 
 CREATE POLICY profiles_admin_update ON public.profiles FOR UPDATE USING (public.is_admin()) WITH CHECK (public.is_admin());
+
+
+--
+-- Name: profiles profiles_owner_update; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY profiles_owner_update ON public.profiles FOR UPDATE USING (public.is_owner()) WITH CHECK (public.is_owner());
+
+
+--
+-- Name: profiles profiles_self_update; Type: POLICY; Schema: public; Owner: -
+--
+
+CREATE POLICY profiles_self_update ON public.profiles FOR UPDATE USING ((id = auth.uid())) WITH CHECK ((id = auth.uid()));
 
 
 --

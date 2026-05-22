@@ -50,7 +50,7 @@ import { SnackbarService } from "../../core/services/snackbar.service";
               <span
                 class="state-neutral rounded-full border px-3 py-1 text-[10px] font-bold uppercase tracking-wide"
               >
-                {{ auth.profile()?.role }}
+                {{ auth.profile()?.roles?.join(', ') }}
               </span>
             </div>
             <p class="mt-5 text-sm leading-6 text-muted">

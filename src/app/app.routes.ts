@@ -2,6 +2,7 @@ import { Routes } from "@angular/router";
 import { adminGuard } from "./core/guards/admin.guard";
 import { appHomeGuard } from "./core/guards/app-home.guard";
 import { authGuard } from "./core/guards/auth.guard";
+import { treasurerGuard } from "./core/guards/treasurer.guard";
 import { ShellComponent } from "./shared/components/shell.component";
 
 export const routes: Routes = [
@@ -54,6 +55,7 @@ export const routes: Routes = [
       },
       {
         path: "tesoreria",
+        canActivate: [treasurerGuard],
         loadComponent: () =>
           import("./features/tesoreria/tesoreria.component").then(
             (m) => m.TesoreriaComponent,

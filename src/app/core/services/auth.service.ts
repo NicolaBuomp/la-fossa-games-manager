@@ -17,8 +17,11 @@ export class AuthService {
   readonly loading = this.loadingState.asReadonly();
   readonly user = computed<User | null>(() => this.sessionState()?.user ?? null);
   readonly isAuthenticated = computed(() => !!this.sessionState());
-  readonly isAdmin = computed(() => this.profileState()?.role === 'admin');
+  readonly isAdmin = computed(() => this.profileState()?.roles?.includes('admin') ?? false);
+  readonly isOwner = computed(() => this.profileState()?.roles?.includes('owner') ?? false);
+  readonly isTreasurer = computed(() => this.profileState()?.roles?.includes('tesoriere') ?? false);
   readonly isActive = computed(() => this.profileState()?.active === true);
+  readonly canAccessTreasury = computed(() => this.isOwner() || this.isTreasurer());
 
   constructor(
     private readonly supabase: SupabaseService,

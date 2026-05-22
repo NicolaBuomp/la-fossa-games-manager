@@ -18,6 +18,7 @@ interface NavItem {
   short: string;
   badge?: "tournamentRequests" | "sponsorRequests";
   adminOnly?: boolean;
+  treasuryOnly?: boolean;
 }
 
 @Component({
@@ -91,7 +92,7 @@ interface NavItem {
             {{ auth.profile()?.full_name || auth.user()?.email }}
           </p>
           <p class="mb-3 text-xs uppercase tracking-wider text-muted">
-            {{ auth.profile()?.role }}
+            {{ auth.profile()?.roles?.join(', ') }}
           </p>
           <button
             class="hover-border-accent w-full rounded-lg border border-soft bg-surface-muted px-4 py-2 text-sm font-bold uppercase tracking-wide text-primary transition"
@@ -257,7 +258,7 @@ interface NavItem {
                 {{ auth.profile()?.full_name || auth.user()?.email }}
               </p>
               <p class="mb-3 text-xs uppercase tracking-wider text-muted">
-                {{ auth.profile()?.role }}
+                {{ auth.profile()?.roles?.join(', ') }}
               </p>
               <button
                 class="hover-border-accent w-full rounded-lg border border-soft bg-surface-muted px-4 py-2 text-sm font-bold uppercase tracking-wide text-primary transition"
@@ -301,6 +302,7 @@ export class ShellComponent implements OnInit {
       path: "/app/tesoreria",
       label: "Tesoriere",
       short: "T",
+      treasuryOnly: true,
     },
     { path: "/app/registrations", label: "Iscritti", short: "I" },
     { path: "/app/tournaments", label: "Tornei", short: "T" },
@@ -332,7 +334,11 @@ export class ShellComponent implements OnInit {
   ];
 
   readonly visibleNav = computed(() =>
-    this.nav.filter((item) => !item.adminOnly || this.auth.isAdmin()),
+    this.nav.filter((item) => {
+      if (item.adminOnly && !this.auth.isAdmin()) return false;
+      if (item.treasuryOnly && !this.auth.canAccessTreasury()) return false;
+      return true;
+    }),
   );
 
   constructor(

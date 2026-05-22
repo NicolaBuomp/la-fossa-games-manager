@@ -712,7 +712,7 @@ export class SponsorsComponent implements OnInit {
   private profileOptionLabel(profile: Profile): string {
     const name =
       profile.full_name || profile.username || profile.email || profile.id;
-    return `${name} · ${profile.role}`;
+    return `${name} · ${profile.roles?.join(', ')}`;
   }
 
   private message(error: unknown): string {
