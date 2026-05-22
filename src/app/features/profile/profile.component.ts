@@ -1,6 +1,7 @@
 import { Component, inject, signal } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { AuthService } from "../../core/services/auth.service";
+import { ProfileService } from "../../core/services/profile.service";
 import { SnackbarService } from "../../core/services/snackbar.service";
 
 @Component({
@@ -32,17 +33,18 @@ import { SnackbarService } from "../../core/services/snackbar.service";
         </p>
       }
 
-      <div class="max-w-xl">
+      <div class="max-w-xl space-y-5">
+        <!-- Form nome visualizzato -->
         <form
           class="rounded-lg border border-soft bg-surface p-5 shadow-sm"
-          (ngSubmit)="savePassword()"
+          (ngSubmit)="saveName()"
         >
-          <fieldset [disabled]="savingPassword()" class="disabled:opacity-70">
+          <fieldset [disabled]="savingName()" class="disabled:opacity-70">
             <div
               class="flex flex-wrap items-start justify-between gap-3 border-b border-soft pb-4"
             >
               <div>
-                <h2 class="font-display text-xl uppercase">Password</h2>
+                <h2 class="font-display text-xl uppercase">Il tuo profilo</h2>
                 <p class="mt-1 text-sm text-muted">
                   {{ auth.profile()?.username || auth.user()?.email }}
                 </p>
@@ -53,7 +55,36 @@ import { SnackbarService } from "../../core/services/snackbar.service";
                 {{ auth.profile()?.roles?.join(', ') }}
               </span>
             </div>
-            <p class="mt-5 text-sm leading-6 text-muted">
+
+            <div class="mt-5">
+              <label class="block">
+                <span class="text-xs font-bold uppercase tracking-wide text-muted">Nome visualizzato</span>
+                <input
+                  name="fullName"
+                  type="text"
+                  [(ngModel)]="fullName"
+                  class="mt-1 w-full rounded-lg border border-soft bg-surface-muted px-3 py-3 outline-none disabled:cursor-not-allowed disabled:opacity-70"
+                  placeholder="Es. Mario Rossi"
+                />
+              </label>
+            </div>
+
+            <button
+              class="bg-accent text-on-accent mt-5 min-h-11 rounded-lg px-5 text-sm font-bold uppercase tracking-wide disabled:opacity-60"
+            >
+              {{ savingName() ? "Salvataggio..." : "Salva nome" }}
+            </button>
+          </fieldset>
+        </form>
+
+        <!-- Form password -->
+        <form
+          class="rounded-lg border border-soft bg-surface p-5 shadow-sm"
+          (ngSubmit)="savePassword()"
+        >
+          <fieldset [disabled]="savingPassword()" class="disabled:opacity-70">
+            <h2 class="font-display text-xl uppercase">Password</h2>
+            <p class="mt-2 text-sm leading-6 text-muted">
               Imposta una nuova password per il tuo account.
             </p>
 
@@ -102,12 +133,36 @@ import { SnackbarService } from "../../core/services/snackbar.service";
 export class ProfileComponent {
   password = "";
   passwordConfirm = "";
+  fullName = "";
   savingPassword = signal(false);
+  savingName = signal(false);
   success = signal("");
   error = signal("");
   private readonly snackbar = inject(SnackbarService);
+  private readonly profileService = inject(ProfileService);
 
-  constructor(readonly auth: AuthService) {}
+  constructor(readonly auth: AuthService) {
+    this.fullName = auth.profile()?.full_name ?? "";
+  }
+
+  async saveName(): Promise<void> {
+    const name = this.fullName.trim();
+    if (!name) return;
+    this.resetMessages();
+    this.savingName.set(true);
+    try {
+      await this.profileService.updateOwnFullName(name);
+      await this.auth.refreshProfile();
+      this.success.set("Nome aggiornato.");
+      this.snackbar.success("Nome aggiornato.");
+    } catch (error) {
+      const message = this.message(error, "Aggiornamento nome non riuscito.");
+      this.error.set(message);
+      this.snackbar.error(message);
+    } finally {
+      this.savingName.set(false);
+    }
+  }
 
   async savePassword(): Promise<void> {
     this.resetMessages();

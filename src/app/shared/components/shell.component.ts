@@ -19,6 +19,7 @@ interface NavItem {
   badge?: "tournamentRequests" | "sponsorRequests";
   adminOnly?: boolean;
   treasuryOnly?: boolean;
+  group?: string;
 }
 
 @Component({
@@ -45,8 +46,15 @@ interface NavItem {
             Event manager
           </p>
         </div>
-        <nav class="flex-1 space-y-1 overflow-y-auto px-4">
-          @for (item of visibleNav(); track item.path) {
+        <nav class="flex-1 overflow-y-auto px-4 py-2">
+          @for (item of visibleNav(); track item.path; let i = $index) {
+            @if (isNewGroup(i)) {
+              <div class="mx-2 my-2 border-t border-soft"></div>
+              <p class="mb-1 mt-2 px-2 text-[9px] font-bold uppercase tracking-[0.2em] text-muted">{{ item.group }}</p>
+            }
+            @if (i === 0) {
+              <p class="mb-1 px-2 text-[9px] font-bold uppercase tracking-[0.2em] text-muted">{{ item.group }}</p>
+            }
             <a
               [routerLink]="item.path"
               routerLinkActive="bg-accent text-on-accent"
@@ -111,7 +119,7 @@ interface NavItem {
             <div class="flex min-w-0 items-center gap-3">
               <button
                 type="button"
-                class="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-soft bg-surface text-primary"
+                class="relative grid h-10 w-10 shrink-0 place-items-center rounded-full border border-soft bg-surface text-primary"
                 aria-label="Apri menu"
                 [attr.aria-expanded]="mobileMenuOpen()"
                 (click)="openMobileMenu()"
@@ -128,6 +136,11 @@ interface NavItem {
                   <path d="M4 12h16" />
                   <path d="M4 17h16" />
                 </svg>
+                @if (totalBadgeCount() > 0) {
+                  <span class="bg-accent text-on-accent absolute -right-1 -top-1 grid min-h-5 min-w-5 place-items-center rounded-full px-1 text-[10px] font-black leading-none">
+                    {{ totalBadgeCount() }}
+                  </span>
+                }
               </button>
               <div class="min-w-0">
                 <p class="truncate font-display text-xl uppercase">
@@ -207,8 +220,15 @@ interface NavItem {
               </button>
             </div>
 
-            <nav class="flex-1 space-y-1 px-4">
-              @for (item of visibleNav(); track item.path) {
+            <nav class="flex-1 overflow-y-auto px-4 py-2">
+              @for (item of visibleNav(); track item.path; let i = $index) {
+                @if (isNewGroup(i)) {
+                  <div class="mx-2 my-2 border-t border-soft"></div>
+                  <p class="mb-1 mt-2 px-2 text-[9px] font-bold uppercase tracking-[0.2em] text-muted">{{ item.group }}</p>
+                }
+                @if (i === 0) {
+                  <p class="mb-1 px-2 text-[9px] font-bold uppercase tracking-[0.2em] text-muted">{{ item.group }}</p>
+                }
                 <a
                   [routerLink]="item.path"
                   routerLinkActive="bg-accent text-on-accent"
@@ -288,49 +308,16 @@ export class ShellComponent implements OnInit {
   ];
 
   readonly nav: NavItem[] = [
-    {
-      path: "/app/dashboard",
-      label: "Home",
-      short: "H",
-    },
-    {
-      path: "/app/transazioni",
-      label: "Transazioni",
-      short: "$",
-    },
-    {
-      path: "/app/tesoreria",
-      label: "Tesoriere",
-      short: "T",
-      treasuryOnly: true,
-    },
-    { path: "/app/registrations", label: "Iscritti", short: "I" },
-    { path: "/app/tournaments", label: "Tornei", short: "T" },
-    {
-      path: "/app/participation-requests",
-      label: "Richieste",
-      short: "R",
-      badge: "tournamentRequests",
-    },
-    {
-      path: "/app/sponsors",
-      label: "Sponsor",
-      short: "S",
-      badge: "sponsorRequests",
-    },
-    { path: "/app/profile", label: "Profilo", short: "P" },
-    {
-      path: "/app/users",
-      label: "Utenti",
-      short: "U",
-      adminOnly: true,
-    },
-    {
-      path: "/app/audit",
-      label: "Audit",
-      short: "A",
-      adminOnly: true,
-    },
+    { path: "/app/dashboard", label: "Home", short: "H", group: "Gestionale" },
+    { path: "/app/registrations", label: "Iscritti", short: "I", group: "Gestionale" },
+    { path: "/app/tournaments", label: "Tornei", short: "T", group: "Gestionale" },
+    { path: "/app/participation-requests", label: "Richieste", short: "R", badge: "tournamentRequests", group: "Gestionale" },
+    { path: "/app/sponsors", label: "Sponsor", short: "S", badge: "sponsorRequests", group: "Gestionale" },
+    { path: "/app/transazioni", label: "Transazioni", short: "$", group: "Finanze" },
+    { path: "/app/tesoreria", label: "Tesoriere", short: "T", treasuryOnly: true, group: "Finanze" },
+    { path: "/app/profile", label: "Profilo", short: "P", group: "Account" },
+    { path: "/app/users", label: "Utenti", short: "U", adminOnly: true, group: "Admin" },
+    { path: "/app/audit", label: "Audit", short: "A", adminOnly: true, group: "Admin" },
   ];
 
   readonly visibleNav = computed(() =>
@@ -340,6 +327,16 @@ export class ShellComponent implements OnInit {
       return true;
     }),
   );
+
+  readonly totalBadgeCount = computed(() =>
+    this.badges.tournamentRequests() + this.badges.sponsorRequests(),
+  );
+
+  isNewGroup(index: number): boolean {
+    const items = this.visibleNav();
+    if (index === 0) return false;
+    return items[index].group !== items[index - 1].group;
+  }
 
   constructor(
     readonly auth: AuthService,

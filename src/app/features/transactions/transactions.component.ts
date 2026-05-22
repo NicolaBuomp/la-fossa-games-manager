@@ -123,6 +123,13 @@ import {
       }
 
       <div class="space-y-3">
+        <input
+          type="search"
+          placeholder="Cerca per descrizione…"
+          class="w-full rounded-lg border border-soft bg-surface px-4 py-2.5 text-sm outline-none placeholder:text-muted"
+          [value]="searchQuery()"
+          (input)="searchQuery.set($any($event.target).value)"
+        />
         <lfg-status-filter-pills
           [options]="typeFilterOptions"
           (filterChange)="setTypeFilter($event)"
@@ -313,6 +320,7 @@ export class TransactionsComponent implements OnInit {
 
   typeFilter = signal<"all" | "income" | "expense">("all");
   deliveryFilter = signal<"all" | "pending" | "delivered">("all");
+  searchQuery = signal("");
 
   private readonly snackbar = inject(SnackbarService);
 
@@ -336,6 +344,7 @@ export class TransactionsComponent implements OnInit {
     let result = this.items();
     const type = this.typeFilter();
     const delivery = this.deliveryFilter();
+    const q = this.searchQuery().toLowerCase().trim();
 
     if (type !== "all") {
       result = result.filter((i) => i.type === type);
@@ -347,6 +356,11 @@ export class TransactionsComponent implements OnInit {
           ? !i.delivered_to_treasurer
           : i.delivered_to_treasurer;
       });
+    }
+    if (q) {
+      result = result.filter((i) =>
+        (i.description ?? "").toLowerCase().includes(q),
+      );
     }
     return result;
   });

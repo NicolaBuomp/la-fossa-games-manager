@@ -86,6 +86,15 @@ type SponsorForm = InsertSponsor & { withoutPromisedAmount: boolean };
           </button>
         </div>
       </div>
+      <div class="relative">
+        <input
+          type="search"
+          placeholder="Cerca per azienda o referente…"
+          class="w-full rounded-lg border border-soft bg-surface px-4 py-2.5 text-sm outline-none placeholder:text-muted"
+          [value]="searchQuery()"
+          (input)="searchQuery.set($any($event.target).value)"
+        />
+      </div>
       <lfg-status-filter-pills
         [options]="statusFilterOptions"
         (filterChange)="setStatusFilter($event)"
@@ -340,6 +349,7 @@ export class SponsorsComponent implements OnInit {
   saving = signal(false);
   updatingSponsorId = signal<string | null>(null);
   statusFilter = signal<SponsorStatus | "all">("all");
+  searchQuery = signal("");
   compactView = signal(false);
   confirmPending = signal<(() => Promise<void>) | null>(null);
   confirmMessage = signal("");
@@ -615,9 +625,16 @@ export class SponsorsComponent implements OnInit {
   }
   filteredItems(): Sponsor[] {
     const status = this.statusFilter();
-    return status === "all"
-      ? this.items()
-      : this.items().filter((item) => item.status === status);
+    const q = this.searchQuery().toLowerCase().trim();
+    let items = status === "all" ? this.items() : this.items().filter((i) => i.status === status);
+    if (q) {
+      items = items.filter(
+        (i) =>
+          i.company_name.toLowerCase().includes(q) ||
+          (i.contact_name ?? "").toLowerCase().includes(q),
+      );
+    }
+    return items;
   }
   setStatusFilter(value: string): void {
     this.statusFilter.set(value as SponsorStatus | "all");

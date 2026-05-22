@@ -105,6 +105,15 @@ const DIRECT_CODES = [...SOLO_CODES, ...DUO_CODES];
         </section>
       </lfg-kpi-panel>
 
+      <div class="relative">
+        <input
+          type="search"
+          placeholder="Cerca per nome o email…"
+          class="w-full rounded-lg border border-soft bg-surface px-4 py-2.5 text-sm outline-none placeholder:text-muted"
+          [value]="searchQuery()"
+          (input)="searchQuery.set($any($event.target).value)"
+        />
+      </div>
       <lfg-status-filter-pills
         [options]="statusFilterOptions"
         (filterChange)="setStatusFilter($event)"
@@ -170,7 +179,8 @@ const DIRECT_CODES = [...SOLO_CODES, ...DUO_CODES];
                 </a>
               </div>
 
-              <div class="mt-4 flex flex-wrap gap-2 border-t border-soft pt-4">
+              <div class="mt-4 flex flex-wrap items-center gap-2 border-t border-soft pt-4">
+                <!-- Accetta / Trasferisci — sempre visibile -->
                 <button
                   [disabled]="updatingRequestId() === request.id"
                   class="bg-strong text-on-strong rounded-lg px-4 py-2 text-xs font-bold uppercase disabled:cursor-not-allowed disabled:opacity-60"
@@ -178,33 +188,73 @@ const DIRECT_CODES = [...SOLO_CODES, ...DUO_CODES];
                 >
                   {{ request.status === "nuova" ? "Accetta" : "Trasferisci" }}
                 </button>
-                @if (request.status !== "contattata") {
+
+                <!-- Azioni secondarie desktop: sempre visibili -->
+                <div class="hidden flex-wrap gap-2 sm:flex">
+                  @if (request.status !== "contattata") {
+                    <button
+                      [disabled]="updatingRequestId() === request.id"
+                      class="state-success rounded-lg border px-4 py-2 text-xs font-bold uppercase disabled:cursor-not-allowed disabled:opacity-60"
+                      (click)="setStatus(request, 'contattata')"
+                    >
+                      Segna contattata
+                    </button>
+                  }
+                  @if (request.status !== "archiviata") {
+                    <button
+                      [disabled]="updatingRequestId() === request.id"
+                      class="state-neutral rounded-lg border px-4 py-2 text-xs font-bold uppercase disabled:cursor-not-allowed disabled:opacity-60"
+                      (click)="setStatus(request, 'archiviata')"
+                    >
+                      Archivia
+                    </button>
+                  }
+                  @if (request.status !== "nuova") {
+                    <button
+                      [disabled]="updatingRequestId() === request.id"
+                      class="state-warning rounded-lg border px-4 py-2 text-xs font-bold uppercase disabled:cursor-not-allowed disabled:opacity-60"
+                      (click)="setStatus(request, 'nuova')"
+                    >
+                      Riapri
+                    </button>
+                  }
+                </div>
+
+                <!-- Azioni secondarie mobile: dropdown ⋯ -->
+                <div class="relative sm:hidden">
                   <button
-                    [disabled]="updatingRequestId() === request.id"
-                    class="state-success rounded-lg border px-4 py-2 text-xs font-bold uppercase disabled:cursor-not-allowed disabled:opacity-60"
-                    (click)="setStatus(request, 'contattata')"
-                  >
-                    Segna contattata
-                  </button>
-                }
-                @if (request.status !== "archiviata") {
-                  <button
-                    [disabled]="updatingRequestId() === request.id"
-                    class="state-neutral rounded-lg border px-4 py-2 text-xs font-bold uppercase disabled:cursor-not-allowed disabled:opacity-60"
-                    (click)="setStatus(request, 'archiviata')"
-                  >
-                    Archivia
-                  </button>
-                }
-                @if (request.status !== "nuova") {
-                  <button
-                    [disabled]="updatingRequestId() === request.id"
-                    class="state-warning rounded-lg border px-4 py-2 text-xs font-bold uppercase disabled:cursor-not-allowed disabled:opacity-60"
-                    (click)="setStatus(request, 'nuova')"
-                  >
-                    Riapri
-                  </button>
-                }
+                    class="rounded-lg border border-soft px-3 py-2 text-base font-black leading-none"
+                    (click)="openActionsId.set(openActionsId() === request.id ? null : request.id)"
+                  >⋯</button>
+                  @if (openActionsId() === request.id) {
+                    <div
+                      class="absolute left-0 top-full z-20 mt-1 flex min-w-[10rem] flex-col rounded-xl border border-soft bg-surface shadow-lg"
+                      (click)="openActionsId.set(null)"
+                    >
+                      @if (request.status !== "contattata") {
+                        <button
+                          [disabled]="updatingRequestId() === request.id"
+                          class="px-4 py-3 text-left text-sm font-bold text-green-700 disabled:opacity-60"
+                          (click)="setStatus(request, 'contattata')"
+                        >Segna contattata</button>
+                      }
+                      @if (request.status !== "archiviata") {
+                        <button
+                          [disabled]="updatingRequestId() === request.id"
+                          class="px-4 py-3 text-left text-sm font-bold disabled:opacity-60"
+                          (click)="setStatus(request, 'archiviata')"
+                        >Archivia</button>
+                      }
+                      @if (request.status !== "nuova") {
+                        <button
+                          [disabled]="updatingRequestId() === request.id"
+                          class="px-4 py-3 text-left text-sm font-bold text-amber-700 disabled:opacity-60"
+                          (click)="setStatus(request, 'nuova')"
+                        >Riapri</button>
+                      }
+                    </div>
+                  }
+                </div>
               </div>
 
               <div
@@ -449,7 +499,9 @@ export class ParticipationRequestsComponent implements OnInit {
   error = signal("");
   savingNoteId = signal<string | null>(null);
   updatingRequestId = signal<string | null>(null);
+  searchQuery = signal("");
   statusFilter = signal<RequestStatus | "all">("all");
+  openActionsId = signal<string | null>(null);
   transferRequest = signal<ParticipationRequestWithTournament | null>(null);
   confirmPending = signal<(() => Promise<void>) | null>(null);
   confirmMessage = signal("");
@@ -472,9 +524,18 @@ export class ParticipationRequestsComponent implements OnInit {
   ]);
   filteredRequests = computed(() => {
     const status = this.statusFilter();
-    return status === "all"
+    const q = this.searchQuery().toLowerCase().trim();
+    let items = status === "all"
       ? this.requests()
-      : this.requests().filter((request) => request.status === status);
+      : this.requests().filter((r) => r.status === status);
+    if (q) {
+      items = items.filter(
+        (r) =>
+          `${r.first_name} ${r.last_name}`.toLowerCase().includes(q) ||
+          (r.email ?? "").toLowerCase().includes(q),
+      );
+    }
+    return items;
   });
 
   constructor(

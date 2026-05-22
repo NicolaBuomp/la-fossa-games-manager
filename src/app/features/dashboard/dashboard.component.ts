@@ -155,32 +155,64 @@ import { AuditDetailModalComponent } from "../audit/components/audit-detail-moda
           </div>
         </section>
 
+        <!-- Azioni rapide (solo mobile) -->
+        <section class="grid grid-cols-2 gap-3 sm:hidden">
+          <a routerLink="/app/registrations"
+            class="flex flex-col items-center justify-center gap-1 rounded-xl border border-soft bg-surface px-3 py-4 text-center shadow-sm">
+            <span class="text-2xl">📋</span>
+            <span class="text-xs font-bold uppercase tracking-wide">Iscrizioni</span>
+          </a>
+          <a routerLink="/app/sponsors"
+            class="flex flex-col items-center justify-center gap-1 rounded-xl border border-soft bg-surface px-3 py-4 text-center shadow-sm">
+            <span class="text-2xl">🤝</span>
+            <span class="text-xs font-bold uppercase tracking-wide">Sponsor</span>
+          </a>
+          <a routerLink="/app/participation-requests"
+            class="flex flex-col items-center justify-center gap-1 rounded-xl border border-soft bg-surface px-3 py-4 text-center shadow-sm">
+            <span class="text-2xl">📩</span>
+            <span class="text-xs font-bold uppercase tracking-wide">Richieste</span>
+          </a>
+          <a routerLink="/app/transactions"
+            class="flex flex-col items-center justify-center gap-1 rounded-xl border border-soft bg-surface px-3 py-4 text-center shadow-sm">
+            <span class="text-2xl">💰</span>
+            <span class="text-xs font-bold uppercase tracking-wide">Transazioni</span>
+          </a>
+        </section>
+
         <lfg-kpi-panel title="KPI evento" storageKey="dashboard">
           <section class="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-            <lfg-summary-card
-              label="Sponsor pagati"
-              [value]="eur(sponsorPaid())"
-              [hint]="sponsorPaidCount() + ' sponsor'"
-              tone="income"
-            />
-            <lfg-summary-card
-              label="Sponsor confermati"
-              [value]="eur(sponsorConfirmed())"
-              hint="Confermati, non ancora pagati"
-              tone="warning"
-            />
-            <lfg-summary-card
-              label="Iscrizioni pagate"
-              [value]="eur(regPaidAmount())"
-              [hint]="regPaidCount() + ' pagate'"
-              tone="income"
-            />
-            <lfg-summary-card
-              label="Da incassare"
-              [value]="eur(regPendingAmount())"
-              [hint]="regPendingCount() + ' aperte'"
-              tone="warning"
-            />
+            <a routerLink="/app/sponsors" class="block cursor-pointer rounded-lg transition hover:opacity-80 active:scale-[.98]">
+              <lfg-summary-card
+                label="Sponsor pagati"
+                [value]="eur(sponsorPaid())"
+                [hint]="sponsorPaidCount() + ' sponsor'"
+                tone="income"
+              />
+            </a>
+            <a routerLink="/app/sponsors" class="block cursor-pointer rounded-lg transition hover:opacity-80 active:scale-[.98]">
+              <lfg-summary-card
+                label="Sponsor confermati"
+                [value]="eur(sponsorConfirmed())"
+                hint="Confermati, non ancora pagati"
+                tone="warning"
+              />
+            </a>
+            <a routerLink="/app/registrations" class="block cursor-pointer rounded-lg transition hover:opacity-80 active:scale-[.98]">
+              <lfg-summary-card
+                label="Iscrizioni pagate"
+                [value]="eur(regPaidAmount())"
+                [hint]="regPaidCount() + ' pagate'"
+                tone="income"
+              />
+            </a>
+            <a routerLink="/app/registrations" class="block cursor-pointer rounded-lg transition hover:opacity-80 active:scale-[.98]">
+              <lfg-summary-card
+                label="Da incassare"
+                [value]="eur(regPendingAmount())"
+                [hint]="regPendingCount() + ' aperte'"
+                tone="warning"
+              />
+            </a>
             <lfg-summary-card
               label="Tasso pagamento"
               [value]="regPaymentRate() + '%'"

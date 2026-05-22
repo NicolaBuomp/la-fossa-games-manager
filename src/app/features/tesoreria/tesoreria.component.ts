@@ -1,3 +1,4 @@
+import { NgTemplateOutlet } from "@angular/common";
 import { Component, OnInit, computed, inject, signal } from "@angular/core";
 import { AuthService } from "../../core/services/auth.service";
 import { SnackbarService } from "../../core/services/snackbar.service";
@@ -9,6 +10,7 @@ import {
   StatusFilterPillsComponent,
 } from "../../shared/components/status-filter-pills.component";
 import {
+  ConfirmModalComponent,
   EmptyStateComponent,
   KpiPanelComponent,
   SummaryCardComponent,
@@ -17,6 +19,8 @@ import {
 @Component({
   standalone: true,
   imports: [
+    NgTemplateOutlet,
+    ConfirmModalComponent,
     EmptyStateComponent,
     KpiPanelComponent,
     SummaryCardComponent,
@@ -34,12 +38,12 @@ import {
         @if (selectedItems().length > 0) {
           <div class="flex items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2">
             <span class="text-sm font-bold text-amber-800">
-              {{ selectedItems().length }} selezionate — {{ eur(selectedTotal()) }}
+              {{ selectedItems().length }} sel. — {{ eur(selectedTotal()) }}
             </span>
             <button
               class="rounded-lg bg-amber-600 px-4 py-2 text-sm font-bold text-white transition hover:bg-amber-700 disabled:opacity-60"
               [disabled]="delivering()"
-              (click)="deliverSelected()"
+              (click)="confirmDeliveryOpen.set(true)"
             >
               {{ delivering() ? 'Consegna in corso…' : 'Consegna al tesoriere →' }}
             </button>
@@ -95,13 +99,13 @@ import {
           />
         </div>
       } @else {
-        @if (deliveryFilter() === 'pending' && pendingItems().length > 0) {
+        @if (deliveryFilter() === 'pending' && filteredItems().length > 0) {
           <div class="flex items-center gap-3">
             <button
               class="text-xs font-bold text-muted underline hover:text-primary"
               (click)="selectAll()"
             >
-              Seleziona tutte ({{ pendingItems().length }})
+              Seleziona tutte ({{ filteredItems().length }})
             </button>
             @if (selectedItems().length > 0) {
               <button
@@ -114,7 +118,8 @@ import {
           </div>
         }
 
-        <div class="overflow-hidden rounded-lg border border-soft bg-surface">
+        <!-- Desktop: tabella -->
+        <div class="hidden overflow-hidden rounded-lg border border-soft bg-surface sm:block">
           <table class="w-full text-sm">
             <thead>
               <tr class="border-b border-soft bg-surface-muted">
@@ -151,33 +156,90 @@ import {
                   <td class="px-4 py-3 font-semibold">{{ item.description }}</td>
                   <td class="px-4 py-3 text-muted">{{ item.category }}</td>
                   <td class="px-4 py-3">
-                    @if (item.source_table === 'tournament_teams') {
-                      <span class="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-blue-700">Iscrizione</span>
-                    } @else if (item.source_table === 'sponsors') {
-                      <span class="rounded-full bg-purple-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-purple-700">Sponsor</span>
-                    } @else {
-                      <span class="rounded-full bg-surface-muted px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-muted">Manuale</span>
-                    }
+                    <ng-container *ngTemplateOutlet="sourceBadge; context: { $implicit: item }" />
                   </td>
                   <td class="px-4 py-3 text-right font-black text-positive">+{{ eur(item.amount) }}</td>
                   <td class="px-4 py-3">
-                    @if (item.delivered_to_treasurer) {
-                      <span class="inline-flex items-center gap-1 rounded-full border border-green-200 bg-green-50 px-2 py-0.5 text-xs font-semibold text-green-700">
-                        ✓ {{ formatDate(item.delivered_at!) }}
-                      </span>
-                    } @else {
-                      <span class="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-700">
-                        Da consegnare
-                      </span>
-                    }
+                    <ng-container *ngTemplateOutlet="deliveryBadge; context: { $implicit: item }" />
                   </td>
                 </tr>
               }
             </tbody>
           </table>
         </div>
+
+        <!-- Mobile: card list -->
+        <div class="flex flex-col gap-3 sm:hidden">
+          @for (item of filteredItems(); track item.source_id) {
+            <div
+              class="rounded-xl border border-soft bg-surface p-4 transition"
+              [class.border-amber-300]="isSelected(item)"
+              [class.bg-amber-50]="isSelected(item)"
+            >
+              <div class="flex items-start gap-3">
+                @if (deliveryFilter() === 'pending') {
+                  <input
+                    type="checkbox"
+                    class="mt-1 h-5 w-5 flex-shrink-0 cursor-pointer rounded border-soft accent-amber-600"
+                    [checked]="isSelected(item)"
+                    (change)="toggleSelect(item)"
+                  />
+                }
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-center justify-between gap-2">
+                    <p class="truncate font-semibold">{{ item.description }}</p>
+                    <span class="flex-shrink-0 text-lg font-black text-positive">+{{ eur(item.amount) }}</span>
+                  </div>
+                  <div class="mt-1.5 flex flex-wrap items-center gap-2 text-xs text-muted">
+                    <span>{{ formatDate(item.date) }}</span>
+                    <span>·</span>
+                    <span>{{ item.category }}</span>
+                    <span>·</span>
+                    <ng-container *ngTemplateOutlet="sourceBadge; context: { $implicit: item }" />
+                  </div>
+                  <div class="mt-2">
+                    <ng-container *ngTemplateOutlet="deliveryBadge; context: { $implicit: item }" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
       }
     </section>
+
+    <!-- Template badge fonte -->
+    <ng-template #sourceBadge let-item>
+      @if (item.source_table === 'tournament_teams') {
+        <span class="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-blue-700">Iscrizione</span>
+      } @else if (item.source_table === 'sponsors') {
+        <span class="rounded-full bg-purple-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-purple-700">Sponsor</span>
+      } @else {
+        <span class="rounded-full bg-surface-muted px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-muted">Manuale</span>
+      }
+    </ng-template>
+
+    <!-- Template badge stato consegna -->
+    <ng-template #deliveryBadge let-item>
+      @if (item.delivered_to_treasurer) {
+        <span class="inline-flex items-center gap-1 rounded-full border border-green-200 bg-green-50 px-2 py-0.5 text-xs font-semibold text-green-700">
+          ✓ {{ formatDate(item.delivered_at!) }}
+        </span>
+      } @else {
+        <span class="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-700">
+          Da consegnare
+        </span>
+      }
+    </ng-template>
+
+    <!-- Modale conferma consegna -->
+    <lfg-confirm
+      [open]="confirmDeliveryOpen()"
+      [message]="'Consegnare ' + selectedItems().length + ' entrate al tesoriere per un totale di ' + eur(selectedTotal()) + '? Questa azione non è reversibile.'"
+      confirmLabel="Consegna"
+      (confirm)="onConfirmDelivery()"
+      (cancel)="confirmDeliveryOpen.set(false)"
+    />
   `,
 })
 export class TesoreriaComponent implements OnInit {
@@ -187,6 +249,7 @@ export class TesoreriaComponent implements OnInit {
   selectedItems = signal<DeliveryItem[]>([]);
   delivering = signal(false);
   error = signal("");
+  confirmDeliveryOpen = signal(false);
   private readonly snackbar = inject(SnackbarService);
 
   readonly pendingItems = computed(() =>
@@ -302,7 +365,7 @@ export class TesoreriaComponent implements OnInit {
 
   selectAll(): void {
     this.selectedItems.set(
-      this.pendingItems().map((i) => ({
+      this.filteredItems().map((i) => ({
         source_table: i.source_table,
         source_id: i.source_id,
       })),
@@ -313,7 +376,8 @@ export class TesoreriaComponent implements OnInit {
     this.selectedItems.set([]);
   }
 
-  async deliverSelected(): Promise<void> {
+  async onConfirmDelivery(): Promise<void> {
+    this.confirmDeliveryOpen.set(false);
     const items = this.selectedItems();
     if (!items.length || this.delivering()) return;
     const userId = this.auth.profile()?.id;

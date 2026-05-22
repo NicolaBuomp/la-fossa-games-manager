@@ -100,6 +100,13 @@ const DIRECT_CODES = [...SOLO_CODES, ...DUO_CODES];
         </div>
       </lfg-kpi-panel>
 
+      <input
+        type="search"
+        placeholder="Cerca per nome squadra o capitano…"
+        class="w-full rounded-lg border border-soft bg-surface px-4 py-2.5 text-sm outline-none placeholder:text-muted"
+        [value]="searchQuery()"
+        (input)="searchQuery.set($any($event.target).value)"
+      />
       <lfg-status-filter-pills
         [options]="paymentFilterOptions"
         (filterChange)="setPaymentFilter($event)"
@@ -215,6 +222,7 @@ export class RegistrationsComponent implements OnInit {
   tournaments = signal<TournamentWithTeams[]>([]);
   selectedTournamentId = signal<string | null>(null);
   paymentFilter = signal<PaymentFilter>("all");
+  searchQuery = signal("");
   modalMode = signal<ModalMode>(null);
   saving = signal(false);
   modalError = signal("");
@@ -242,14 +250,28 @@ export class RegistrationsComponent implements OnInit {
     const t = this.activeTournament();
     if (!t) return [];
     const teams = t.tournament_teams || [];
-    return this.filterTeamsByPayment(teams);
+    const q = this.searchQuery().toLowerCase().trim();
+    const byPayment = this.filterTeamsByPayment(teams);
+    if (!q) return byPayment;
+    return byPayment.filter(
+      (team) =>
+        team.name.toLowerCase().includes(q) ||
+        (team.captain_name ?? "").toLowerCase().includes(q),
+    );
   });
 
   filteredDirects = computed(() => {
     const t = this.activeTournament();
     if (!t || !this.isDirect(t)) return [];
     const teams = t.tournament_teams || [];
-    return this.filterTeamsByPayment(teams);
+    const q = this.searchQuery().toLowerCase().trim();
+    const byPayment = this.filterTeamsByPayment(teams);
+    if (!q) return byPayment;
+    return byPayment.filter(
+      (team) =>
+        team.name.toLowerCase().includes(q) ||
+        (team.captain_name ?? "").toLowerCase().includes(q),
+    );
   });
 
   paymentFilterOptions = computed<FilterOption[]>(() => [
