@@ -35,7 +35,10 @@ export const ASSIGNABLE_ROLES = [
   { value: USER_ROLE.Staff, label: "Staff" },
   { value: USER_ROLE.Admin, label: "Admin" },
   { value: USER_ROLE.Treasurer, label: "Tesoriere" },
-] as const satisfies ReadonlyArray<{ value: Exclude<UserRole, "owner">; label: string }>;
+] as const satisfies ReadonlyArray<{
+  value: Exclude<UserRole, "owner">;
+  label: string;
+}>;
 
 export const USER_ROLE_BADGE_CLASSES = {
   [USER_ROLE.Owner]: "border-accent bg-accent text-on-accent",
@@ -138,7 +141,9 @@ export const DELIVERY_STATUS = {
   Delivered: "delivered",
 } as const;
 
-export type DeliveryStatusFilter = typeof FILTER_ALL | (typeof DELIVERY_STATUS)[keyof typeof DELIVERY_STATUS];
+export type DeliveryStatusFilter =
+  | typeof FILTER_ALL
+  | (typeof DELIVERY_STATUS)[keyof typeof DELIVERY_STATUS];
 
 export const THEME_MODE = {
   System: "system",
@@ -147,7 +152,9 @@ export const THEME_MODE = {
 } as const;
 
 export type ThemeModeValue = (typeof THEME_MODE)[keyof typeof THEME_MODE];
-export type ResolvedThemeValue = typeof THEME_MODE.Light | typeof THEME_MODE.Dark;
+export type ResolvedThemeValue =
+  | typeof THEME_MODE.Light
+  | typeof THEME_MODE.Dark;
 
 export const THEME_MODE_OPTIONS = [
   { id: THEME_MODE.System, label: "Auto" },
@@ -162,15 +169,60 @@ export const SHELL_BADGE = {
 
 export const SHELL_NAV_ITEMS = [
   { path: "/app/dashboard", label: "Home", short: "H", group: "Gestionale" },
-  { path: "/app/registrations", label: "Iscritti", short: "I", group: "Gestionale" },
-  { path: "/app/tournaments", label: "Tornei", short: "T", group: "Gestionale" },
-  { path: "/app/participation-requests", label: "Richieste", short: "R", badge: SHELL_BADGE.TournamentRequests, group: "Gestionale" },
-  { path: "/app/sponsors", label: "Sponsor", short: "S", badge: SHELL_BADGE.SponsorRequests, group: "Gestionale" },
-  { path: "/app/transazioni", label: "Transazioni", short: "$", group: "Finanze" },
-  { path: "/app/tesoreria", label: "Tesoriere", short: "T", treasuryOnly: true, group: "Finanze" },
+  {
+    path: "/app/registrations",
+    label: "Iscritti",
+    short: "I",
+    group: "Gestionale",
+  },
+  {
+    path: "/app/tournaments",
+    label: "Tornei",
+    short: "T",
+    group: "Gestionale",
+  },
+  {
+    path: "/app/participation-requests",
+    label: "Richieste",
+    short: "R",
+    badge: SHELL_BADGE.TournamentRequests,
+    group: "Gestionale",
+  },
+  {
+    path: "/app/sponsors",
+    label: "Sponsor",
+    short: "S",
+    badge: SHELL_BADGE.SponsorRequests,
+    group: "Gestionale",
+  },
+  {
+    path: "/app/transactions",
+    label: "Transazioni",
+    short: "$",
+    group: "Finanze",
+  },
+  {
+    path: "/app/tesoreria",
+    label: "Tesoriere",
+    short: "T",
+    treasuryOnly: true,
+    group: "Finanze",
+  },
   { path: "/app/profile", label: "Profilo", short: "P", group: "Account" },
-  { path: "/app/users", label: "Utenti", short: "U", adminOnly: true, group: "Admin" },
-  { path: "/app/audit", label: "Audit", short: "A", adminOnly: true, group: "Admin" },
+  {
+    path: "/app/users",
+    label: "Utenti",
+    short: "U",
+    adminOnly: true,
+    group: "Admin",
+  },
+  {
+    path: "/app/audit",
+    label: "Audit",
+    short: "A",
+    adminOnly: true,
+    group: "Admin",
+  },
 ] as const;
 
 export const SUPABASE_TABLE = {
@@ -217,7 +269,9 @@ export const DEFAULT_TOURNAMENT_CODE = {
   TableFootball: "calcio-balilla",
 } as const;
 
-export const DEFAULT_TOURNAMENT_CODES = Object.values(DEFAULT_TOURNAMENT_CODE) as readonly string[];
+export const DEFAULT_TOURNAMENT_CODES = Object.values(
+  DEFAULT_TOURNAMENT_CODE,
+) as readonly string[];
 export const SOLO_TOURNAMENT_CODES: readonly string[] = [
   DEFAULT_TOURNAMENT_CODE.Fifa,
   DEFAULT_TOURNAMENT_CODE.PingPong,
@@ -232,13 +286,48 @@ export const DIRECT_TOURNAMENT_CODES: readonly string[] = [
 ];
 
 export const DEFAULT_TOURNAMENTS = [
-  { code: DEFAULT_TOURNAMENT_CODE.Football5, name: "Calcio a 5", sport: TOURNAMENT_SPORT.Football, fee: 0 },
-  { code: DEFAULT_TOURNAMENT_CODE.Football5Under15, name: "Calcio a 5 Under 15", sport: TOURNAMENT_SPORT.Football, fee: 0 },
-  { code: DEFAULT_TOURNAMENT_CODE.Volleyball, name: "Green Volley", sport: TOURNAMENT_SPORT.Volleyball, fee: 50 },
-  { code: DEFAULT_TOURNAMENT_CODE.Briscola, name: "Briscola", sport: TOURNAMENT_SPORT.Other, fee: 0 },
-  { code: DEFAULT_TOURNAMENT_CODE.Fifa, name: "Fifa", sport: TOURNAMENT_SPORT.Other, fee: 0 },
-  { code: DEFAULT_TOURNAMENT_CODE.PingPong, name: "Ping Pong", sport: TOURNAMENT_SPORT.Other, fee: 0 },
-  { code: DEFAULT_TOURNAMENT_CODE.TableFootball, name: "Calcio Balilla", sport: TOURNAMENT_SPORT.Other, fee: 0 },
+  {
+    code: DEFAULT_TOURNAMENT_CODE.Football5,
+    name: "Calcio a 5",
+    sport: TOURNAMENT_SPORT.Football,
+    fee: 0,
+  },
+  {
+    code: DEFAULT_TOURNAMENT_CODE.Football5Under15,
+    name: "Calcio a 5 Under 15",
+    sport: TOURNAMENT_SPORT.Football,
+    fee: 0,
+  },
+  {
+    code: DEFAULT_TOURNAMENT_CODE.Volleyball,
+    name: "Green Volley",
+    sport: TOURNAMENT_SPORT.Volleyball,
+    fee: 50,
+  },
+  {
+    code: DEFAULT_TOURNAMENT_CODE.Briscola,
+    name: "Briscola",
+    sport: TOURNAMENT_SPORT.Other,
+    fee: 0,
+  },
+  {
+    code: DEFAULT_TOURNAMENT_CODE.Fifa,
+    name: "Fifa",
+    sport: TOURNAMENT_SPORT.Other,
+    fee: 0,
+  },
+  {
+    code: DEFAULT_TOURNAMENT_CODE.PingPong,
+    name: "Ping Pong",
+    sport: TOURNAMENT_SPORT.Other,
+    fee: 0,
+  },
+  {
+    code: DEFAULT_TOURNAMENT_CODE.TableFootball,
+    name: "Calcio Balilla",
+    sport: TOURNAMENT_SPORT.Other,
+    fee: 0,
+  },
 ] as const satisfies ReadonlyArray<{
   code: string;
   name: string;
@@ -246,7 +335,9 @@ export const DEFAULT_TOURNAMENTS = [
   fee: number;
 }>;
 
-export const TOURNAMENT_MIN_PARTICIPANTS_BY_CODE: Readonly<Record<string, number>> = {
+export const TOURNAMENT_MIN_PARTICIPANTS_BY_CODE: Readonly<
+  Record<string, number>
+> = {
   [DEFAULT_TOURNAMENT_CODE.Volleyball]: 5,
   [DEFAULT_TOURNAMENT_CODE.Briscola]: 2,
   [DEFAULT_TOURNAMENT_CODE.Fifa]: 1,
@@ -300,7 +391,11 @@ export const PAYMENT_METHODS = Object.values(PAYMENT_METHOD);
 
 export const EXPENSE_STATUSES = [
   { id: EXPENSE_STATUS.Paid, label: "Pagata", className: "state-success" },
-  { id: EXPENSE_STATUS.ToRefund, label: "Da rimborsare", className: "state-warning" },
+  {
+    id: EXPENSE_STATUS.ToRefund,
+    label: "Da rimborsare",
+    className: "state-warning",
+  },
   { id: EXPENSE_STATUS.Refunded, label: "Rimborsata", className: "state-info" },
 ] as const satisfies ReadonlyArray<StatusOption<ExpenseStatus>>;
 
@@ -312,49 +407,154 @@ export const SPONSOR_CATEGORIES = [
 ] as const satisfies ReadonlyArray<Option<SponsorCategory>>;
 
 export const SPONSOR_STATUSES = [
-  { id: SPONSOR_STATUS.Contacted, label: "Contattato", className: "state-neutral" },
-  { id: SPONSOR_STATUS.Negotiating, label: "In trattativa", className: "state-warning" },
-  { id: SPONSOR_STATUS.Confirmed, label: "Confermato", className: "state-info" },
+  {
+    id: SPONSOR_STATUS.Contacted,
+    label: "Contattato",
+    className: "state-neutral",
+  },
+  {
+    id: SPONSOR_STATUS.Negotiating,
+    label: "In trattativa",
+    className: "state-warning",
+  },
+  {
+    id: SPONSOR_STATUS.Confirmed,
+    label: "Confermato",
+    className: "state-info",
+  },
   { id: SPONSOR_STATUS.Paid, label: "Pagato", className: "state-success" },
 ] as const satisfies ReadonlyArray<StatusOption<SponsorStatus>>;
 
 export const PARTICIPATION_REQUEST_STATUSES = [
-  { id: PARTICIPATION_REQUEST_STATUS.New, label: "Nuove", className: "state-warning" },
-  { id: PARTICIPATION_REQUEST_STATUS.Managing, label: "In gestione", className: "state-info" },
-  { id: PARTICIPATION_REQUEST_STATUS.Contacted, label: "Contattate", className: "state-success" },
-  { id: PARTICIPATION_REQUEST_STATUS.Archived, label: "Archiviate", className: "state-neutral" },
-  { id: PARTICIPATION_REQUEST_STATUS.Transferred, label: "Trasferite", className: "state-success" },
+  {
+    id: PARTICIPATION_REQUEST_STATUS.New,
+    label: "Nuove",
+    className: "state-warning",
+  },
+  {
+    id: PARTICIPATION_REQUEST_STATUS.Managing,
+    label: "In gestione",
+    className: "state-info",
+  },
+  {
+    id: PARTICIPATION_REQUEST_STATUS.Contacted,
+    label: "Contattate",
+    className: "state-success",
+  },
+  {
+    id: PARTICIPATION_REQUEST_STATUS.Archived,
+    label: "Archiviate",
+    className: "state-neutral",
+  },
+  {
+    id: PARTICIPATION_REQUEST_STATUS.Transferred,
+    label: "Trasferite",
+    className: "state-success",
+  },
 ] as const satisfies ReadonlyArray<StatusOption<ParticipationRequestStatus>>;
 
 export const TOURNAMENT_MATCH_STATUSES = [
-  { id: TOURNAMENT_MATCH_STATUS.Scheduled, label: "Programmato", className: "state-neutral" },
-  { id: TOURNAMENT_MATCH_STATUS.Live, label: "Live", className: "state-warning" },
-  { id: TOURNAMENT_MATCH_STATUS.Completed, label: "Completato", className: "state-success" },
-  { id: TOURNAMENT_MATCH_STATUS.Cancelled, label: "Annullato", className: "state-danger" },
+  {
+    id: TOURNAMENT_MATCH_STATUS.Scheduled,
+    label: "Programmato",
+    className: "state-neutral",
+  },
+  {
+    id: TOURNAMENT_MATCH_STATUS.Live,
+    label: "Live",
+    className: "state-warning",
+  },
+  {
+    id: TOURNAMENT_MATCH_STATUS.Completed,
+    label: "Completato",
+    className: "state-success",
+  },
+  {
+    id: TOURNAMENT_MATCH_STATUS.Cancelled,
+    label: "Annullato",
+    className: "state-danger",
+  },
 ] as const satisfies ReadonlyArray<StatusOption<TournamentMatchStatus>>;
 
 export const TOURNAMENT_STATUSES = [
   { id: TOURNAMENT_STATUS.Draft, label: "Bozza", className: "state-neutral" },
-  { id: TOURNAMENT_STATUS.RegistrationsOpen, label: "Iscrizioni aperte", className: "state-success" },
-  { id: TOURNAMENT_STATUS.RegistrationsClosed, label: "Iscrizioni chiuse", className: "state-warning" },
-  { id: TOURNAMENT_STATUS.GroupsGenerated, label: "Gironi generati", className: "state-info" },
-  { id: TOURNAMENT_STATUS.InProgress, label: "In corso", className: "state-warning" },
-  { id: TOURNAMENT_STATUS.Completed, label: "Completato", className: "state-success" },
-  { id: TOURNAMENT_STATUS.Archived, label: "Archiviato", className: "state-neutral" },
+  {
+    id: TOURNAMENT_STATUS.RegistrationsOpen,
+    label: "Iscrizioni aperte",
+    className: "state-success",
+  },
+  {
+    id: TOURNAMENT_STATUS.RegistrationsClosed,
+    label: "Iscrizioni chiuse",
+    className: "state-warning",
+  },
+  {
+    id: TOURNAMENT_STATUS.GroupsGenerated,
+    label: "Gironi generati",
+    className: "state-info",
+  },
+  {
+    id: TOURNAMENT_STATUS.InProgress,
+    label: "In corso",
+    className: "state-warning",
+  },
+  {
+    id: TOURNAMENT_STATUS.Completed,
+    label: "Completato",
+    className: "state-success",
+  },
+  {
+    id: TOURNAMENT_STATUS.Archived,
+    label: "Archiviato",
+    className: "state-neutral",
+  },
 ] as const satisfies ReadonlyArray<StatusOption<TournamentStatus>>;
 
 export const TOURNAMENT_PUBLIC_STATUSES = [
-  { id: TOURNAMENT_PUBLIC_STATUS.Hidden, label: "Nascosto", className: "state-neutral" },
-  { id: TOURNAMENT_PUBLIC_STATUS.RegistrationsOpen, label: "Iscrizioni pubbliche", className: "state-info" },
-  { id: TOURNAMENT_PUBLIC_STATUS.Published, label: "Pubblicato", className: "state-success" },
-  { id: TOURNAMENT_PUBLIC_STATUS.ResultsPublished, label: "Risultati pubblicati", className: "state-success" },
+  {
+    id: TOURNAMENT_PUBLIC_STATUS.Hidden,
+    label: "Nascosto",
+    className: "state-neutral",
+  },
+  {
+    id: TOURNAMENT_PUBLIC_STATUS.RegistrationsOpen,
+    label: "Iscrizioni pubbliche",
+    className: "state-info",
+  },
+  {
+    id: TOURNAMENT_PUBLIC_STATUS.Published,
+    label: "Pubblicato",
+    className: "state-success",
+  },
+  {
+    id: TOURNAMENT_PUBLIC_STATUS.ResultsPublished,
+    label: "Risultati pubblicati",
+    className: "state-success",
+  },
 ] as const satisfies ReadonlyArray<StatusOption<TournamentPublicStatus>>;
 
 export const AUDIT_ACTIONS = [
-  { id: AUDIT_ACTION.Insert, label: "Aggiunto", phrase: "inserito", className: "state-success" },
-  { id: AUDIT_ACTION.Update, label: "Modificato", phrase: "modificato", className: "state-info" },
-  { id: AUDIT_ACTION.Delete, label: "Eliminato", phrase: "eliminato", className: "state-danger" },
-] as const satisfies ReadonlyArray<StatusOption<AuditAction> & { phrase: string }>;
+  {
+    id: AUDIT_ACTION.Insert,
+    label: "Aggiunto",
+    phrase: "inserito",
+    className: "state-success",
+  },
+  {
+    id: AUDIT_ACTION.Update,
+    label: "Modificato",
+    phrase: "modificato",
+    className: "state-info",
+  },
+  {
+    id: AUDIT_ACTION.Delete,
+    label: "Eliminato",
+    phrase: "eliminato",
+    className: "state-danger",
+  },
+] as const satisfies ReadonlyArray<
+  StatusOption<AuditAction> & { phrase: string }
+>;
 
 export const AUDIT_TABLE_LABELS: Readonly<Record<string, string>> = {
   [SUPABASE_TABLE.Expenses]: "spesa",
@@ -376,4 +576,5 @@ export const AUDIT_TABLE_PLURAL_LABELS: Readonly<Record<string, string>> = {
   [SUPABASE_TABLE.TeamParticipants]: "partecipanti",
 } as const;
 
-export const PUBLIC_SPONSOR_LEAD_DELIVERABLES = "Richiesta informazioni sponsor dal sito pubblico";
+export const PUBLIC_SPONSOR_LEAD_DELIVERABLES =
+  "Richiesta informazioni sponsor dal sito pubblico";

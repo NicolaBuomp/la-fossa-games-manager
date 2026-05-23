@@ -1,10 +1,4 @@
-import {
-  Component,
-  OnInit,
-  computed,
-  inject,
-  signal,
-} from "@angular/core";
+import { Component, OnInit, computed, inject, signal } from "@angular/core";
 import { RouterLink } from "@angular/router";
 import { AuthService } from "../../core/services/auth.service";
 import { ExpensesService } from "../../core/services/expenses.service";
@@ -14,11 +8,11 @@ import { ProfileService } from "../../core/services/profile.service";
 import { SnackbarService } from "../../core/services/snackbar.service";
 import { TransactionsService } from "../../core/services/transactions.service";
 import {
+  DELIVERY_STATUS,
+  DeliveryStatusFilter,
   EXPENSE_CATEGORIES,
   EXPENSE_STATUS,
   EXPENSE_STATUSES,
-  DELIVERY_STATUS,
-  DeliveryStatusFilter,
   FILTER_ALL,
   INCOME_CATEGORIES,
   PAGE_SIZE,
@@ -87,13 +81,13 @@ import {
             class="rounded-lg bg-surface px-4 py-2 text-sm font-bold text-positive ring-1 ring-black/15 transition hover:bg-surface-muted"
             (click)="newIncome()"
           >
-            + Entrata
+            Entrata
           </button>
           <button
             class="rounded-lg bg-surface px-4 py-2 text-sm font-bold text-negative ring-1 ring-black/15 transition hover:bg-surface-muted"
             (click)="newExpense()"
           >
-            − Spesa
+            Spesa
           </button>
         </div>
       </div>
@@ -165,23 +159,39 @@ import {
       } @else {
         <div class="grid gap-3">
           @for (item of items(); track item.source_id) {
-            <article class="rounded-lg border border-soft bg-surface p-4 shadow-sm">
+            <article
+              class="rounded-lg border border-soft bg-surface p-4 shadow-sm"
+            >
               <!-- Riga superiore: tipo + importo sempre affiancati -->
               <div class="flex items-start justify-between gap-2">
                 <div class="flex min-w-0 flex-wrap items-center gap-1.5">
                   <span
                     class="shrink-0 text-xs font-black uppercase"
                     [class.text-positive]="item.type === transactionType.Income"
-                    [class.text-negative]="item.type === transactionType.Expense"
+                    [class.text-negative]="
+                      item.type === transactionType.Expense
+                    "
                   >
-                    {{ item.type === transactionType.Income ? '↑ Entrata' : '↓ Spesa' }}
+                    {{
+                      item.type === transactionType.Income
+                        ? "↑ Entrata"
+                        : "↓ Spesa"
+                    }}
                   </span>
-                  @if (item.source_table === transactionSourceTable.TournamentTeams) {
-                    <span class="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-blue-700">
+                  @if (
+                    item.source_table === transactionSourceTable.TournamentTeams
+                  ) {
+                    <span
+                      class="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-blue-700"
+                    >
                       Iscrizione torneo
                     </span>
-                  } @else if (item.source_table === transactionSourceTable.Sponsors) {
-                    <span class="rounded-full bg-purple-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-purple-700">
+                  } @else if (
+                    item.source_table === transactionSourceTable.Sponsors
+                  ) {
+                    <span
+                      class="rounded-full bg-purple-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-purple-700"
+                    >
                       Sponsor
                     </span>
                   }
@@ -191,7 +201,8 @@ import {
                   [class.text-positive]="item.type === transactionType.Income"
                   [class.text-negative]="item.type === transactionType.Expense"
                 >
-                  {{ item.type === transactionType.Income ? '+' : '−' }}{{ eur(item.amount) }}
+                  {{ item.type === transactionType.Income ? "+" : "−"
+                  }}{{ eur(item.amount) }}
                 </p>
               </div>
 
@@ -203,12 +214,14 @@ import {
               <!-- Metadati su più righe su mobile -->
               <p class="mt-1 text-xs text-muted">
                 {{ formatDate(item.date) }}
-                @if (item.category) { · {{ item.category }} }
-                @if (item.person) { · {{ item.person }} }
-                @if (item.payment_method) { · {{ item.payment_method }} }
+                @if (item.person) {
+                  · {{ item.person }}
+                }
               </p>
 
-              @if (item.type === transactionType.Expense && item.expense_status) {
+              @if (
+                item.type === transactionType.Expense && item.expense_status
+              ) {
                 <div class="mt-2">
                   <lfg-status-badge
                     [label]="expenseStatusLabel(item.expense_status)"
@@ -220,11 +233,16 @@ import {
               @if (item.type === transactionType.Income) {
                 <div class="mt-2">
                   @if (item.delivered_to_treasurer) {
-                    <span class="inline-flex items-center gap-1 rounded-full border border-green-200 bg-green-50 px-2 py-0.5 text-xs font-semibold text-green-700">
-                      ✓ Consegnato al tesoriere · {{ formatDate(item.delivered_at!) }}
+                    <span
+                      class="inline-flex items-center gap-1 rounded-full border border-green-200 bg-green-50 px-2 py-0.5 text-xs font-semibold text-green-700"
+                    >
+                      ✓ Consegnato al tesoriere ·
+                      {{ formatDate(item.delivered_at!) }}
                     </span>
                   } @else {
-                    <span class="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-700">
+                    <span
+                      class="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-700"
+                    >
                       Da consegnare al tesoriere
                     </span>
                   }
@@ -236,8 +254,13 @@ import {
               </p>
 
               <!-- Azioni: solo per righe modificabili (incomes/expenses manuali) -->
-              @if (item.source_table === transactionSourceTable.Incomes || item.source_table === transactionSourceTable.Expenses) {
-                <div class="mt-4 flex justify-end gap-2 border-t border-soft pt-3">
+              @if (
+                item.source_table === transactionSourceTable.Incomes ||
+                item.source_table === transactionSourceTable.Expenses
+              ) {
+                <div
+                  class="mt-4 flex justify-end gap-2 border-t border-soft pt-3"
+                >
                   <button
                     class="rounded-md bg-surface-muted px-3 py-1.5 text-xs font-bold uppercase"
                     (click)="edit(item)"
@@ -255,15 +278,21 @@ import {
                 </div>
               } @else {
                 <!-- Per le righe automatiche: link alla pagina sorgente -->
-                <div class="mt-4 flex justify-end gap-2 border-t border-soft pt-3">
-                  @if (item.source_table === transactionSourceTable.TournamentTeams) {
+                <div
+                  class="mt-4 flex justify-end gap-2 border-t border-soft pt-3"
+                >
+                  @if (
+                    item.source_table === transactionSourceTable.TournamentTeams
+                  ) {
                     <a
                       routerLink="/app/registrations"
                       class="rounded-md bg-surface-muted px-3 py-1.5 text-xs font-bold uppercase"
                     >
                       Vai a Iscritti →
                     </a>
-                  } @else if (item.source_table === transactionSourceTable.Sponsors) {
+                  } @else if (
+                    item.source_table === transactionSourceTable.Sponsors
+                  ) {
                     <a
                       routerLink="/app/sponsors"
                       class="rounded-md bg-surface-muted px-3 py-1.5 text-xs font-bold uppercase"
@@ -347,17 +376,41 @@ export class TransactionsComponent implements OnInit {
 
   get typeFilterOptions(): () => FilterOption[] {
     return () => [
-      { label: "Tutte", value: FILTER_ALL, active: this.typeFilter() === FILTER_ALL },
-      { label: "Entrate", value: TRANSACTION_TYPE.Income, active: this.typeFilter() === TRANSACTION_TYPE.Income },
-      { label: "Spese", value: TRANSACTION_TYPE.Expense, active: this.typeFilter() === TRANSACTION_TYPE.Expense },
+      {
+        label: "Tutte",
+        value: FILTER_ALL,
+        active: this.typeFilter() === FILTER_ALL,
+      },
+      {
+        label: "Entrate",
+        value: TRANSACTION_TYPE.Income,
+        active: this.typeFilter() === TRANSACTION_TYPE.Income,
+      },
+      {
+        label: "Spese",
+        value: TRANSACTION_TYPE.Expense,
+        active: this.typeFilter() === TRANSACTION_TYPE.Expense,
+      },
     ];
   }
 
   get deliveryFilterOptions(): () => FilterOption[] {
     return () => [
-      { label: "Tutti gli stati", value: FILTER_ALL, active: this.deliveryFilter() === FILTER_ALL },
-      { label: "Da consegnare", value: DELIVERY_STATUS.Pending, active: this.deliveryFilter() === DELIVERY_STATUS.Pending },
-      { label: "Consegnati", value: DELIVERY_STATUS.Delivered, active: this.deliveryFilter() === DELIVERY_STATUS.Delivered },
+      {
+        label: "Tutti gli stati",
+        value: FILTER_ALL,
+        active: this.deliveryFilter() === FILTER_ALL,
+      },
+      {
+        label: "Da consegnare",
+        value: DELIVERY_STATUS.Pending,
+        active: this.deliveryFilter() === DELIVERY_STATUS.Pending,
+      },
+      {
+        label: "Consegnati",
+        value: DELIVERY_STATUS.Delivered,
+        active: this.deliveryFilter() === DELIVERY_STATUS.Delivered,
+      },
     ];
   }
 
@@ -366,12 +419,23 @@ export class TransactionsComponent implements OnInit {
   readonly balance = computed(() => this.totalIncomes() - this.totalExpenses());
   readonly incomeCount = computed(() => this.summary()?.incomeCount ?? 0);
   readonly expenseCount = computed(() => this.summary()?.expenseCount ?? 0);
-  readonly pendingDelivery = computed(() => this.summary()?.pendingDelivery ?? 0);
-  readonly pendingDeliveryCount = computed(() => this.summary()?.pendingDeliveryCount ?? 0);
+  readonly pendingDelivery = computed(
+    () => this.summary()?.pendingDelivery ?? 0,
+  );
+  readonly pendingDeliveryCount = computed(
+    () => this.summary()?.pendingDeliveryCount ?? 0,
+  );
 
   readonly incomeFormFields = computed<CrudFormField[]>(() => [
     { name: "source", label: "Fonte", type: "text", required: true },
-    { name: "amount", label: "Importo", type: "number", required: true, min: 0, step: 0.01 },
+    {
+      name: "amount",
+      label: "Importo",
+      type: "number",
+      required: true,
+      min: 0,
+      step: 0.01,
+    },
     { name: "date", label: "Data", type: "date", required: true },
     {
       name: "category",
@@ -402,7 +466,14 @@ export class TransactionsComponent implements OnInit {
 
   readonly expenseFormFields = computed<CrudFormField[]>(() => [
     { name: "description", label: "Descrizione", type: "text", required: true },
-    { name: "amount", label: "Importo", type: "number", required: true, min: 0, step: 0.01 },
+    {
+      name: "amount",
+      label: "Importo",
+      type: "number",
+      required: true,
+      min: 0,
+      step: 0.01,
+    },
     { name: "date", label: "Data", type: "date", required: true },
     {
       name: "category",
@@ -564,7 +635,10 @@ export class TransactionsComponent implements OnInit {
     this.saving.set(true);
     this.error.set("");
     try {
-      const payload = { ...this.incomeForm, amount: Number(this.incomeForm.amount || 0) };
+      const payload = {
+        ...this.incomeForm,
+        amount: Number(this.incomeForm.amount || 0),
+      };
       const current = this.editingIncome();
       if (current?.id) await this.incomesService.update(current.id, payload);
       else await this.incomesService.create(payload);
@@ -582,7 +656,10 @@ export class TransactionsComponent implements OnInit {
     this.saving.set(true);
     this.error.set("");
     try {
-      const payload = { ...this.expenseForm, amount: Number(this.expenseForm.amount || 0) };
+      const payload = {
+        ...this.expenseForm,
+        amount: Number(this.expenseForm.amount || 0),
+      };
       const current = this.editingExpense();
       if (current?.id) await this.expensesService.update(current.id, payload);
       else await this.expensesService.create(payload);
@@ -609,8 +686,10 @@ export class TransactionsComponent implements OnInit {
     );
     this.confirmPending.set(async () => {
       try {
-        if (item.source_table === TRANSACTION_SOURCE_TABLE.Incomes) await this.incomesService.remove(item.source_id);
-        else if (item.source_table === TRANSACTION_SOURCE_TABLE.Expenses) await this.expensesService.remove(item.source_id);
+        if (item.source_table === TRANSACTION_SOURCE_TABLE.Incomes)
+          await this.incomesService.remove(item.source_id);
+        else if (item.source_table === TRANSACTION_SOURCE_TABLE.Expenses)
+          await this.expensesService.remove(item.source_id);
         await Promise.all([this.load(), this.loadSummary()]);
       } catch (e) {
         this.setError(this.message(e));
@@ -650,7 +729,10 @@ export class TransactionsComponent implements OnInit {
   }
 
   eur(value: number): string {
-    return new Intl.NumberFormat("it-IT", { style: "currency", currency: "EUR" }).format(value);
+    return new Intl.NumberFormat("it-IT", {
+      style: "currency",
+      currency: "EUR",
+    }).format(value);
   }
 
   formatDate(value: string): string {
@@ -658,13 +740,15 @@ export class TransactionsComponent implements OnInit {
   }
 
   formatDateTime(value: string): string {
-    return new Intl.DateTimeFormat("it-IT", { dateStyle: "short", timeStyle: "short" }).format(
-      new Date(value),
-    );
+    return new Intl.DateTimeFormat("it-IT", {
+      dateStyle: "short",
+      timeStyle: "short",
+    }).format(new Date(value));
   }
 
   insertMeta(item: Transaction): string {
-    const name = this.userNames()[item.created_by ?? ""] ?? "Utente non disponibile";
+    const name =
+      this.userNames()[item.created_by ?? ""] ?? "Utente non disponibile";
     return `Inserito da ${name} · ${this.formatDateTime(item.created_at)}`;
   }
 

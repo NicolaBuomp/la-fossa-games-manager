@@ -9,18 +9,26 @@ import { SnackbarService } from "../../core/services/snackbar.service";
 import { SponsorsService } from "../../core/services/sponsors.service";
 import { SupabaseService } from "../../core/services/supabase.service";
 import {
-  AuditLog,
-  Expense,
-  Registration,
-  Sponsor,
-} from "../../core/types/models";
-import {
   AUDIT_ACTION,
   DEFAULT_TOURNAMENT_CODES,
   EXPENSE_STATUS,
   SPONSOR_STATUS,
   SUPABASE_RPC,
 } from "../../core/types/constants";
+import {
+  AuditLog,
+  Expense,
+  Registration,
+  Sponsor,
+} from "../../core/types/models";
+import {
+  KpiPanelComponent,
+  SummaryCardComponent,
+} from "../../shared/components/ui.component";
+import { buildAuditActivities } from "../audit/components/audit-activity-builder";
+import { AuditActivityListComponent } from "../audit/components/audit-activity-list.component";
+import { AuditActivityItem } from "../audit/components/audit-activity.model";
+import { AuditDetailModalComponent } from "../audit/components/audit-detail-modal.component";
 
 interface DashboardFinancials {
   total_expenses: number;
@@ -34,14 +42,6 @@ interface DashboardFinancials {
   reg_paid_count: number;
   reg_pending_count: number;
 }
-import {
-  KpiPanelComponent,
-  SummaryCardComponent,
-} from "../../shared/components/ui.component";
-import { buildAuditActivities } from "../audit/components/audit-activity-builder";
-import { AuditActivityListComponent } from "../audit/components/audit-activity-list.component";
-import { AuditActivityItem } from "../audit/components/audit-activity.model";
-import { AuditDetailModalComponent } from "../audit/components/audit-detail-modal.component";
 
 @Component({
   standalone: true,
@@ -176,31 +176,50 @@ import { AuditDetailModalComponent } from "../audit/components/audit-detail-moda
 
         <!-- Azioni rapide (solo mobile) -->
         <section class="grid grid-cols-2 gap-3 sm:hidden">
-          <a routerLink="/app/registrations"
-            class="flex flex-col items-center justify-center gap-1 rounded-xl border border-soft bg-surface px-3 py-4 text-center shadow-sm">
+          <a
+            routerLink="/app/registrations"
+            class="flex flex-col items-center justify-center gap-1 rounded-xl border border-soft bg-surface px-3 py-4 text-center shadow-sm"
+          >
             <span class="text-2xl">📋</span>
-            <span class="text-xs font-bold uppercase tracking-wide">Iscrizioni</span>
+            <span class="text-xs font-bold uppercase tracking-wide"
+              >Iscrizioni</span
+            >
           </a>
-          <a routerLink="/app/sponsors"
-            class="flex flex-col items-center justify-center gap-1 rounded-xl border border-soft bg-surface px-3 py-4 text-center shadow-sm">
+          <a
+            routerLink="/app/sponsors"
+            class="flex flex-col items-center justify-center gap-1 rounded-xl border border-soft bg-surface px-3 py-4 text-center shadow-sm"
+          >
             <span class="text-2xl">🤝</span>
-            <span class="text-xs font-bold uppercase tracking-wide">Sponsor</span>
+            <span class="text-xs font-bold uppercase tracking-wide"
+              >Sponsor</span
+            >
           </a>
-          <a routerLink="/app/participation-requests"
-            class="flex flex-col items-center justify-center gap-1 rounded-xl border border-soft bg-surface px-3 py-4 text-center shadow-sm">
+          <a
+            routerLink="/app/participation-requests"
+            class="flex flex-col items-center justify-center gap-1 rounded-xl border border-soft bg-surface px-3 py-4 text-center shadow-sm"
+          >
             <span class="text-2xl">📩</span>
-            <span class="text-xs font-bold uppercase tracking-wide">Richieste</span>
+            <span class="text-xs font-bold uppercase tracking-wide"
+              >Richieste</span
+            >
           </a>
-          <a routerLink="/app/transactions"
-            class="flex flex-col items-center justify-center gap-1 rounded-xl border border-soft bg-surface px-3 py-4 text-center shadow-sm">
+          <a
+            routerLink="/app/transactions"
+            class="flex flex-col items-center justify-center gap-1 rounded-xl border border-soft bg-surface px-3 py-4 text-center shadow-sm"
+          >
             <span class="text-2xl">💰</span>
-            <span class="text-xs font-bold uppercase tracking-wide">Transazioni</span>
+            <span class="text-xs font-bold uppercase tracking-wide"
+              >Transazioni</span
+            >
           </a>
         </section>
 
         <lfg-kpi-panel title="KPI evento" storageKey="dashboard">
           <section class="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-            <a routerLink="/app/sponsors" class="block cursor-pointer rounded-lg transition hover:opacity-80 active:scale-[.98]">
+            <a
+              routerLink="/app/sponsors"
+              class="block cursor-pointer rounded-lg transition hover:opacity-80 active:scale-[.98]"
+            >
               <lfg-summary-card
                 label="Sponsor pagati"
                 [value]="eur(sponsorPaid())"
@@ -208,7 +227,10 @@ import { AuditDetailModalComponent } from "../audit/components/audit-detail-moda
                 tone="income"
               />
             </a>
-            <a routerLink="/app/sponsors" class="block cursor-pointer rounded-lg transition hover:opacity-80 active:scale-[.98]">
+            <a
+              routerLink="/app/sponsors"
+              class="block cursor-pointer rounded-lg transition hover:opacity-80 active:scale-[.98]"
+            >
               <lfg-summary-card
                 label="Sponsor confermati"
                 [value]="eur(sponsorConfirmed())"
@@ -216,7 +238,10 @@ import { AuditDetailModalComponent } from "../audit/components/audit-detail-moda
                 tone="warning"
               />
             </a>
-            <a routerLink="/app/registrations" class="block cursor-pointer rounded-lg transition hover:opacity-80 active:scale-[.98]">
+            <a
+              routerLink="/app/registrations"
+              class="block cursor-pointer rounded-lg transition hover:opacity-80 active:scale-[.98]"
+            >
               <lfg-summary-card
                 label="Iscrizioni pagate"
                 [value]="eur(regPaidAmount())"
@@ -224,7 +249,10 @@ import { AuditDetailModalComponent } from "../audit/components/audit-detail-moda
                 tone="income"
               />
             </a>
-            <a routerLink="/app/registrations" class="block cursor-pointer rounded-lg transition hover:opacity-80 active:scale-[.98]">
+            <a
+              routerLink="/app/registrations"
+              class="block cursor-pointer rounded-lg transition hover:opacity-80 active:scale-[.98]"
+            >
               <lfg-summary-card
                 label="Da incassare"
                 [value]="eur(regPendingAmount())"
@@ -662,7 +690,9 @@ export class DashboardComponent implements OnInit {
 
   ownConfirmedSponsors(): number {
     return this.ownSponsors().filter(
-      (item) => item.status === SPONSOR_STATUS.Confirmed || item.status === SPONSOR_STATUS.Paid,
+      (item) =>
+        item.status === SPONSOR_STATUS.Confirmed ||
+        item.status === SPONSOR_STATUS.Paid,
     ).length;
   }
 
@@ -673,16 +703,21 @@ export class DashboardComponent implements OnInit {
   }
 
   ownExpensesToRefund(): number {
-    return this.ownExpenses().filter((item) => item.status === EXPENSE_STATUS.ToRefund)
-      .length;
+    return this.ownExpenses().filter(
+      (item) => item.status === EXPENSE_STATUS.ToRefund,
+    ).length;
   }
 
   staffInsertCount(): number {
-    return this.auditLogs().filter((item) => item.action === AUDIT_ACTION.Insert).length;
+    return this.auditLogs().filter(
+      (item) => item.action === AUDIT_ACTION.Insert,
+    ).length;
   }
 
   staffUpdateCount(): number {
-    return this.auditLogs().filter((item) => item.action === AUDIT_ACTION.Update).length;
+    return this.auditLogs().filter(
+      (item) => item.action === AUDIT_ACTION.Update,
+    ).length;
   }
 
   totalStaffActions(): number {

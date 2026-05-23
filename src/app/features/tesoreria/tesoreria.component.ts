@@ -43,7 +43,9 @@ import {
           <h1 class="font-display text-3xl uppercase">Tesoriere</h1>
         </div>
         @if (selectedItems().length > 0) {
-          <div class="flex items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2">
+          <div
+            class="flex items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2"
+          >
             <span class="text-sm font-bold text-amber-800">
               {{ selectedItems().length }} sel. — {{ eur(selectedTotal()) }}
             </span>
@@ -52,7 +54,9 @@ import {
               [disabled]="delivering()"
               (click)="confirmDeliveryOpen.set(true)"
             >
-              {{ delivering() ? 'Consegna in corso…' : 'Consegna al tesoriere →' }}
+              {{
+                delivering() ? "Consegna in corso…" : "Consegna al tesoriere →"
+              }}
             </button>
           </div>
         }
@@ -106,7 +110,10 @@ import {
           />
         </div>
       } @else {
-        @if (deliveryFilter() === deliveryStatus.Pending && filteredItems().length > 0) {
+        @if (
+          deliveryFilter() === deliveryStatus.Pending &&
+          filteredItems().length > 0
+        ) {
           <div class="flex items-center gap-3">
             <button
               class="text-xs font-bold text-muted underline hover:text-primary"
@@ -126,7 +133,9 @@ import {
         }
 
         <!-- Desktop: tabella -->
-        <div class="hidden overflow-hidden rounded-lg border border-soft bg-surface sm:block">
+        <div
+          class="hidden overflow-hidden rounded-lg border border-soft bg-surface sm:block"
+        >
           <table class="w-full text-sm">
             <thead>
               <tr class="border-b border-soft bg-surface-muted">
@@ -135,12 +144,36 @@ import {
                     <span class="sr-only">Seleziona</span>
                   </th>
                 }
-                <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide text-muted">Data</th>
-                <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide text-muted">Descrizione</th>
-                <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide text-muted">Categoria</th>
-                <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide text-muted">Fonte</th>
-                <th class="px-4 py-3 text-right text-xs font-bold uppercase tracking-wide text-muted">Importo</th>
-                <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide text-muted">Stato</th>
+                <th
+                  class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide text-muted"
+                >
+                  Data
+                </th>
+                <th
+                  class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide text-muted"
+                >
+                  Descrizione
+                </th>
+                <th
+                  class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide text-muted"
+                >
+                  Categoria
+                </th>
+                <th
+                  class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide text-muted"
+                >
+                  Fonte
+                </th>
+                <th
+                  class="px-4 py-3 text-right text-xs font-bold uppercase tracking-wide text-muted"
+                >
+                  Importo
+                </th>
+                <th
+                  class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide text-muted"
+                >
+                  Stato
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -159,15 +192,31 @@ import {
                       />
                     </td>
                   }
-                  <td class="px-4 py-3 text-muted">{{ formatDate(item.date) }}</td>
-                  <td class="px-4 py-3 font-semibold">{{ item.description }}</td>
+                  <td class="px-4 py-3 text-muted">
+                    {{ formatDate(item.date) }}
+                  </td>
+                  <td class="px-4 py-3 font-semibold">
+                    {{ item.description }}
+                  </td>
                   <td class="px-4 py-3 text-muted">{{ item.category }}</td>
                   <td class="px-4 py-3">
-                    <ng-container *ngTemplateOutlet="sourceBadge; context: { $implicit: item }" />
+                    <ng-container
+                      *ngTemplateOutlet="
+                        sourceBadge;
+                        context: { $implicit: item }
+                      "
+                    />
                   </td>
-                  <td class="px-4 py-3 text-right font-black text-positive">+{{ eur(item.amount) }}</td>
+                  <td class="px-4 py-3 text-right font-black text-positive">
+                    +{{ eur(item.amount) }}
+                  </td>
                   <td class="px-4 py-3">
-                    <ng-container *ngTemplateOutlet="deliveryBadge; context: { $implicit: item }" />
+                    <ng-container
+                      *ngTemplateOutlet="
+                        deliveryBadge;
+                        context: { $implicit: item }
+                      "
+                    />
                   </td>
                 </tr>
               }
@@ -195,17 +244,29 @@ import {
                 <div class="min-w-0 flex-1">
                   <div class="flex items-center justify-between gap-2">
                     <p class="truncate font-semibold">{{ item.description }}</p>
-                    <span class="flex-shrink-0 text-lg font-black text-positive">+{{ eur(item.amount) }}</span>
+                    <span class="flex-shrink-0 text-lg font-black text-positive"
+                      >+{{ eur(item.amount) }}</span
+                    >
                   </div>
-                  <div class="mt-1.5 flex flex-wrap items-center gap-2 text-xs text-muted">
+                  <div
+                    class="mt-1.5 flex flex-wrap items-center gap-2 text-xs text-muted"
+                  >
                     <span>{{ formatDate(item.date) }}</span>
                     <span>·</span>
-                    <span>{{ item.category }}</span>
-                    <span>·</span>
-                    <ng-container *ngTemplateOutlet="sourceBadge; context: { $implicit: item }" />
+                    <ng-container
+                      *ngTemplateOutlet="
+                        sourceBadge;
+                        context: { $implicit: item }
+                      "
+                    />
                   </div>
                   <div class="mt-2">
-                    <ng-container *ngTemplateOutlet="deliveryBadge; context: { $implicit: item }" />
+                    <ng-container
+                      *ngTemplateOutlet="
+                        deliveryBadge;
+                        context: { $implicit: item }
+                      "
+                    />
                   </div>
                 </div>
               </div>
@@ -218,22 +279,35 @@ import {
     <!-- Template badge fonte -->
     <ng-template #sourceBadge let-item>
       @if (item.source_table === transactionSourceTable.TournamentTeams) {
-        <span class="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-blue-700">Iscrizione</span>
+        <span
+          class="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-blue-700"
+          >Iscrizione</span
+        >
       } @else if (item.source_table === transactionSourceTable.Sponsors) {
-        <span class="rounded-full bg-purple-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-purple-700">Sponsor</span>
+        <span
+          class="rounded-full bg-purple-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-purple-700"
+          >Sponsor</span
+        >
       } @else {
-        <span class="rounded-full bg-surface-muted px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-muted">Manuale</span>
+        <span
+          class="rounded-full bg-surface-muted px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-muted"
+          >Manuale</span
+        >
       }
     </ng-template>
 
     <!-- Template badge stato consegna -->
     <ng-template #deliveryBadge let-item>
       @if (item.delivered_to_treasurer) {
-        <span class="inline-flex items-center gap-1 rounded-full border border-green-200 bg-green-50 px-2 py-0.5 text-xs font-semibold text-green-700">
+        <span
+          class="inline-flex items-center gap-1 rounded-full border border-green-200 bg-green-50 px-2 py-0.5 text-xs font-semibold text-green-700"
+        >
           ✓ {{ formatDate(item.delivered_at!) }}
         </span>
       } @else {
-        <span class="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-700">
+        <span
+          class="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-700"
+        >
           Da consegnare
         </span>
       }
@@ -242,7 +316,13 @@ import {
     <!-- Modale conferma consegna -->
     <lfg-confirm
       [open]="confirmDeliveryOpen()"
-      [message]="'Consegnare ' + selectedItems().length + ' entrate al tesoriere per un totale di ' + eur(selectedTotal()) + '? Questa azione non è reversibile.'"
+      [message]="
+        'Consegnare ' +
+        selectedItems().length +
+        ' entrate al tesoriere per un totale di ' +
+        eur(selectedTotal()) +
+        '? Questa azione non è reversibile.'
+      "
       confirmLabel="Consegna"
       (confirm)="onConfirmDelivery()"
       (cancel)="confirmDeliveryOpen.set(false)"
@@ -260,10 +340,14 @@ export class TesoreriaComponent implements OnInit {
   private readonly snackbar = inject(SnackbarService);
 
   readonly pendingItems = computed(() =>
-    this.allItems().filter((i) => i.type === TRANSACTION_TYPE.Income && !i.delivered_to_treasurer),
+    this.allItems().filter(
+      (i) => i.type === TRANSACTION_TYPE.Income && !i.delivered_to_treasurer,
+    ),
   );
   readonly deliveredItems = computed(() =>
-    this.allItems().filter((i) => i.type === TRANSACTION_TYPE.Income && i.delivered_to_treasurer),
+    this.allItems().filter(
+      (i) => i.type === TRANSACTION_TYPE.Income && i.delivered_to_treasurer,
+    ),
   );
   readonly pendingTotal = computed(() =>
     this.pendingItems().reduce((s, i) => s + Number(i.amount || 0), 0),
@@ -277,13 +361,18 @@ export class TesoreriaComponent implements OnInit {
       .filter((i) => {
         if (!i.delivered_at) return false;
         const d = new Date(i.delivered_at);
-        return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+        return (
+          d.getMonth() === now.getMonth() &&
+          d.getFullYear() === now.getFullYear()
+        );
       })
       .reduce((s, i) => s + Number(i.amount || 0), 0);
   });
 
   readonly filteredItems = computed(() => {
-    let items = this.allItems().filter((i) => i.type === TRANSACTION_TYPE.Income);
+    let items = this.allItems().filter(
+      (i) => i.type === TRANSACTION_TYPE.Income,
+    );
     if (this.deliveryFilter() === DELIVERY_STATUS.Pending) {
       items = items.filter((i) => !i.delivered_to_treasurer);
     } else if (this.deliveryFilter() === DELIVERY_STATUS.Delivered) {
@@ -303,15 +392,31 @@ export class TesoreriaComponent implements OnInit {
 
   get deliveryFilterOptions(): () => FilterOption[] {
     return () => [
-      { label: "Da consegnare", value: DELIVERY_STATUS.Pending, active: this.deliveryFilter() === DELIVERY_STATUS.Pending },
-      { label: "Consegnati", value: DELIVERY_STATUS.Delivered, active: this.deliveryFilter() === DELIVERY_STATUS.Delivered },
-      { label: "Tutti", value: FILTER_ALL, active: this.deliveryFilter() === FILTER_ALL },
+      {
+        label: "Da consegnare",
+        value: DELIVERY_STATUS.Pending,
+        active: this.deliveryFilter() === DELIVERY_STATUS.Pending,
+      },
+      {
+        label: "Consegnati",
+        value: DELIVERY_STATUS.Delivered,
+        active: this.deliveryFilter() === DELIVERY_STATUS.Delivered,
+      },
+      {
+        label: "Tutti",
+        value: FILTER_ALL,
+        active: this.deliveryFilter() === FILTER_ALL,
+      },
     ];
   }
 
   get categoryFilterOptions(): () => FilterOption[] {
     return () => [
-      { label: "Tutte le categorie", value: FILTER_ALL, active: this.categoryFilter() === FILTER_ALL },
+      {
+        label: "Tutte le categorie",
+        value: FILTER_ALL,
+        active: this.categoryFilter() === FILTER_ALL,
+      },
       ...INCOME_CATEGORIES.map((c) => ({
         label: c,
         value: c,
@@ -350,7 +455,8 @@ export class TesoreriaComponent implements OnInit {
 
   isSelected(item: Transaction): boolean {
     return this.selectedItems().some(
-      (s) => s.source_table === item.source_table && s.source_id === item.source_id,
+      (s) =>
+        s.source_table === item.source_table && s.source_id === item.source_id,
     );
   }
 
@@ -359,7 +465,11 @@ export class TesoreriaComponent implements OnInit {
     if (this.isSelected(item)) {
       this.selectedItems.set(
         current.filter(
-          (s) => !(s.source_table === item.source_table && s.source_id === item.source_id),
+          (s) =>
+            !(
+              s.source_table === item.source_table &&
+              s.source_id === item.source_id
+            ),
         ),
       );
     } else {
@@ -404,7 +514,10 @@ export class TesoreriaComponent implements OnInit {
   }
 
   eur(value: number): string {
-    return new Intl.NumberFormat("it-IT", { style: "currency", currency: "EUR" }).format(value);
+    return new Intl.NumberFormat("it-IT", {
+      style: "currency",
+      currency: "EUR",
+    }).format(value);
   }
 
   formatDate(value: string): string {

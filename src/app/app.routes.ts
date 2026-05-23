@@ -37,17 +37,7 @@ export const routes: Routes = [
           ),
       },
       {
-        path: "expenses",
-        redirectTo: "transazioni",
-        pathMatch: "full",
-      },
-      {
-        path: "incomes",
-        redirectTo: "transazioni",
-        pathMatch: "full",
-      },
-      {
-        path: "transazioni",
+        path: "transactions",
         loadComponent: () =>
           import("./features/transactions/transactions.component").then(
             (m) => m.TransactionsComponent,
