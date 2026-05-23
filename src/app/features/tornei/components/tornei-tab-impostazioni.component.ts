@@ -14,7 +14,7 @@ import {
   imports: [FormsModule],
   template: `
     <div class="animate-fade-in">
-      <form class="space-y-6" (ngSubmit)="save()">
+      <form class="space-y-6 pb-20 sm:pb-0" (ngSubmit)="save()">
         <!-- INFORMAZIONI BASE -->
         <section>
           <p class="mb-3 text-xs font-bold uppercase tracking-[0.18em] text-muted">

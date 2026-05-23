@@ -164,7 +164,7 @@ export class KpiPanelComponent implements OnInit {
   standalone: true,
   template: `
     <div
-      class="rounded-lg border border-dashed border-soft bg-surface px-6 py-12 text-center"
+      class="mt-6 rounded-lg border border-dashed border-soft bg-surface px-6 py-12 text-center"
     >
       <p class="text-sm font-semibold text-primary">{{ title }}</p>
       <p class="mt-1 text-xs text-muted">{{ text }}</p>
