@@ -289,17 +289,17 @@ import { SPONSOR_TIERS } from "./landing-content";
                     Platino
                   </p>
                 </div>
-                <div class="flex flex-wrap justify-center gap-5">
+                <div class="flex flex-wrap justify-center gap-5 lg:justify-start">
                   @for (logo of platinumSponsors; track logo.src) {
                     <article
-                      class="platinum-hero relative flex w-full max-w-sm flex-col items-center justify-center rounded-xl border border-[#e5e4e2]/40 bg-white px-8 py-8 transition-transform duration-300 hover:-translate-y-1"
+                      class="platinum-hero relative flex w-full max-w-sm flex-col items-center justify-center rounded-xl border border-[#e5e4e2]/40 bg-white px-10 py-10 transition-transform duration-300 hover:-translate-y-1 lg:max-w-md lg:px-12 lg:py-12"
                     >
                       <span
                         class="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-[#e5e4e2] px-4 py-1 text-[0.6rem] font-black uppercase tracking-[0.22em] text-black"
                       >
                         Partner Ufficiale
                       </span>
-                      <div class="flex h-44 w-full items-center justify-center">
+                      <div class="flex h-48 w-full items-center justify-center lg:h-60">
                         <img
                           [src]="logo.src"
                           [alt]="logo.name"
@@ -371,7 +371,7 @@ import { SPONSOR_TIERS } from "./landing-content";
                   </p>
                 </div>
                 @if (silverSponsors.length === 1) {
-                  <div class="flex flex-wrap justify-center gap-5">
+                  <div class="flex flex-wrap justify-center gap-5 lg:justify-start">
                     @for (logo of silverSponsors; track logo.src) {
                       <article
                         class="silver-hero relative flex w-full max-w-xs flex-col items-center justify-center rounded-xl border border-[#c8c8c8]/35 bg-white px-6 py-6 transition-transform duration-300 hover:-translate-y-1"
