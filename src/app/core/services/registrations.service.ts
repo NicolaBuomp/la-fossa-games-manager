@@ -7,6 +7,7 @@ import {
   TeamParticipant,
   Tournament,
   TournamentTeam,
+  TournamentTeamWithParticipants,
   TournamentWithTeams,
 } from "../types/models";
 import {
@@ -98,6 +99,31 @@ export class RegistrationsService {
     if (error) throw error;
   }
 
+  private normalizeTeam(
+    team: TournamentTeamWithParticipants,
+  ): TournamentTeamWithParticipants {
+    return {
+      ...team,
+      captain_name: team.captain_name ?? null,
+      captain_contact: team.captain_contact ?? null,
+      vice_captain_name: team.vice_captain_name ?? null,
+      vice_captain_contact: team.vice_captain_contact ?? null,
+      fee: Number(team.fee || 0),
+      team_participants: [...(team.team_participants ?? [])]
+        .map((participant) => ({
+          ...participant,
+          gender: participant.gender ?? PARTICIPANT_GENDER.Male,
+          registered: Boolean(participant.registered),
+        }))
+        .sort((a, b) =>
+          `${a.last_name} ${a.first_name}`.localeCompare(
+            `${b.last_name} ${b.first_name}`,
+            "it",
+          ),
+        ),
+    };
+  }
+
   private normalizeTournament(
     tournament: TournamentWithTeams,
   ): TournamentWithTeams {
@@ -110,27 +136,28 @@ export class RegistrationsService {
       published_at: tournament.published_at ?? null,
       tournament_teams: [...(tournament.tournament_teams ?? [])]
         .sort((a, b) => a.name.localeCompare(b.name, "it"))
-        .map((team) => ({
-          ...team,
-          captain_name: team.captain_name ?? null,
-          captain_contact: team.captain_contact ?? null,
-          vice_captain_name: team.vice_captain_name ?? null,
-          vice_captain_contact: team.vice_captain_contact ?? null,
-          fee: Number(team.fee || 0),
-          team_participants: [...(team.team_participants ?? [])]
-            .map((participant) => ({
-              ...participant,
-              gender: participant.gender ?? PARTICIPANT_GENDER.Male,
-              registered: Boolean(participant.registered),
-            }))
-            .sort((a, b) =>
-              `${a.last_name} ${a.first_name}`.localeCompare(
-                `${b.last_name} ${b.first_name}`,
-                "it",
-              ),
-            ),
-        })),
+        .map((team) => this.normalizeTeam(team)),
     };
+  }
+
+  async getTournamentWithTeams(id: string): Promise<TournamentWithTeams | null> {
+    const { data, error } = await this.supabase.client
+      .from(SUPABASE_TABLE.Tournaments)
+      .select("*, tournament_teams(*, team_participants(*))")
+      .eq("id", id)
+      .maybeSingle();
+    if (error) throw error;
+    return data ? this.normalizeTournament(data as TournamentWithTeams) : null;
+  }
+
+  async getTeamWithParticipants(teamId: string): Promise<TournamentTeamWithParticipants | null> {
+    const { data, error } = await this.supabase.client
+      .from(SUPABASE_TABLE.TournamentTeams)
+      .select("*, team_participants(*)")
+      .eq("id", teamId)
+      .maybeSingle();
+    if (error) throw error;
+    return data ? this.normalizeTeam(data as TournamentTeamWithParticipants) : null;
   }
 
   async updateTournament(

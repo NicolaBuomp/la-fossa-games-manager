@@ -34,7 +34,10 @@ import { StatusBadgeComponent } from "../../../shared/components/ui.component";
                   </p>
                 }
               } @else {
-                <h3 class="break-words text-base font-bold leading-snug">
+                <h3
+                  class="break-words text-base font-bold leading-snug cursor-pointer hover:text-accent transition-colors"
+                  (click)="openTeamDetail.emit(team.id)"
+                >
                   {{ team.name }}
                 </h3>
                 <p class="mt-1 text-xs leading-5 text-muted">
@@ -160,6 +163,7 @@ export class RegistrationsTableComponent {
   @Output() deleteTeam = new EventEmitter<string>();
   @Output() editParticipant = new EventEmitter<TeamParticipant>();
   @Output() deleteParticipant = new EventEmitter<string>();
+  @Output() openTeamDetail = new EventEmitter<string>();
 
   directLabel(team: TournamentTeamWithParticipants): string {
     const people = team.team_participants

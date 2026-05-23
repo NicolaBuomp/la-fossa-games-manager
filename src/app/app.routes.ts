@@ -59,19 +59,28 @@ export const routes: Routes = [
           ),
       },
       {
-        path: "registrations",
+        path: "tornei",
         loadComponent: () =>
-          import("./features/registrations/registrations.component").then(
-            (m) => m.RegistrationsComponent,
+          import("./features/tornei/tornei-list.component").then(
+            (m) => m.TorneiListComponent,
           ),
       },
       {
-        path: "tournaments",
+        path: "tornei/:id",
         loadComponent: () =>
-          import("./features/tournaments/tournaments.component").then(
-            (m) => m.TournamentsComponent,
+          import("./features/tornei/tornei-detail.component").then(
+            (m) => m.TorneiDetailComponent,
           ),
       },
+      {
+        path: "tornei/:id/squadre/:teamId",
+        loadComponent: () =>
+          import("./features/tornei/team-detail.component").then(
+            (m) => m.TeamDetailComponent,
+          ),
+      },
+      { path: "registrations", redirectTo: "tornei", pathMatch: "full" },
+      { path: "tournaments", redirectTo: "tornei", pathMatch: "full" },
       {
         path: "participation-requests",
         loadComponent: () =>

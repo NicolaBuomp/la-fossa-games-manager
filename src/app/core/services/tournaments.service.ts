@@ -114,6 +114,16 @@ export class TournamentsService {
     );
   }
 
+  async getOperational(id: string): Promise<OperationalTournament | null> {
+    const { data, error } = await this.supabase.client
+      .from(SUPABASE_TABLE.Tournaments)
+      .select(TOURNAMENT_SELECT)
+      .eq("id", id)
+      .maybeSingle();
+    if (error) throw error;
+    return data ? this.normalizeTournament(data as OperationalTournament) : null;
+  }
+
   async generateGroupStage(
     tournamentId: string,
     groupCount: number,

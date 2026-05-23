@@ -170,13 +170,7 @@ export const SHELL_BADGE = {
 export const SHELL_NAV_ITEMS = [
   { path: "/app/dashboard", label: "Home", short: "H", group: "Gestionale" },
   {
-    path: "/app/registrations",
-    label: "Iscritti",
-    short: "I",
-    group: "Gestionale",
-  },
-  {
-    path: "/app/tournaments",
+    path: "/app/tornei",
     label: "Tornei",
     short: "T",
     group: "Gestionale",
