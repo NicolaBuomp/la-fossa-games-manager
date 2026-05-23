@@ -1,4 +1,11 @@
-import { Component, EventEmitter, Output } from "@angular/core";
+import {
+  Component,
+  ElementRef,
+  EventEmitter,
+  OnDestroy,
+  Output,
+  ViewChild,
+} from "@angular/core";
 import {
   SPONSOR_ASSETS,
   SponsorAsset,
@@ -61,6 +68,17 @@ import { SPONSOR_TIERS } from "./landing-content";
         display: flex;
         width: max-content;
         animation: tickerRight 36s linear infinite;
+      }
+      .ticker-wrapper {
+        cursor: grab;
+        user-select: none;
+      }
+      .ticker-wrapper.dragging {
+        cursor: grabbing;
+      }
+      .ticker-wrapper.dragging .ticker-track,
+      .ticker-wrapper.dragging .ticker-track-right {
+        animation-play-state: paused;
       }
       .ticker-wrapper:hover .ticker-track,
       .ticker-wrapper:hover .ticker-track-right {
@@ -406,7 +424,7 @@ import { SPONSOR_TIERS } from "./landing-content";
               </div>
             }
 
-            <!-- BRONZO: doppio ticker infinito -->
+            <!-- BRONZO: doppio ticker infinito con drag/swipe -->
             @if (bronzeSponsors.length) {
               <div class="mt-8">
                 <div class="mb-4 flex items-center gap-3">
@@ -420,15 +438,21 @@ import { SPONSOR_TIERS } from "./landing-content";
                 </div>
 
                 <!-- Riga 1: scorre a sinistra -->
-                <div class="ticker-wrapper overflow-hidden">
+                <div
+                  #tickerWrapper1
+                  class="ticker-wrapper overflow-hidden"
+                  (mousedown)="onDragStart($event, 1)"
+                  (touchstart)="onTouchStart($event, 1)"
+                >
                   <div
+                    #tickerTrack1
                     class="ticker-track"
                     role="list"
                     aria-label="Sponsor Bronzo"
                   >
                     @for (logo of bronzeRow1; track $index) {
                       <div
-                        class="mx-2 flex min-h-28 w-40 shrink-0 flex-col items-center justify-center rounded-md border border-white/10 bg-white px-2 py-3 transition-all duration-300 hover:border-[#d98945]/40 hover:shadow-[0_0_20px_rgba(217,137,69,0.25)] sm:w-48 lg:w-52"
+                        class="mx-2 flex min-h-28 w-40 shrink-0 flex-col items-center justify-center rounded-md border border-white/10 bg-white px-2 py-3 transition-colors duration-300 hover:border-[#d98945]/40 hover:shadow-[0_0_20px_rgba(217,137,69,0.25)] sm:w-48 lg:w-52"
                         [attr.role]="
                           $index < bronzeSponsors.length ? 'listitem' : null
                         "
@@ -446,6 +470,7 @@ import { SPONSOR_TIERS } from "./landing-content";
                             "
                             class="h-full w-full object-contain object-center"
                             loading="lazy"
+                            draggable="false"
                           />
                         </div>
                         <p
@@ -460,15 +485,21 @@ import { SPONSOR_TIERS } from "./landing-content";
 
                 <!-- Riga 2: scorre a destra (direzione opposta) -->
                 @if (bronzeRow2.length > 0) {
-                  <div class="ticker-wrapper mt-3 overflow-hidden">
+                  <div
+                    #tickerWrapper2
+                    class="ticker-wrapper mt-3 overflow-hidden"
+                    (mousedown)="onDragStart($event, 2)"
+                    (touchstart)="onTouchStart($event, 2)"
+                  >
                     <div
+                      #tickerTrack2
                       class="ticker-track-right"
                       role="presentation"
                       aria-hidden="true"
                     >
                       @for (logo of bronzeRow2; track $index) {
                         <div
-                          class="mx-2 flex min-h-28 w-40 shrink-0 flex-col items-center justify-center rounded-md border border-white/10 bg-white px-2 py-3 transition-all duration-300 hover:border-[#d98945]/40 hover:shadow-[0_0_20px_rgba(217,137,69,0.25)] sm:w-48 lg:w-52"
+                          class="mx-2 flex min-h-28 w-40 shrink-0 flex-col items-center justify-center rounded-md border border-white/10 bg-white px-2 py-3 transition-colors duration-300 hover:border-[#d98945]/40 hover:shadow-[0_0_20px_rgba(217,137,69,0.25)] sm:w-48 lg:w-52"
                         >
                           <div
                             class="flex h-20 w-full items-center justify-center"
@@ -478,6 +509,7 @@ import { SPONSOR_TIERS } from "./landing-content";
                               [alt]="''"
                               class="h-full w-full object-contain object-center"
                               loading="lazy"
+                              draggable="false"
                             />
                           </div>
                           <p
@@ -508,8 +540,13 @@ import { SPONSOR_TIERS } from "./landing-content";
     </section>
   `,
 })
-export class LandingSponsorSectionComponent {
+export class LandingSponsorSectionComponent implements OnDestroy {
   @Output() sponsorContact = new EventEmitter<MouseEvent>();
+
+  @ViewChild("tickerWrapper1") tickerWrapper1!: ElementRef<HTMLElement>;
+  @ViewChild("tickerTrack1") tickerTrack1!: ElementRef<HTMLElement>;
+  @ViewChild("tickerWrapper2") tickerWrapper2!: ElementRef<HTMLElement>;
+  @ViewChild("tickerTrack2") tickerTrack2!: ElementRef<HTMLElement>;
 
   protected readonly tierIcon: Record<string, string> = {
     Platino: "✦",
@@ -536,14 +573,137 @@ export class LandingSponsorSectionComponent {
   protected readonly bronzeRow1: SponsorAsset[];
   protected readonly bronzeRow2: SponsorAsset[];
 
+  private dragState: {
+    row: 1 | 2;
+    startX: number;
+    currentTranslate: number;
+    trackWidth: number;
+    animDuration: number;
+  } | null = null;
+
+  private readonly boundMouseMove = this.onDragMove.bind(this);
+  private readonly boundMouseUp = this.onDragEnd.bind(this);
+  private readonly boundTouchMove = this.onTouchMove.bind(this);
+  private readonly boundTouchEnd = this.onDragEnd.bind(this);
+
   constructor() {
     const bronze = this.bronzeSponsors;
     const half = Math.ceil(bronze.length / 2);
     const firstHalf = bronze.slice(0, half);
     const secondHalf = bronze.slice(half);
-    // Duplica ogni metà per il loop seamless
     this.bronzeRow1 = [...firstHalf, ...firstHalf];
     this.bronzeRow2 =
       secondHalf.length > 0 ? [...secondHalf, ...secondHalf] : [];
+  }
+
+  ngOnDestroy(): void {
+    this.removeListeners();
+  }
+
+  protected onDragStart(event: MouseEvent, row: 1 | 2): void {
+    event.preventDefault();
+    this.startDrag(event.clientX, row);
+    document.addEventListener("mousemove", this.boundMouseMove);
+    document.addEventListener("mouseup", this.boundMouseUp);
+  }
+
+  protected onTouchStart(event: TouchEvent, row: 1 | 2): void {
+    this.startDrag(event.touches[0].clientX, row);
+    document.addEventListener("touchmove", this.boundTouchMove, {
+      passive: true,
+    });
+    document.addEventListener("touchend", this.boundTouchEnd);
+  }
+
+  private startDrag(clientX: number, row: 1 | 2): void {
+    const track = row === 1 ? this.tickerTrack1 : this.tickerTrack2;
+    const wrapper = row === 1 ? this.tickerWrapper1 : this.tickerWrapper2;
+    if (!track?.nativeElement || !wrapper?.nativeElement) return;
+
+    const trackEl = track.nativeElement;
+    const wrapperEl = wrapper.nativeElement;
+
+    // Legge la posizione attuale della trasformazione applicata dall'animazione CSS
+    const matrix = new DOMMatrix(getComputedStyle(trackEl).transform);
+    const currentTranslate = matrix.m41;
+
+    const trackWidth = trackEl.scrollWidth;
+    const animDuration = row === 1 ? 30000 : 36000;
+
+    // Blocca l'animazione CSS congelandola sulla posizione corrente
+    trackEl.style.animationPlayState = "paused";
+    trackEl.style.transform = `translateX(${currentTranslate}px)`;
+    wrapperEl.classList.add("dragging");
+
+    this.dragState = {
+      row,
+      startX: clientX,
+      currentTranslate,
+      trackWidth,
+      animDuration,
+    };
+  }
+
+  private onDragMove(event: MouseEvent): void {
+    this.moveDrag(event.clientX);
+  }
+
+  private onTouchMove(event: TouchEvent): void {
+    this.moveDrag(event.touches[0].clientX);
+  }
+
+  private moveDrag(clientX: number): void {
+    if (!this.dragState) return;
+    const { row, startX, currentTranslate, trackWidth } = this.dragState;
+    const track = row === 1 ? this.tickerTrack1 : this.tickerTrack2;
+    if (!track?.nativeElement) return;
+
+    const delta = clientX - startX;
+    let newTranslate = currentTranslate + delta;
+
+    // Mantieni il valore nel range valido per il loop seamless (-50% .. 0)
+    const halfWidth = -(trackWidth / 2);
+    newTranslate = ((newTranslate - halfWidth) % (trackWidth / 2)) + halfWidth;
+    if (newTranslate > 0) newTranslate -= trackWidth / 2;
+
+    track.nativeElement.style.transform = `translateX(${newTranslate}px)`;
+    this.dragState = {
+      ...this.dragState,
+      currentTranslate: newTranslate,
+      startX: clientX,
+    };
+  }
+
+  private onDragEnd(): void {
+    if (!this.dragState) return;
+    const { row, currentTranslate, trackWidth, animDuration } = this.dragState;
+    const track = row === 1 ? this.tickerTrack1 : this.tickerTrack2;
+    const wrapper = row === 1 ? this.tickerWrapper1 : this.tickerWrapper2;
+
+    if (track?.nativeElement && wrapper?.nativeElement) {
+      const trackEl = track.nativeElement;
+      const wrapperEl = wrapper.nativeElement;
+
+      // Calcola il delay negativo per riprendere l'animazione dalla posizione corrente
+      // senza salto visivo
+      const halfWidth = trackWidth / 2;
+      const progress = Math.abs(currentTranslate) / halfWidth; // 0..1
+      const delay = -(progress * animDuration) / 1000;
+
+      trackEl.style.transform = "";
+      trackEl.style.animationDelay = `${delay}s`;
+      trackEl.style.animationPlayState = "running";
+      wrapperEl.classList.remove("dragging");
+    }
+
+    this.dragState = null;
+    this.removeListeners();
+  }
+
+  private removeListeners(): void {
+    document.removeEventListener("mousemove", this.boundMouseMove);
+    document.removeEventListener("mouseup", this.boundMouseUp);
+    document.removeEventListener("touchmove", this.boundTouchMove);
+    document.removeEventListener("touchend", this.boundTouchEnd);
   }
 }
