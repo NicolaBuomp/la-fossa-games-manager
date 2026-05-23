@@ -114,7 +114,7 @@ import { TeamParticipantRowComponent } from "./components/team-participant-row.c
       <div class="space-y-5 pt-6">
         @if (error()) {
           <p
-            class="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700"
+            class="form-error"
           >
             {{ error() }}
           </p>

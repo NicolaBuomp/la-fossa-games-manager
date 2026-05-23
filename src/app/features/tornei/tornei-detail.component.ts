@@ -140,7 +140,7 @@ const TABS: { id: TorneiTab; label: string; adminOnly?: boolean }[] = [
       <div class="pt-6">
         @if (error()) {
           <p
-            class="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700"
+            class="mb-4 form-error"
           >
             {{ error() }}
           </p>

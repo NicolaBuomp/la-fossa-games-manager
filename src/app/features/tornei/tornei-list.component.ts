@@ -53,7 +53,7 @@ import { TorneiCardComponent } from "./components/tornei-card.component";
     </header>
 
     @if (error()) {
-      <p class="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+      <p class="mb-4 form-error">
         {{ error() }}
       </p>
     }
@@ -68,6 +68,7 @@ import { TorneiCardComponent } from "./components/tornei-card.component";
       <lfg-empty-state
         title="Nessun torneo"
         text="Crea il primo torneo con il pulsante in alto."
+        icon="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"
       />
     } @else {
       <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">

@@ -77,7 +77,7 @@ function unlockGlobalScroll(): void {
   selector: "lfg-summary-card",
   standalone: true,
   template: `
-    <article class="rounded-lg border border-soft bg-surface p-4 shadow-sm">
+    <article class="flex h-full flex-col rounded-lg border border-soft bg-surface p-4 shadow-sm">
       <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-muted">
         {{ label }}
       </p>
@@ -145,7 +145,7 @@ export class KpiPanelComponent implements OnInit {
 
   ngOnInit(): void {
     if (this.storageKey) {
-      const stored = localStorage.getItem(`lfg-kpi-${this.storageKey}`);
+      const stored = localStorage.getItem(`lfg-kpi-v2-${this.storageKey}`);
       if (stored !== null) this.collapsed.set(stored === "1");
     }
   }
@@ -154,7 +154,7 @@ export class KpiPanelComponent implements OnInit {
     const next = !this.collapsed();
     this.collapsed.set(next);
     if (this.storageKey) {
-      localStorage.setItem(`lfg-kpi-${this.storageKey}`, next ? "1" : "0");
+      localStorage.setItem(`lfg-kpi-v2-${this.storageKey}`, next ? "1" : "0");
     }
   }
 }
@@ -166,6 +166,13 @@ export class KpiPanelComponent implements OnInit {
     <div
       class="mt-6 rounded-lg border border-dashed border-soft bg-surface px-6 py-12 text-center"
     >
+      @if (icon) {
+        <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-surface-muted">
+          <svg viewBox="0 0 24 24" class="h-6 w-6 text-muted" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" [attr.d]="icon"/>
+          </svg>
+        </div>
+      }
       <p class="text-sm font-semibold text-primary">{{ title }}</p>
       <p class="mt-1 text-xs text-muted">{{ text }}</p>
       @if (actionLabel) {
@@ -184,6 +191,7 @@ export class EmptyStateComponent {
   @Input() title = "Nessun dato";
   @Input() text = "Aggiungi il primo record per iniziare.";
   @Input() actionLabel = "";
+  @Input() icon = "";
   @Output() action = new EventEmitter<void>();
 }
 
@@ -222,7 +230,7 @@ export class EmptyStateComponent {
         class="flex min-h-full items-end justify-center p-0 sm:items-center sm:p-4"
       >
         <section
-          class="max-h-[92dvh] w-full overflow-y-auto rounded-t-2xl bg-surface text-primary shadow-2xl animate-slide-up sm:max-w-2xl sm:rounded-2xl"
+          class="max-h-[92dvh] w-full overflow-y-auto rounded-t-2xl bg-surface text-primary shadow-2xl animate-slide-up sm:animate-modal-in sm:max-w-2xl sm:rounded-2xl"
           (click)="$event.stopPropagation()"
         >
           <header

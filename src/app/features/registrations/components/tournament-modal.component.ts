@@ -77,11 +77,7 @@ import { ModalComponent } from "../../../shared/components/ui.component";
           </label>
 
           @if (error()) {
-            <p
-              class="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700"
-            >
-              {{ error() }}
-            </p>
+            <p class="form-error">{{ error() }}</p>
           }
 
           <button

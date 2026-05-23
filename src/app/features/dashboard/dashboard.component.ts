@@ -73,6 +73,17 @@ interface DashboardFinancials {
           </button>
         </div>
 
+        @if (loading() && !financials()) {
+          <!-- Skeleton primo caricamento -->
+          <div class="h-40 animate-pulse rounded-lg bg-surface-muted"></div>
+          <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+            @for (i of [1,2,3,4,5]; track i) {
+              <div class="h-24 animate-pulse rounded-lg bg-surface-muted"></div>
+            }
+          </div>
+          <div class="h-48 animate-pulse rounded-lg bg-surface-muted"></div>
+        }
+
         @if (hasPendingRequests()) {
           <section
             class="rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-950 shadow-sm"
@@ -128,19 +139,23 @@ interface DashboardFinancials {
           </section>
         }
 
-        <section class="bg-strong text-on-strong rounded-lg p-6">
-          <p class="text-xs font-bold uppercase tracking-[0.2em] text-white/50">
+        <section class="bg-strong text-on-strong relative overflow-hidden rounded-lg p-6">
+          <!-- Decorazione accent top-left -->
+          <div class="bg-accent absolute left-0 top-0 h-0.5 w-24 rounded-full opacity-90"></div>
+          <!-- Dot pattern sfondo -->
+          <div class="pointer-events-none absolute inset-0 opacity-[0.04]" style="background-image: radial-gradient(circle, #ffffff 1px, transparent 1px); background-size: 20px 20px;"></div>
+          <p class="eyebrow relative text-white/50">
             Saldo attuale
           </p>
           <p
-            class="mt-3 text-4xl font-black"
+            class="relative mt-3 text-4xl font-black"
             [class.text-emerald-300]="balance() >= 0"
             [class.text-red-300]="balance() < 0"
           >
             {{ eur(balance()) }}
           </p>
           <div
-            class="mt-6 grid gap-3 border-t border-white/10 pt-5 sm:grid-cols-3"
+            class="relative mt-6 grid gap-3 border-t border-white/10 pt-5 sm:grid-cols-3"
           >
             <div>
               <p
@@ -178,39 +193,44 @@ interface DashboardFinancials {
         <section class="grid grid-cols-2 gap-3 sm:hidden">
           <a
             routerLink="/app/registrations"
-            class="flex flex-col items-center justify-center gap-1 rounded-xl border border-soft bg-surface px-3 py-4 text-center shadow-sm"
+            class="hover-border-accent flex flex-col items-center justify-center gap-2 rounded-xl border border-soft bg-surface px-3 py-5 text-center shadow-sm transition"
           >
-            <span class="text-2xl">📋</span>
-            <span class="text-xs font-bold uppercase tracking-wide"
-              >Iscrizioni</span
-            >
+            <svg viewBox="0 0 24 24" class="h-6 w-6 text-muted" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+            </svg>
+            <span class="text-xs font-bold uppercase tracking-wide">Iscrizioni</span>
           </a>
           <a
             routerLink="/app/sponsors"
-            class="flex flex-col items-center justify-center gap-1 rounded-xl border border-soft bg-surface px-3 py-4 text-center shadow-sm"
+            class="hover-border-accent flex flex-col items-center justify-center gap-2 rounded-xl border border-soft bg-surface px-3 py-5 text-center shadow-sm transition"
           >
-            <span class="text-2xl">🤝</span>
-            <span class="text-xs font-bold uppercase tracking-wide"
-              >Sponsor</span
-            >
+            <svg viewBox="0 0 24 24" class="h-6 w-6 text-muted" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+            <span class="text-xs font-bold uppercase tracking-wide">Sponsor</span>
           </a>
           <a
             routerLink="/app/participation-requests"
-            class="flex flex-col items-center justify-center gap-1 rounded-xl border border-soft bg-surface px-3 py-4 text-center shadow-sm"
+            class="hover-border-accent relative flex flex-col items-center justify-center gap-2 rounded-xl border border-soft bg-surface px-3 py-5 text-center shadow-sm transition"
           >
-            <span class="text-2xl">📩</span>
-            <span class="text-xs font-bold uppercase tracking-wide"
-              >Richieste</span
-            >
+            <svg viewBox="0 0 24 24" class="h-6 w-6 text-muted" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+            </svg>
+            <span class="text-xs font-bold uppercase tracking-wide">Richieste</span>
+            @if (hasPendingRequests()) {
+              <span class="bg-accent text-on-accent absolute right-2 top-2 grid min-h-5 min-w-5 place-items-center rounded-full px-1 text-[10px] font-black leading-none">
+                {{ pendingTournamentRequests() + pendingSponsorRequests() }}
+              </span>
+            }
           </a>
           <a
             routerLink="/app/transactions"
-            class="flex flex-col items-center justify-center gap-1 rounded-xl border border-soft bg-surface px-3 py-4 text-center shadow-sm"
+            class="hover-border-accent flex flex-col items-center justify-center gap-2 rounded-xl border border-soft bg-surface px-3 py-5 text-center shadow-sm transition"
           >
-            <span class="text-2xl">💰</span>
-            <span class="text-xs font-bold uppercase tracking-wide"
-              >Transazioni</span
-            >
+            <svg viewBox="0 0 24 24" class="h-6 w-6 text-muted" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <span class="text-xs font-bold uppercase tracking-wide">Transazioni</span>
           </a>
         </section>
 
@@ -277,7 +297,7 @@ interface DashboardFinancials {
 
         @if (error()) {
           <p
-            class="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700"
+            class="form-error"
           >
             {{ error() }}
           </p>
@@ -340,23 +360,35 @@ interface DashboardFinancials {
           </button>
         </div>
 
+        @if (loading() && !auditLogs().length) {
+          <!-- Skeleton primo caricamento staff -->
+          <div class="h-32 animate-pulse rounded-lg bg-surface-muted"></div>
+          <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            @for (i of [1,2,3,4]; track i) {
+              <div class="h-24 animate-pulse rounded-lg bg-surface-muted"></div>
+            }
+          </div>
+        }
+
         @if (error()) {
           <p
-            class="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700"
+            class="form-error"
           >
             {{ error() }}
           </p>
         }
 
-        <section class="bg-strong text-on-strong rounded-lg p-5">
-          <p class="text-xs font-bold uppercase tracking-[0.2em] text-white/50">
+        <section class="bg-strong text-on-strong relative overflow-hidden rounded-lg p-5">
+          <div class="bg-accent absolute left-0 top-0 h-0.5 w-16 rounded-full opacity-90"></div>
+          <div class="pointer-events-none absolute inset-0 opacity-[0.04]" style="background-image: radial-gradient(circle, #ffffff 1px, transparent 1px); background-size: 20px 20px;"></div>
+          <p class="eyebrow relative text-white/50">
             Operatività personale
           </p>
-          <p class="mt-3 text-3xl font-black">
+          <p class="relative mt-3 text-3xl font-black">
             {{ totalStaffActions() }} attività tracciate
           </p>
           <div
-            class="mt-5 grid gap-3 border-t border-white/10 pt-5 sm:grid-cols-3"
+            class="relative mt-5 grid gap-3 border-t border-white/10 pt-5 sm:grid-cols-3"
           >
             <div>
               <p

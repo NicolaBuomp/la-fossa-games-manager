@@ -72,13 +72,13 @@ import { ModalComponent } from "../../../shared/components/ui.component";
           </label>
 
           <label
-            class="flex items-center gap-3 rounded-lg bg-surface-muted p-3 text-sm font-bold"
+            class="flex items-center gap-2 rounded-lg bg-surface-muted p-3 text-sm font-bold"
           >
             <input
               type="checkbox"
               name="paid"
               [(ngModel)]="form.paid"
-              class="h-5 w-5 disabled:cursor-not-allowed disabled:opacity-70"
+              class="h-4 w-4 disabled:cursor-not-allowed disabled:opacity-70"
             />
             Iscrizione pagata
           </label>
@@ -94,11 +94,7 @@ import { ModalComponent } from "../../../shared/components/ui.component";
           </label>
 
           @if (error()) {
-            <p
-              class="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700"
-            >
-              {{ error() }}
-            </p>
+            <p class="form-error">{{ error() }}</p>
           }
 
           <button

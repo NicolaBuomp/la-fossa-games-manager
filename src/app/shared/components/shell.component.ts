@@ -55,8 +55,8 @@ interface NavItem {
             }
             <a
               [routerLink]="item.path"
-              routerLinkActive="bg-accent text-on-accent"
-              class="flex items-center justify-between gap-3 rounded-lg px-4 py-3 text-sm font-bold uppercase tracking-wide text-muted transition hover:bg-surface-muted hover:text-primary"
+              routerLinkActive="bg-accent-5 border-l-[3px] border-accent text-primary"
+              class="flex items-center justify-between gap-3 rounded-lg border-l-[3px] border-transparent px-4 py-3 text-sm font-bold uppercase tracking-wide text-muted transition hover:bg-surface-muted hover:text-primary"
             >
               <span>{{ item.label }}</span>
               @if (badgeCount(item) > 0) {
@@ -69,14 +69,10 @@ interface NavItem {
             </a>
           }
         </nav>
-        <div class="border-t border-soft p-4">
-          <div class="mb-3 rounded-lg border border-soft bg-surface-muted p-2">
-            <p
-              class="text-[10px] font-bold uppercase tracking-[0.16em] text-muted"
-            >
-              Tema
-            </p>
-            <div class="mt-2 grid grid-cols-3 gap-1">
+        <div class="border-t border-soft p-5">
+          <div class="mb-4 rounded-lg border border-soft bg-surface-muted p-3">
+            <p class="eyebrow mb-2">Tema</p>
+            <div class="grid grid-cols-3 gap-1">
               @for (mode of themeModes; track mode.id) {
                 <button
                   type="button"
@@ -94,14 +90,21 @@ interface NavItem {
               }
             </div>
           </div>
-          <p class="truncate text-sm font-semibold">
-            {{ auth.profile()?.full_name || auth.user()?.email }}
-          </p>
-          <p class="mb-3 text-xs uppercase tracking-wider text-muted">
-            {{ auth.profile()?.roles?.join(', ') }}
-          </p>
+          <div class="flex items-center gap-3 py-1">
+            <div class="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-accent text-on-accent text-sm font-black">
+              {{ (auth.profile()?.full_name || auth.user()?.email || '?').charAt(0).toUpperCase() }}
+            </div>
+            <div class="min-w-0 flex-1">
+              <p class="truncate text-sm font-semibold leading-tight">
+                {{ auth.profile()?.full_name || auth.user()?.email }}
+              </p>
+              <p class="text-[10px] uppercase tracking-wider text-muted">
+                {{ auth.profile()?.roles?.join(', ') }}
+              </p>
+            </div>
+          </div>
           <button
-            class="hover-border-accent w-full rounded-lg border border-soft bg-surface-muted px-4 py-2 text-sm font-bold uppercase tracking-wide text-primary transition"
+            class="hover-border-accent mt-3 w-full rounded-lg border border-soft bg-surface-muted px-4 py-2 text-sm font-bold uppercase tracking-wide text-primary transition"
             (click)="auth.signOut()"
           >
             Esci
@@ -181,11 +184,11 @@ interface NavItem {
 
         @if (mobileMenuOpen()) {
           <div
-            class="fixed inset-0 z-40 bg-black/35 lg:hidden"
+            class="animate-fade-in fixed inset-0 z-40 bg-black/35 lg:hidden"
             (click)="closeMobileMenu()"
           ></div>
           <aside
-            class="fixed inset-y-0 left-0 z-50 flex w-72 max-w-[82vw] flex-col border-r border-soft bg-surface shadow-2xl lg:hidden"
+            class="animate-slide-in-left fixed inset-y-0 left-0 z-50 flex w-72 max-w-[82vw] flex-col border-r border-soft bg-surface shadow-2xl lg:hidden"
           >
             <div class="flex items-start justify-between gap-4 px-5 py-5">
               <div>
@@ -229,8 +232,8 @@ interface NavItem {
                 }
                 <a
                   [routerLink]="item.path"
-                  routerLinkActive="bg-accent text-on-accent"
-                  class="flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-bold uppercase tracking-wide text-muted transition hover:bg-surface-muted hover:text-primary"
+                  routerLinkActive="bg-accent-5 border-l-[3px] border-accent text-primary"
+                  class="flex items-center gap-3 rounded-lg border-l-[3px] border-transparent px-4 py-3 text-sm font-bold uppercase tracking-wide text-muted transition hover:bg-surface-muted hover:text-primary"
                   (click)="closeMobileMenu()"
                 >
                   <span class="min-w-0 flex-1">{{ item.label }}</span>
@@ -245,16 +248,10 @@ interface NavItem {
               }
             </nav>
 
-            <div class="border-t border-soft p-4">
-              <div
-                class="mb-3 rounded-lg border border-soft bg-surface-muted p-2"
-              >
-                <p
-                  class="text-[10px] font-bold uppercase tracking-[0.16em] text-muted"
-                >
-                  Tema
-                </p>
-                <div class="mt-2 grid grid-cols-3 gap-1">
+            <div class="border-t border-soft p-5">
+              <div class="mb-4 rounded-lg border border-soft bg-surface-muted p-3">
+                <p class="eyebrow mb-2">Tema</p>
+                <div class="grid grid-cols-3 gap-1">
                   @for (mode of themeModes; track mode.id) {
                     <button
                       type="button"
@@ -272,14 +269,21 @@ interface NavItem {
                   }
                 </div>
               </div>
-              <p class="truncate text-sm font-semibold">
-                {{ auth.profile()?.full_name || auth.user()?.email }}
-              </p>
-              <p class="mb-3 text-xs uppercase tracking-wider text-muted">
-                {{ auth.profile()?.roles?.join(', ') }}
-              </p>
+              <div class="flex items-center gap-3 py-1">
+                <div class="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-accent text-on-accent text-sm font-black">
+                  {{ (auth.profile()?.full_name || auth.user()?.email || '?').charAt(0).toUpperCase() }}
+                </div>
+                <div class="min-w-0 flex-1">
+                  <p class="truncate text-sm font-semibold leading-tight">
+                    {{ auth.profile()?.full_name || auth.user()?.email }}
+                  </p>
+                  <p class="text-[10px] uppercase tracking-wider text-muted">
+                    {{ auth.profile()?.roles?.join(', ') }}
+                  </p>
+                </div>
+              </div>
               <button
-                class="hover-border-accent w-full rounded-lg border border-soft bg-surface-muted px-4 py-2 text-sm font-bold uppercase tracking-wide text-primary transition"
+                class="hover-border-accent mt-3 w-full rounded-lg border border-soft bg-surface-muted px-4 py-2 text-sm font-bold uppercase tracking-wide text-primary transition"
                 (click)="auth.signOut()"
               >
                 Esci
@@ -289,10 +293,67 @@ interface NavItem {
         }
 
         <main
-          class="mx-auto w-full max-w-7xl px-4 pb-8 pt-5 sm:px-6 lg:px-8 lg:py-8"
+          class="mx-auto w-full max-w-7xl px-4 pb-8 pt-5 sm:px-6 lg:px-8 lg:py-8 md:pb-24 lg:pb-8"
         >
           <router-outlet />
         </main>
+
+        <!-- Bottom nav tablet (md: 768–1023px) -->
+        <nav
+          class="bg-surface border-t border-soft fixed inset-x-0 bottom-0 z-30 hidden md:flex lg:hidden"
+          aria-label="Navigazione principale"
+        >
+          @for (item of bottomNavItems(); track item.path) {
+            <a
+              [routerLink]="item.path"
+              routerLinkActive="text-accent"
+              class="relative flex flex-1 flex-col items-center justify-center gap-1 py-2.5 text-muted transition hover:text-primary"
+            >
+              @if (badgeCount(item) > 0) {
+                <span class="bg-accent text-on-accent absolute right-[calc(50%-18px)] top-1.5 grid min-h-4 min-w-4 place-items-center rounded-full px-1 text-[9px] font-black leading-none">
+                  {{ badgeCount(item) }}
+                </span>
+              }
+              <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+                @switch (item.path) {
+                  @case ('/app/dashboard') {
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                  }
+                  @case ('/app/tornei') {
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
+                  }
+                  @case ('/app/participation-requests') {
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                  }
+                  @case ('/app/sponsors') {
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                  }
+                  @case ('/app/transactions') {
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  }
+                }
+              </svg>
+              <span class="text-[10px] font-bold uppercase tracking-wide">{{ item.label }}</span>
+            </a>
+          }
+          <!-- Hamburger per voci extra -->
+          <button
+            type="button"
+            class="relative flex flex-1 flex-col items-center justify-center gap-1 py-2.5 text-muted transition hover:text-primary"
+            aria-label="Altro"
+            (click)="openMobileMenu()"
+          >
+            @if (totalBadgeCount() > 0) {
+              <span class="bg-accent text-on-accent absolute right-[calc(50%-18px)] top-1.5 grid min-h-4 min-w-4 place-items-center rounded-full px-1 text-[9px] font-black leading-none">
+                {{ totalBadgeCount() }}
+              </span>
+            }
+            <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
+            </svg>
+            <span class="text-[10px] font-bold uppercase tracking-wide">Altro</span>
+          </button>
+        </nav>
       </section>
     </div>
   `,
@@ -313,6 +374,17 @@ export class ShellComponent implements OnInit, OnDestroy {
   readonly totalBadgeCount = computed(() =>
     this.badges.tournamentRequests() + this.badges.sponsorRequests(),
   );
+
+  readonly bottomNavItems = computed(() => {
+    const bottomPaths = [
+      "/app/dashboard",
+      "/app/tornei",
+      "/app/participation-requests",
+      "/app/sponsors",
+      "/app/transactions",
+    ];
+    return this.visibleNav().filter((item) => bottomPaths.includes(item.path));
+  });
 
   isNewGroup(index: number): boolean {
     const items = this.visibleNav();

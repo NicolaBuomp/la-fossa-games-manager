@@ -25,25 +25,31 @@ import {
           <div class="grid gap-4 sm:grid-cols-2">
             <label class="grid gap-1 text-sm font-bold">
               Stato operativo
-              <select
-                [(ngModel)]="localStatus"
-                class="rounded-lg border border-soft bg-surface-muted px-3 py-3 font-normal"
-              >
-                @for (status of tournamentStatuses; track status.id) {
-                  <option [value]="status.id">{{ status.label }}</option>
-                }
-              </select>
+              <div class="relative">
+                <select
+                  [(ngModel)]="localStatus"
+                  class="w-full appearance-none rounded-lg border border-soft bg-surface-muted px-3 py-3 pr-9 font-normal"
+                >
+                  @for (status of tournamentStatuses; track status.id) {
+                    <option [value]="status.id">{{ status.label }}</option>
+                  }
+                </select>
+                <svg class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+              </div>
             </label>
             <label class="grid gap-1 text-sm font-bold">
               Visibilità pubblica
-              <select
-                [(ngModel)]="localPublicStatus"
-                class="rounded-lg border border-soft bg-surface-muted px-3 py-3 font-normal"
-              >
-                @for (status of publicStatuses; track status.id) {
-                  <option [value]="status.id">{{ status.label }}</option>
-                }
-              </select>
+              <div class="relative">
+                <select
+                  [(ngModel)]="localPublicStatus"
+                  class="w-full appearance-none rounded-lg border border-soft bg-surface-muted px-3 py-3 pr-9 font-normal"
+                >
+                  @for (status of publicStatuses; track status.id) {
+                    <option [value]="status.id">{{ status.label }}</option>
+                  }
+                </select>
+                <svg class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+              </div>
             </label>
           </div>
 

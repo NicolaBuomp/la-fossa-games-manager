@@ -35,11 +35,11 @@ export interface CrudFormField {
           @for (field of fields(); track field.name) {
             @if (field.type === "checkbox") {
               <label
-                class="flex items-start gap-3 rounded-lg border border-soft bg-surface-muted p-3 text-sm font-bold"
+                class="flex items-start gap-2 rounded-lg border border-soft bg-surface-muted p-3 text-sm font-bold"
               >
                 <input
                   type="checkbox"
-                  class="mt-1 h-4 w-4 disabled:cursor-not-allowed disabled:opacity-70"
+                  class="mt-0.5 h-4 w-4 disabled:cursor-not-allowed disabled:opacity-70"
                   [name]="field.name"
                   [ngModel]="form[field.name]"
                   (ngModelChange)="updateForm(field.name, $event)"
@@ -116,11 +116,7 @@ export interface CrudFormField {
             }
           }
           @if (error()) {
-            <p
-              class="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700"
-            >
-              {{ error() }}
-            </p>
+            <p class="form-error">{{ error() }}</p>
           }
           <button
             type="submit"
