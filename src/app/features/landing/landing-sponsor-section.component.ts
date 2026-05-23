@@ -8,6 +8,80 @@ import { SPONSOR_TIERS } from "./landing-content";
 @Component({
   selector: "lfg-landing-sponsor-section",
   standalone: true,
+  styles: [
+    `
+      @keyframes platinumPulse {
+        0%,
+        100% {
+          box-shadow:
+            0 0 32px rgba(229, 228, 226, 0.18),
+            0 0 64px rgba(229, 228, 226, 0.06);
+        }
+        50% {
+          box-shadow:
+            0 0 48px rgba(229, 228, 226, 0.38),
+            0 0 96px rgba(229, 228, 226, 0.14);
+        }
+      }
+      @keyframes silverPulse {
+        0%,
+        100% {
+          box-shadow:
+            0 0 24px rgba(200, 200, 200, 0.14),
+            0 0 48px rgba(200, 200, 200, 0.04);
+        }
+        50% {
+          box-shadow:
+            0 0 36px rgba(200, 200, 200, 0.28),
+            0 0 72px rgba(200, 200, 200, 0.1);
+        }
+      }
+      @keyframes tickerLeft {
+        from {
+          transform: translateX(0);
+        }
+        to {
+          transform: translateX(-50%);
+        }
+      }
+      @keyframes tickerRight {
+        from {
+          transform: translateX(-50%);
+        }
+        to {
+          transform: translateX(0);
+        }
+      }
+      .ticker-track {
+        display: flex;
+        width: max-content;
+        animation: tickerLeft 30s linear infinite;
+      }
+      .ticker-track-right {
+        display: flex;
+        width: max-content;
+        animation: tickerRight 36s linear infinite;
+      }
+      .ticker-wrapper:hover .ticker-track,
+      .ticker-wrapper:hover .ticker-track-right {
+        animation-play-state: paused;
+      }
+      .platinum-hero {
+        animation: platinumPulse 3s ease-in-out infinite;
+      }
+      .silver-hero {
+        animation: silverPulse 3.5s ease-in-out infinite;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .ticker-track,
+        .ticker-track-right,
+        .platinum-hero,
+        .silver-hero {
+          animation: none;
+        }
+      }
+    `,
+  ],
   template: `
     <section
       id="sponsor"
@@ -107,9 +181,13 @@ import { SPONSOR_TIERS } from "./landing-content";
               @if (tier.name === "Platino" || tier.name === "Oro") {
                 <span
                   class="absolute -top-3 left-5 rounded-full px-3 py-0.5 text-[0.65rem] font-black uppercase tracking-[0.18em] text-black"
-                  [class]="tier.name === 'Platino' ? 'bg-[#e5e4e2]' : 'bg-[#ffd400]'"
+                  [class]="
+                    tier.name === 'Platino' ? 'bg-[#e5e4e2]' : 'bg-[#ffd400]'
+                  "
                 >
-                  {{ tier.name === "Platino" ? "Top di gamma" : "Più equilibrato" }}
+                  {{
+                    tier.name === "Platino" ? "Top di gamma" : "Più equilibrato"
+                  }}
                 </span>
               }
               <div class="flex items-center gap-4">
@@ -182,50 +260,64 @@ import { SPONSOR_TIERS } from "./landing-content";
               </div>
             </div>
 
+            <!-- PLATINO: card hero centrata con glow pulsante -->
             @if (platinumSponsors.length) {
-              <div class="mt-7">
-                <div
-                  class="mb-3 flex items-center justify-between gap-3 text-xs font-black uppercase tracking-[0.22em]"
-                >
-                  <p class="text-accent">Platino</p>
+              <div class="mt-8">
+                <div class="mb-4 flex items-center gap-3">
+                  <span class="text-sm text-[#e5e4e2]">✦</span>
+                  <p
+                    class="text-xs font-black uppercase tracking-[0.28em] text-[#e5e4e2]"
+                  >
+                    Platino
+                  </p>
                 </div>
-                <div
-                  class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3"
-                >
+                <div class="flex flex-wrap justify-center gap-5">
                   @for (logo of platinumSponsors; track logo.src) {
                     <article
-                      class="sponsor-logo-card flex min-h-52 flex-col items-center justify-center rounded-md border border-accent/30 bg-white px-5 py-6 shadow-[0_18px_40px_rgba(0,0,0,0.2)] transition-all duration-300 hover:-translate-y-0.5 hover:border-[#ffd400]/60 hover:shadow-[0_0_28px_rgba(255,212,0,0.35)] lg:min-h-72 lg:p-6"
+                      class="platinum-hero relative flex w-full max-w-sm flex-col items-center justify-center rounded-xl border border-[#e5e4e2]/40 bg-white px-8 py-8 transition-transform duration-300 hover:-translate-y-1"
                     >
-                      <div
-                        class="flex h-40 w-full items-center justify-center lg:h-56"
+                      <span
+                        class="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-[#e5e4e2] px-4 py-1 text-[0.6rem] font-black uppercase tracking-[0.22em] text-black"
                       >
+                        Partner Ufficiale
+                      </span>
+                      <div class="flex h-44 w-full items-center justify-center">
                         <img
                           [src]="logo.src"
                           [alt]="logo.name"
-                          class="h-full w-full object-contain object-center lg:scale-110"
+                          class="h-full w-full object-contain object-center"
                           loading="lazy"
                         />
                       </div>
-                      <p class="mt-3 text-center text-[0.6rem] font-black uppercase tracking-widest text-black/40">{{ logo.name }}</p>
+                      <p
+                        class="mt-4 text-center text-[0.6rem] font-black uppercase tracking-widest text-black/40"
+                      >
+                        {{ logo.name }}
+                      </p>
                     </article>
                   }
                 </div>
               </div>
             }
 
+            <!-- ORO: grid standard -->
             @if (goldSponsors.length) {
-              <div class="mt-6">
-                <div
-                  class="mb-3 flex items-center justify-between gap-3 text-xs font-black uppercase tracking-[0.22em]"
-                >
-                  <p style="color: #ffd400">Sponsor Oro</p>
+              <div class="mt-8">
+                <div class="mb-4 flex items-center gap-3">
+                  <span class="text-sm" style="color: #ffd400">★</span>
+                  <p
+                    class="text-xs font-black uppercase tracking-[0.28em]"
+                    style="color: #ffd400"
+                  >
+                    Oro
+                  </p>
                 </div>
                 <div
                   class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3"
                 >
                   @for (logo of goldSponsors; track logo.src) {
                     <article
-                      class="sponsor-logo-card flex min-h-44 flex-col items-center justify-center rounded-md border border-[#ffd400]/25 bg-white px-4 py-5 transition-all duration-300 hover:-translate-y-0.5 hover:border-[#ffd400]/55 hover:shadow-[0_0_24px_rgba(255,212,0,0.30)] lg:min-h-56 lg:p-6"
+                      class="flex min-h-44 flex-col items-center justify-center rounded-md border border-[#ffd400]/25 bg-white px-4 py-5 transition-all duration-300 hover:-translate-y-0.5 hover:border-[#ffd400]/55 hover:shadow-[0_0_24px_rgba(255,212,0,0.30)] lg:min-h-56 lg:p-6"
                     >
                       <div
                         class="flex h-32 w-full items-center justify-center lg:h-44"
@@ -233,76 +325,171 @@ import { SPONSOR_TIERS } from "./landing-content";
                         <img
                           [src]="logo.src"
                           [alt]="logo.name"
-                          class="h-full w-full object-contain object-center lg:scale-110"
+                          class="h-full w-full object-contain object-center"
                           loading="lazy"
                         />
                       </div>
-                      <p class="mt-3 text-center text-[0.6rem] font-black uppercase tracking-widest text-black/40">{{ logo.name }}</p>
+                      <p
+                        class="mt-3 text-center text-[0.6rem] font-black uppercase tracking-widest text-black/40"
+                      >
+                        {{ logo.name }}
+                      </p>
                     </article>
                   }
                 </div>
               </div>
             }
 
+            <!-- ARGENTO: card singola con glow argento -->
             @if (silverSponsors.length) {
-              <div class="mt-6">
-                <div
-                  class="mb-3 flex items-center justify-between gap-3 text-xs font-black uppercase tracking-[0.22em]"
-                >
-                  <p style="color: #c8c8c8">Sponsor Argento</p>
+              <div class="mt-8">
+                <div class="mb-4 flex items-center gap-3">
+                  <span class="text-sm" style="color: #c8c8c8">◆</span>
+                  <p
+                    class="text-xs font-black uppercase tracking-[0.28em]"
+                    style="color: #c8c8c8"
+                  >
+                    Argento
+                  </p>
                 </div>
-                <div
-                  class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4"
-                >
-                  @for (logo of silverSponsors; track logo.src) {
-                    <article
-                      class="sponsor-logo-card flex min-h-36 flex-col items-center justify-center rounded-md border border-white/10 bg-white px-3 py-4 transition-all duration-300 hover:-translate-y-0.5 hover:border-[#c8c8c8]/50 hover:shadow-[0_0_24px_rgba(200,200,200,0.30)] lg:min-h-48 lg:px-4 lg:py-5"
-                    >
-                      <div
-                        class="flex h-28 w-full items-center justify-center lg:h-40"
+                @if (silverSponsors.length === 1) {
+                  <div class="flex flex-wrap justify-center gap-5">
+                    @for (logo of silverSponsors; track logo.src) {
+                      <article
+                        class="silver-hero relative flex w-full max-w-xs flex-col items-center justify-center rounded-xl border border-[#c8c8c8]/35 bg-white px-6 py-6 transition-transform duration-300 hover:-translate-y-1"
                       >
-                        <img
-                          [src]="logo.src"
-                          [alt]="logo.name"
-                          class="h-full w-full object-contain object-center lg:scale-125"
-                          loading="lazy"
-                        />
-                      </div>
-                      <p class="mt-2 text-center text-[0.6rem] font-black uppercase tracking-widest text-black/40">{{ logo.name }}</p>
-                    </article>
-                  }
-                </div>
+                        <div
+                          class="flex h-36 w-full items-center justify-center"
+                        >
+                          <img
+                            [src]="logo.src"
+                            [alt]="logo.name"
+                            class="h-full w-full object-contain object-center"
+                            loading="lazy"
+                          />
+                        </div>
+                        <p
+                          class="mt-3 text-center text-[0.6rem] font-black uppercase tracking-widest text-black/40"
+                        >
+                          {{ logo.name }}
+                        </p>
+                      </article>
+                    }
+                  </div>
+                } @else {
+                  <div
+                    class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4"
+                  >
+                    @for (logo of silverSponsors; track logo.src) {
+                      <article
+                        class="flex min-h-36 flex-col items-center justify-center rounded-md border border-white/10 bg-white px-3 py-4 transition-all duration-300 hover:-translate-y-0.5 hover:border-[#c8c8c8]/50 hover:shadow-[0_0_24px_rgba(200,200,200,0.30)] lg:min-h-48 lg:px-4 lg:py-5"
+                      >
+                        <div
+                          class="flex h-28 w-full items-center justify-center lg:h-40"
+                        >
+                          <img
+                            [src]="logo.src"
+                            [alt]="logo.name"
+                            class="h-full w-full object-contain object-center"
+                            loading="lazy"
+                          />
+                        </div>
+                        <p
+                          class="mt-2 text-center text-[0.6rem] font-black uppercase tracking-widest text-black/40"
+                        >
+                          {{ logo.name }}
+                        </p>
+                      </article>
+                    }
+                  </div>
+                }
               </div>
             }
 
+            <!-- BRONZO: doppio ticker infinito -->
             @if (bronzeSponsors.length) {
-              <div class="mt-5">
-                <div
-                  class="mb-2 flex items-center justify-between gap-3 text-xs font-black uppercase tracking-[0.22em]"
-                >
-                  <p style="color: #d98945">Sponsor Bronzo</p>
+              <div class="mt-8">
+                <div class="mb-4 flex items-center gap-3">
+                  <span class="text-sm" style="color: #d98945">●</span>
+                  <p
+                    class="text-xs font-black uppercase tracking-[0.28em]"
+                    style="color: #d98945"
+                  >
+                    Bronzo
+                  </p>
                 </div>
-                <div
-                  class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5"
-                >
-                  @for (logo of bronzeSponsors; track logo.src) {
-                    <article
-                      class="sponsor-logo-card flex min-h-28 flex-col items-center justify-center rounded-md border border-white/10 bg-white px-2 py-3 transition-all duration-300 hover:-translate-y-0.5 hover:border-[#d98945]/40 hover:shadow-[0_0_20px_rgba(217,137,69,0.25)] lg:min-h-36 lg:px-3"
-                    >
+
+                <!-- Riga 1: scorre a sinistra -->
+                <div class="ticker-wrapper overflow-hidden">
+                  <div
+                    class="ticker-track"
+                    role="list"
+                    aria-label="Sponsor Bronzo"
+                  >
+                    @for (logo of bronzeRow1; track $index) {
                       <div
-                        class="flex h-20 w-full items-center justify-center lg:h-28"
+                        class="mx-2 flex min-h-28 w-40 shrink-0 flex-col items-center justify-center rounded-md border border-white/10 bg-white px-2 py-3 transition-all duration-300 hover:border-[#d98945]/40 hover:shadow-[0_0_20px_rgba(217,137,69,0.25)] sm:w-48 lg:w-52"
+                        [attr.role]="
+                          $index < bronzeSponsors.length ? 'listitem' : null
+                        "
+                        [attr.aria-hidden]="
+                          $index >= bronzeSponsors.length ? 'true' : null
+                        "
                       >
-                        <img
-                          [src]="logo.src"
-                          [alt]="logo.name"
-                          class="h-full w-full object-contain object-center lg:scale-[1.35]"
-                          loading="lazy"
-                        />
+                        <div
+                          class="flex h-20 w-full items-center justify-center"
+                        >
+                          <img
+                            [src]="logo.src"
+                            [alt]="
+                              $index < bronzeSponsors.length ? logo.name : ''
+                            "
+                            class="h-full w-full object-contain object-center"
+                            loading="lazy"
+                          />
+                        </div>
+                        <p
+                          class="mt-2 text-center text-[0.55rem] font-black uppercase tracking-widest text-black/40"
+                        >
+                          {{ logo.name }}
+                        </p>
                       </div>
-                      <p class="mt-2 text-center text-[0.55rem] font-black uppercase tracking-widest text-black/40">{{ logo.name }}</p>
-                    </article>
-                  }
+                    }
+                  </div>
                 </div>
+
+                <!-- Riga 2: scorre a destra (direzione opposta) -->
+                @if (bronzeRow2.length > 0) {
+                  <div class="ticker-wrapper mt-3 overflow-hidden">
+                    <div
+                      class="ticker-track-right"
+                      role="presentation"
+                      aria-hidden="true"
+                    >
+                      @for (logo of bronzeRow2; track $index) {
+                        <div
+                          class="mx-2 flex min-h-28 w-40 shrink-0 flex-col items-center justify-center rounded-md border border-white/10 bg-white px-2 py-3 transition-all duration-300 hover:border-[#d98945]/40 hover:shadow-[0_0_20px_rgba(217,137,69,0.25)] sm:w-48 lg:w-52"
+                        >
+                          <div
+                            class="flex h-20 w-full items-center justify-center"
+                          >
+                            <img
+                              [src]="logo.src"
+                              [alt]="''"
+                              class="h-full w-full object-contain object-center"
+                              loading="lazy"
+                            />
+                          </div>
+                          <p
+                            class="mt-2 text-center text-[0.55rem] font-black uppercase tracking-widest text-black/40"
+                          >
+                            {{ logo.name }}
+                          </p>
+                        </div>
+                      }
+                    </div>
+                  </div>
+                }
               </div>
             }
           </div>
@@ -345,4 +532,18 @@ export class LandingSponsorSectionComponent {
     (s) => s.category === "bronzo",
   );
   protected readonly hasSponsorLogos = SPONSOR_ASSETS.length > 0;
+
+  protected readonly bronzeRow1: SponsorAsset[];
+  protected readonly bronzeRow2: SponsorAsset[];
+
+  constructor() {
+    const bronze = this.bronzeSponsors;
+    const half = Math.ceil(bronze.length / 2);
+    const firstHalf = bronze.slice(0, half);
+    const secondHalf = bronze.slice(half);
+    // Duplica ogni metà per il loop seamless
+    this.bronzeRow1 = [...firstHalf, ...firstHalf];
+    this.bronzeRow2 =
+      secondHalf.length > 0 ? [...secondHalf, ...secondHalf] : [];
+  }
 }
