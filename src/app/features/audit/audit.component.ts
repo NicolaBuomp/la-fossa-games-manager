@@ -7,7 +7,7 @@ import {
 import { ProfileService } from "../../core/services/profile.service";
 import { SnackbarService } from "../../core/services/snackbar.service";
 import { AuditLog, Profile } from "../../core/types/models";
-import { AUDIT_ACTIONS, FILTER_ALL } from "../../core/types/constants";
+import { AUDIT_ACTIONS, AUDIT_TABLE_LABELS, FILTER_ALL } from "../../core/types/constants";
 import { EmptyStateComponent } from "../../shared/components/ui.component";
 import { AuditActivityListComponent } from "./components/audit-activity-list.component";
 import { buildAuditActivities } from "./components/audit-activity-builder";
@@ -42,7 +42,7 @@ import { AuditDetailModalComponent } from "./components/audit-detail-modal.compo
       </div>
 
       <section class="rounded-lg border border-soft bg-surface p-4">
-        <div class="grid gap-3 md:grid-cols-[1fr_1fr_auto] md:items-end">
+        <div class="grid gap-3 md:grid-cols-[1fr_1fr_1fr_auto] md:items-end">
           <label class="block">
             <span class="text-xs font-bold uppercase tracking-wide text-muted">
               Utente
@@ -73,6 +73,22 @@ import { AuditDetailModalComponent } from "./components/audit-detail-modal.compo
               <option [value]="filterAll">Tutte</option>
               @for (actionOption of auditActions; track actionOption.id) {
                 <option [value]="actionOption.id">{{ actionOption.label }}</option>
+              }
+            </select>
+          </label>
+
+          <label class="block">
+            <span class="text-xs font-bold uppercase tracking-wide text-muted">
+              Entità
+            </span>
+            <select
+              class="mt-1 w-full rounded-lg px-3 py-2"
+              [ngModel]="tableName()"
+              (ngModelChange)="setTableName($event)"
+            >
+              <option value="">Tutte le entità</option>
+              @for (opt of tableOptions; track opt.id) {
+                <option [value]="opt.id">{{ opt.label }}</option>
               }
             </select>
           </label>
@@ -152,6 +168,7 @@ export class AuditComponent implements OnInit {
   pageSize = signal(20);
   action = signal<AuditActionFilter>(FILTER_ALL);
   changedBy = signal("");
+  tableName = signal("");
   selectedActivity = signal<AuditActivityItem | null>(null);
   loading = signal(false);
   error = signal("");
@@ -180,6 +197,7 @@ export class AuditComponent implements OnInit {
         pageSize: this.pageSize(),
         action: this.action(),
         changedBy: this.changedBy() || undefined,
+        tableName: this.tableName() || undefined,
       });
       this.rows.set(result.rows);
       this.total.set(result.total);
@@ -208,9 +226,16 @@ export class AuditComponent implements OnInit {
     void this.load();
   }
 
+  setTableName(value: string): void {
+    this.tableName.set(value);
+    this.page.set(1);
+    void this.load();
+  }
+
   resetFilters(): void {
     this.action.set(FILTER_ALL);
     this.changedBy.set("");
+    this.tableName.set("");
     this.page.set(1);
     void this.load();
   }
@@ -257,4 +282,7 @@ export class AuditComponent implements OnInit {
 
   protected readonly auditActions = AUDIT_ACTIONS;
   protected readonly filterAll = FILTER_ALL;
+  protected readonly tableOptions = Object.entries(AUDIT_TABLE_LABELS).map(
+    ([id, label]) => ({ id, label: label.charAt(0).toUpperCase() + label.slice(1) }),
+  );
 }

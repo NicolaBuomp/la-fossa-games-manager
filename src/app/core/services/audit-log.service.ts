@@ -10,6 +10,7 @@ export interface AuditLogQuery {
   pageSize: number;
   action?: AuditActionFilter;
   changedBy?: string;
+  tableName?: string;
 }
 
 export interface AuditLogPage {
@@ -49,6 +50,10 @@ export class AuditLogService {
 
     if (query.changedBy) {
       request = request.eq("changed_by", query.changedBy);
+    }
+
+    if (query.tableName) {
+      request = request.eq("table_name", query.tableName);
     }
 
     const { data, error, count } = await request;

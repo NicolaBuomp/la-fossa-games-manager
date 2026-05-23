@@ -1,5 +1,6 @@
 import { Component, EventEmitter, Input, Output } from "@angular/core";
 import { AuditActivityItem } from "./audit-activity.model";
+import { tableLabel } from "./audit-formatters";
 
 @Component({
   selector: "lfg-audit-activity-list",
@@ -9,14 +10,15 @@ import { AuditActivityItem } from "./audit-activity.model";
       @for (activity of activities; track activity.id) {
         <button
           type="button"
-          class="grid w-full gap-2 py-3 text-left transition hover:bg-surface-muted sm:grid-cols-[1fr_auto] sm:items-center"
+          class="grid w-full grid-cols-[auto_1fr_auto] items-center gap-x-3 py-3 text-left transition hover:bg-surface-muted"
           (click)="select.emit(activity)"
         >
+          <span [class]="activity.badgeClass" class="shrink-0">{{ activity.badge }}</span>
           <div class="min-w-0">
-            <p class="text-sm font-bold">{{ activity.title }}</p>
-            <p class="mt-1 text-xs text-muted">{{ activity.meta }}</p>
+            <p class="truncate text-sm font-bold leading-snug">{{ activity.title }}</p>
+            <p class="mt-0.5 text-xs text-muted">{{ entityLabel(activity) }}</p>
           </div>
-          <span [class]="activity.badgeClass">{{ activity.badge }}</span>
+          <p class="shrink-0 text-xs text-muted">{{ activity.meta }}</p>
         </button>
       }
     </div>
@@ -25,4 +27,9 @@ import { AuditActivityItem } from "./audit-activity.model";
 export class AuditActivityListComponent {
   @Input() activities: AuditActivityItem[] = [];
   @Output() select = new EventEmitter<AuditActivityItem>();
+
+  protected entityLabel(activity: AuditActivityItem): string {
+    const raw = tableLabel(activity.logs[0].table_name);
+    return raw.charAt(0).toUpperCase() + raw.slice(1);
+  }
 }
