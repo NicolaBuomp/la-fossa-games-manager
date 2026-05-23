@@ -1,10 +1,13 @@
 import {
+  AfterViewInit,
   Component,
   ElementRef,
   EventEmitter,
+  NgZone,
   OnDestroy,
   Output,
   ViewChild,
+  inject,
 } from "@angular/core";
 import {
   SPONSOR_ASSETS,
@@ -43,46 +46,21 @@ import { SPONSOR_TIERS } from "./landing-content";
             0 0 72px rgba(200, 200, 200, 0.1);
         }
       }
-      @keyframes tickerLeft {
-        from {
-          transform: translateX(0);
-        }
-        to {
-          transform: translateX(-50%);
-        }
-      }
-      @keyframes tickerRight {
-        from {
-          transform: translateX(-50%);
-        }
-        to {
-          transform: translateX(0);
-        }
-      }
-      .ticker-track {
-        display: flex;
-        width: max-content;
-        animation: tickerLeft 30s linear infinite;
-      }
+      .ticker-track,
       .ticker-track-right {
         display: flex;
         width: max-content;
-        animation: tickerRight 36s linear infinite;
+        will-change: transform;
       }
       .ticker-wrapper {
         cursor: grab;
         user-select: none;
+        touch-action: pan-y;
+        overflow: hidden;
       }
       .ticker-wrapper.dragging {
         cursor: grabbing;
-      }
-      .ticker-wrapper.dragging .ticker-track,
-      .ticker-wrapper.dragging .ticker-track-right {
-        animation-play-state: paused;
-      }
-      .ticker-wrapper:hover .ticker-track,
-      .ticker-wrapper:hover .ticker-track-right {
-        animation-play-state: paused;
+        touch-action: none;
       }
       .platinum-hero {
         animation: platinumPulse 3s ease-in-out infinite;
@@ -91,8 +69,6 @@ import { SPONSOR_TIERS } from "./landing-content";
         animation: silverPulse 3.5s ease-in-out infinite;
       }
       @media (prefers-reduced-motion: reduce) {
-        .ticker-track,
-        .ticker-track-right,
         .platinum-hero,
         .silver-hero {
           animation: none;
@@ -540,7 +516,7 @@ import { SPONSOR_TIERS } from "./landing-content";
     </section>
   `,
 })
-export class LandingSponsorSectionComponent implements OnDestroy {
+export class LandingSponsorSectionComponent implements AfterViewInit, OnDestroy {
   @Output() sponsorContact = new EventEmitter<MouseEvent>();
 
   @ViewChild("tickerWrapper1") tickerWrapper1!: ElementRef<HTMLElement>;
@@ -573,18 +549,28 @@ export class LandingSponsorSectionComponent implements OnDestroy {
   protected readonly bronzeRow1: SponsorAsset[];
   protected readonly bronzeRow2: SponsorAsset[];
 
+  private readonly zone = inject(NgZone);
+
+  private rafId: number | null = null;
+  private lastTimestamp: number | null = null;
+  private speedPxPerMs1 = 0;
+  private speedPxPerMs2 = 0;
+  private pos1 = 0;
+  private pos2 = 0;
+  private halfWidth1 = 0;
+  private halfWidth2 = 0;
+  private reducedMotion = false;
+
   private dragState: {
     row: 1 | 2;
     startX: number;
-    currentTranslate: number;
-    trackWidth: number;
-    animDuration: number;
+    lastPos: number;
   } | null = null;
 
-  private readonly boundMouseMove = this.onDragMove.bind(this);
-  private readonly boundMouseUp = this.onDragEnd.bind(this);
-  private readonly boundTouchMove = this.onTouchMove.bind(this);
-  private readonly boundTouchEnd = this.onDragEnd.bind(this);
+  private readonly boundMouseMove = (e: MouseEvent) => this.onDragMove(e);
+  private readonly boundMouseUp = () => this.onDragEnd();
+  private readonly boundTouchMove = (e: TouchEvent) => this.onTouchMove(e);
+  private readonly boundTouchEnd = () => this.onDragEnd();
 
   constructor() {
     const bronze = this.bronzeSponsors;
@@ -596,8 +582,55 @@ export class LandingSponsorSectionComponent implements OnDestroy {
       secondHalf.length > 0 ? [...secondHalf, ...secondHalf] : [];
   }
 
+  ngAfterViewInit(): void {
+    this.reducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+    if (this.reducedMotion) return;
+
+    this.halfWidth1 = this.tickerTrack1.nativeElement.scrollWidth / 2;
+    this.halfWidth2 = this.tickerTrack2?.nativeElement
+      ? this.tickerTrack2.nativeElement.scrollWidth / 2
+      : 0;
+
+    this.pos1 = 0;
+    this.pos2 = this.halfWidth2 > 0 ? -this.halfWidth2 : 0;
+
+    this.speedPxPerMs1 = this.halfWidth1 / 30000;
+    this.speedPxPerMs2 = this.halfWidth2 > 0 ? this.halfWidth2 / 36000 : 0;
+
+    this.zone.runOutsideAngular(() => {
+      this.rafId = requestAnimationFrame(this.tick.bind(this));
+    });
+  }
+
   ngOnDestroy(): void {
+    if (this.rafId !== null) {
+      cancelAnimationFrame(this.rafId);
+      this.rafId = null;
+    }
     this.removeListeners();
+  }
+
+  private tick(timestamp: number): void {
+    if (this.lastTimestamp !== null && !this.dragState) {
+      const elapsed = timestamp - this.lastTimestamp;
+
+      if (this.halfWidth1 > 0) {
+        this.pos1 -= this.speedPxPerMs1 * elapsed;
+        if (this.pos1 <= -this.halfWidth1) this.pos1 += this.halfWidth1;
+        this.tickerTrack1.nativeElement.style.transform = `translateX(${this.pos1}px)`;
+      }
+
+      if (this.halfWidth2 > 0 && this.tickerTrack2?.nativeElement) {
+        this.pos2 += this.speedPxPerMs2 * elapsed;
+        if (this.pos2 >= 0) this.pos2 -= this.halfWidth2;
+        this.tickerTrack2.nativeElement.style.transform = `translateX(${this.pos2}px)`;
+      }
+    }
+
+    this.lastTimestamp = timestamp;
+    this.rafId = requestAnimationFrame(this.tick.bind(this));
   }
 
   protected onDragStart(event: MouseEvent, row: 1 | 2): void {
@@ -608,39 +641,23 @@ export class LandingSponsorSectionComponent implements OnDestroy {
   }
 
   protected onTouchStart(event: TouchEvent, row: 1 | 2): void {
+    event.preventDefault();
     this.startDrag(event.touches[0].clientX, row);
     document.addEventListener("touchmove", this.boundTouchMove, {
-      passive: true,
+      passive: false,
     });
     document.addEventListener("touchend", this.boundTouchEnd);
   }
 
   private startDrag(clientX: number, row: 1 | 2): void {
-    const track = row === 1 ? this.tickerTrack1 : this.tickerTrack2;
     const wrapper = row === 1 ? this.tickerWrapper1 : this.tickerWrapper2;
-    if (!track?.nativeElement || !wrapper?.nativeElement) return;
+    if (!wrapper?.nativeElement) return;
 
-    const trackEl = track.nativeElement;
-    const wrapperEl = wrapper.nativeElement;
-
-    // Legge la posizione attuale della trasformazione applicata dall'animazione CSS
-    const matrix = new DOMMatrix(getComputedStyle(trackEl).transform);
-    const currentTranslate = matrix.m41;
-
-    const trackWidth = trackEl.scrollWidth;
-    const animDuration = row === 1 ? 30000 : 36000;
-
-    // Blocca l'animazione CSS congelandola sulla posizione corrente
-    trackEl.style.animationPlayState = "paused";
-    trackEl.style.transform = `translateX(${currentTranslate}px)`;
-    wrapperEl.classList.add("dragging");
-
+    wrapper.nativeElement.classList.add("dragging");
     this.dragState = {
       row,
       startX: clientX,
-      currentTranslate,
-      trackWidth,
-      animDuration,
+      lastPos: row === 1 ? this.pos1 : this.pos2,
     };
   }
 
@@ -649,54 +666,43 @@ export class LandingSponsorSectionComponent implements OnDestroy {
   }
 
   private onTouchMove(event: TouchEvent): void {
+    event.preventDefault();
     this.moveDrag(event.touches[0].clientX);
   }
 
   private moveDrag(clientX: number): void {
     if (!this.dragState) return;
-    const { row, startX, currentTranslate, trackWidth } = this.dragState;
+    const { row, startX, lastPos } = this.dragState;
     const track = row === 1 ? this.tickerTrack1 : this.tickerTrack2;
     if (!track?.nativeElement) return;
 
+    const halfWidth = row === 1 ? this.halfWidth1 : this.halfWidth2;
+    if (halfWidth === 0) return;
+
     const delta = clientX - startX;
-    let newTranslate = currentTranslate + delta;
+    let newPos = lastPos + delta;
 
-    // Mantieni il valore nel range valido per il loop seamless (-50% .. 0)
-    const halfWidth = -(trackWidth / 2);
-    newTranslate = ((newTranslate - halfWidth) % (trackWidth / 2)) + halfWidth;
-    if (newTranslate > 0) newTranslate -= trackWidth / 2;
+    newPos = ((newPos % halfWidth) + halfWidth) % halfWidth;
+    if (newPos > 0) newPos -= halfWidth;
 
-    track.nativeElement.style.transform = `translateX(${newTranslate}px)`;
-    this.dragState = {
-      ...this.dragState,
-      currentTranslate: newTranslate,
-      startX: clientX,
-    };
+    if (row === 1) this.pos1 = newPos;
+    else this.pos2 = newPos;
+
+    track.nativeElement.style.transform = `translateX(${newPos}px)`;
+    this.dragState = { ...this.dragState, startX: clientX, lastPos: newPos };
   }
 
   private onDragEnd(): void {
     if (!this.dragState) return;
-    const { row, currentTranslate, trackWidth, animDuration } = this.dragState;
-    const track = row === 1 ? this.tickerTrack1 : this.tickerTrack2;
+    const { row } = this.dragState;
     const wrapper = row === 1 ? this.tickerWrapper1 : this.tickerWrapper2;
 
-    if (track?.nativeElement && wrapper?.nativeElement) {
-      const trackEl = track.nativeElement;
-      const wrapperEl = wrapper.nativeElement;
-
-      // Calcola il delay negativo per riprendere l'animazione dalla posizione corrente
-      // senza salto visivo
-      const halfWidth = trackWidth / 2;
-      const progress = Math.abs(currentTranslate) / halfWidth; // 0..1
-      const delay = -(progress * animDuration) / 1000;
-
-      trackEl.style.transform = "";
-      trackEl.style.animationDelay = `${delay}s`;
-      trackEl.style.animationPlayState = "running";
-      wrapperEl.classList.remove("dragging");
+    if (wrapper?.nativeElement) {
+      wrapper.nativeElement.classList.remove("dragging");
     }
 
     this.dragState = null;
+    this.lastTimestamp = null;
     this.removeListeners();
   }
 
