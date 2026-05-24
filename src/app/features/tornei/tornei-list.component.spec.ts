@@ -13,7 +13,6 @@ describe("TorneiListComponent", () => {
       id: "t-1",
       code: "calcio-a-5",
       name: "Calcio a 5",
-      sport: "calcio",
       fee: 30,
       date: null,
       status: "registrations_open",

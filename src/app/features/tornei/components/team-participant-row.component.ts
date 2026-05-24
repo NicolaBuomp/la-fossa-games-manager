@@ -1,7 +1,6 @@
 import { Component, EventEmitter, Input, Output, signal } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { TeamParticipant, InsertTeamParticipant } from "../../../core/types/models";
-import { PARTICIPANT_GENDER, PARTICIPANT_GENDER_OPTIONS } from "../../../core/types/constants";
 
 @Component({
   selector: "lfg-team-participant-row",
@@ -30,12 +29,6 @@ import { PARTICIPANT_GENDER, PARTICIPANT_GENDER_OPTIONS } from "../../../core/ty
               @if (participant.contact) {
                 <span class="text-xs text-muted">{{ participant.contact }}</span>
               }
-              <span
-                class="rounded px-1.5 py-0.5 text-[10px] font-bold uppercase"
-                [class]="participant.gender === 'donna' ? 'state-info' : 'state-neutral'"
-              >
-                {{ participant.gender === 'donna' ? '♀ Donna' : '♂ Uomo' }}
-              </span>
               @if (participant.registered) {
                 <span class="rounded bg-yellow-100 px-1.5 py-0.5 text-[10px] font-bold uppercase text-yellow-800">
                   FIPAV
@@ -101,17 +94,6 @@ import { PARTICIPANT_GENDER, PARTICIPANT_GENDER_OPTIONS } from "../../../core/ty
                 class="rounded-lg border border-soft bg-surface-muted px-3 py-2.5 text-sm font-normal"
               />
             </label>
-            <label class="grid gap-1 text-xs font-bold uppercase text-muted">
-              Genere
-              <select
-                [(ngModel)]="editForm.gender"
-                class="rounded-lg border border-soft bg-surface-muted px-3 py-2.5 text-sm font-normal"
-              >
-                @for (opt of genderOptions; track opt.id) {
-                  <option [value]="opt.id">{{ opt.label }}</option>
-                }
-              </select>
-            </label>
             @if (isFipavSport) {
               <label class="col-span-full flex items-center gap-2 text-sm font-bold">
                 <input type="checkbox" [(ngModel)]="editForm.registered" />
@@ -148,9 +130,8 @@ export class TeamParticipantRowComponent {
   @Output() save = new EventEmitter<InsertTeamParticipant>();
   @Output() delete = new EventEmitter<string>();
 
-  readonly genderOptions = PARTICIPANT_GENDER_OPTIONS;
   editing = signal(false);
-  editForm: InsertTeamParticipant = { team_id: "", first_name: "", last_name: "", contact: "", gender: PARTICIPANT_GENDER.Male, registered: false };
+  editForm: InsertTeamParticipant = { team_id: "", first_name: "", last_name: "", contact: "", registered: false };
 
   startEdit(): void {
     this.editForm = {
@@ -158,7 +139,6 @@ export class TeamParticipantRowComponent {
       first_name: this.participant.first_name,
       last_name: this.participant.last_name,
       contact: this.participant.contact ?? "",
-      gender: this.participant.gender,
       registered: this.participant.registered,
     };
     this.editing.set(true);

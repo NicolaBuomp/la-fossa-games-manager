@@ -9,7 +9,6 @@ describe("TorneiCardComponent", () => {
       id: "t-1",
       code: "calcio-a-5",
       name: "Calcio a 5",
-      sport: "calcio",
       fee: 30,
       date: null,
       status: "registrations_open",
@@ -35,65 +34,6 @@ describe("TorneiCardComponent", () => {
     c.tournament = tournament;
     return c;
   }
-
-  // ------------------------------------------------------------------ sportLabel
-  describe("sportLabel()", () => {
-    it("mappa calcio", () => {
-      const c = makeComponent(makeTournament());
-      expect(c.sportLabel("calcio")).toBe("Calcio a 5");
-    });
-
-    it("mappa pallavolo", () => {
-      const c = makeComponent(makeTournament());
-      expect(c.sportLabel("pallavolo")).toBe("Pallavolo");
-    });
-
-    it("mappa altro", () => {
-      const c = makeComponent(makeTournament());
-      expect(c.sportLabel("altro")).toBe("Altro");
-    });
-
-    it("restituisce il valore grezzo per sport sconosciuto", () => {
-      const c = makeComponent(makeTournament());
-      expect(c.sportLabel("unknown")).toBe("unknown");
-    });
-  });
-
-  // ------------------------------------------------------------------ sportEmoji
-  describe("sportEmoji()", () => {
-    it("restituisce ⚽ per calcio", () => {
-      const c = makeComponent(makeTournament());
-      expect(c.sportEmoji("calcio")).toBe("⚽");
-    });
-
-    it("restituisce 🏐 per pallavolo", () => {
-      const c = makeComponent(makeTournament());
-      expect(c.sportEmoji("pallavolo")).toBe("🏐");
-    });
-
-    it("restituisce 🏆 come fallback per sport sconosciuto", () => {
-      const c = makeComponent(makeTournament());
-      expect(c.sportEmoji("unknown")).toBe("🏆");
-    });
-  });
-
-  // ------------------------------------------------------------------ sportStyle
-  describe("sportStyle()", () => {
-    it("restituisce stile verde per calcio", () => {
-      const c = makeComponent(makeTournament());
-      expect(c.sportStyle("calcio")).toContain("#dcfce7");
-    });
-
-    it("restituisce stile blu per pallavolo", () => {
-      const c = makeComponent(makeTournament());
-      expect(c.sportStyle("pallavolo")).toContain("#dbeafe");
-    });
-
-    it("usa stile 'altro' come fallback", () => {
-      const c = makeComponent(makeTournament());
-      expect(c.sportStyle("unknown")).toContain("#f3e8ff");
-    });
-  });
 
   // ------------------------------------------------------------------ statusLabel / statusClass
   describe("statusLabel() e statusClass()", () => {

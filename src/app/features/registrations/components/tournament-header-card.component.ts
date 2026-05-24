@@ -16,8 +16,7 @@ import { TournamentWithTeams } from "../../../core/types/models";
               {{ currentTournament.name }}
             </h2>
             <p class="mt-1 text-xs leading-5 text-muted">
-              {{ currentTournament.sport }} · Quota:
-              {{ eur(currentTournament.fee || 0) }}
+              Quota: {{ eur(currentTournament.fee || 0) }}
             </p>
             @if (currentTournament.notes) {
               <p class="mt-2 break-words text-sm leading-5 text-muted">

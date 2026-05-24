@@ -1,4 +1,5 @@
 import { PublicTournament } from "../../core/types/models";
+import { DEFAULT_TOURNAMENT_CODE } from "../../core/types/constants";
 import { ModalComponent } from "../../shared/components/ui.component";
 import { LandingGame } from "./landing.models";
 import { Component, Input, Output, EventEmitter } from "@angular/core";
@@ -265,6 +266,6 @@ export class LandingTournamentsSectionComponent {
   }
 
   private isTournamentForGame(tournament: PublicTournament, game: LandingGame): boolean {
-    return this.sameTournamentName(tournament.name, game.name) || (game.name === "Green Volley" && tournament.sport === "pallavolo");
+    return this.sameTournamentName(tournament.name, game.name) || (game.name === "Green Volley" && tournament.code === DEFAULT_TOURNAMENT_CODE.Volleyball);
   }
 }

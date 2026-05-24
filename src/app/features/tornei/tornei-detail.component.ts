@@ -87,12 +87,11 @@ const TABS: { id: TorneiTab; label: string; adminOnly?: boolean }[] = [
               {{ tournament()!.name }}
             </h1>
             <p class="mt-1 text-xs font-semibold opacity-60">
-              {{ sportLabel(tournament()!.sport) }}
               @if (tournament()!.fee) {
-                · €{{ tournament()!.fee }}
+                €{{ tournament()!.fee }}
               }
               @if (tournament()!.date) {
-                · {{ dateLabel(tournament()!.date) }}
+                @if (tournament()!.fee) { · }{{ dateLabel(tournament()!.date) }}
               }
             </p>
           </div>
@@ -260,15 +259,6 @@ export class TorneiDetailComponent implements OnInit {
 
   goBack(): void {
     void this.router.navigate(["/app/tornei"]);
-  }
-
-  sportLabel(sport: string): string {
-    const map: Record<string, string> = {
-      calcio: "⚽ Calcio a 5",
-      pallavolo: "🏐 Pallavolo",
-      altro: "🎮 Altro",
-    };
-    return map[sport] ?? sport;
   }
 
   dateLabel(date: string | null | undefined): string {

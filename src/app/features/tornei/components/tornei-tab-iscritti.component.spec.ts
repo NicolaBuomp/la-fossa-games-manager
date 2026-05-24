@@ -37,7 +37,6 @@ describe("TorneiTabIscrittiComponent", () => {
       id: "t-1",
       code: "calcio-a-5",
       name: "Calcio a 5",
-      sport: "calcio",
       fee: 30,
       date: null,
       status: "registrations_open",
@@ -60,7 +59,6 @@ describe("TorneiTabIscrittiComponent", () => {
       first_name: "Luca",
       last_name: "Rossi",
       contact: "333",
-      gender: "uomo",
       registered: false,
       created_by: null,
       updated_by: null,
@@ -358,7 +356,7 @@ describe("TorneiTabIscrittiComponent", () => {
     it("blocca l'aggiunta di più di 1 tesserato FIPAV in pallavolo", async () => {
       const registeredParticipant = makeParticipant({ registered: true });
       const team = makeTeam({ team_participants: [registeredParticipant] });
-      const t = makeTournament({ code: "pallavolo", sport: "pallavolo", tournament_teams: [team] });
+      const t = makeTournament({ code: "pallavolo", tournament_teams: [team] });
       const { component, service } = setup(t);
 
       component.onNewParticipant("team-1");

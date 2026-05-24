@@ -13,7 +13,6 @@ describe("TournamentsComponent", () => {
       id: "tournament-1",
       code: "pallavolo",
       name: "Green Volley",
-      sport: "pallavolo",
       fee: 50,
       date: null,
       status: "registrations_open",

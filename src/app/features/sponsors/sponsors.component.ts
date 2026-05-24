@@ -10,12 +10,10 @@ import {
   FILTER_ALL,
   PAGE_SIZE,
   PAYMENT_METHODS,
-  PAYMENT_METHOD,
   SPONSOR_CATEGORY,
   SPONSOR_CATEGORIES,
   SPONSOR_STATUS,
   SPONSOR_STATUSES,
-  SPONSOR_TYPE,
 } from "../../core/types/constants";
 import {
   InsertSponsor,
@@ -24,7 +22,6 @@ import {
   SponsorCategory,
   SponsorStatus,
   SponsorsSummary,
-  SponsorType,
 } from "../../core/types/models";
 import {
   CrudFormField,
@@ -242,7 +239,7 @@ type SponsorForm = InsertSponsor & { withoutPromisedAmount: boolean };
                   <!-- Tags -->
                   <div class="mt-3 flex flex-wrap gap-1.5">
                     <span class="rounded-full bg-surface-muted px-2.5 py-1 text-[10px] font-bold uppercase">{{ categoryLabel(item.category) }}</span>
-                    <span class="rounded-full bg-surface-muted px-2.5 py-1 text-[10px] font-bold uppercase">{{ item.payment_method || sponsorTypeLabel(item.type) }}</span>
+                    <span class="rounded-full bg-surface-muted px-2.5 py-1 text-[10px] font-bold uppercase">{{ item.payment_method }}</span>
                   </div>
                   @if (item.notes) {
                     <p class="mt-2.5 text-sm italic text-muted">{{ item.notes }}</p>
@@ -511,19 +508,16 @@ export class SponsorsComponent implements OnInit {
       category: item.category ?? SPONSOR_CATEGORY.Bronzo,
       contact_name: item.contact_name,
       contact_info: item.contact_info,
-      type: item.type,
-      value: item.value,
-      promised_amount: Number(item.promised_amount ?? item.value ?? 0),
+      promised_amount: Number(item.promised_amount ?? 0),
       received_amount: Number(
-        item.received_amount ?? (item.status === SPONSOR_STATUS.Paid ? item.value : 0),
+        item.received_amount ?? (item.status === SPONSOR_STATUS.Paid ? item.promised_amount : 0),
       ),
-      payment_method: item.payment_method ?? this.sponsorTypeLabel(item.type),
+      payment_method: item.payment_method,
       responsible_user_id: item.responsible_user_id,
       status: item.status,
       deliverables: item.deliverables,
       notes: item.notes,
-      withoutPromisedAmount:
-        Number(item.promised_amount ?? item.value ?? 0) === 0,
+      withoutPromisedAmount: Number(item.promised_amount ?? 0) === 0,
     };
     this.modalOpen.set(true);
   }
@@ -542,8 +536,6 @@ export class SponsorsComponent implements OnInit {
         ...form,
         promised_amount: promisedAmount,
         received_amount: receivedAmount,
-        value: promisedAmount,
-        type: this.sponsorTypeForMethod(form.payment_method),
         responsible_user_id: this.auth.isAdmin()
           ? form.responsible_user_id || null
           : this.auth.profile()?.id || null,
@@ -566,9 +558,7 @@ export class SponsorsComponent implements OnInit {
     try {
       const payload: Partial<InsertSponsor> = { status };
       if (status === SPONSOR_STATUS.Paid && Number(item.received_amount || 0) === 0) {
-        payload.received_amount = Number(
-          item.promised_amount || item.value || 0,
-        );
+        payload.received_amount = Number(item.promised_amount || 0);
       }
       await this.sponsorService.update(item.id, payload);
       await Promise.all([this.load(), this.loadSummary()]);
@@ -641,7 +631,6 @@ export class SponsorsComponent implements OnInit {
     const promised = Number(this.form.promised_amount || 0);
     if (received > promised) {
       this.form.promised_amount = received;
-      this.form.value = received;
     }
     if (received > 0) {
       this.form.status = SPONSOR_STATUS.Paid;
@@ -653,19 +642,13 @@ export class SponsorsComponent implements OnInit {
   statusClass(status: SponsorStatus): string {
     return this.statuses.find((item) => item.id === status)?.className ?? "";
   }
-  sponsorTypeLabel(type: SponsorType): string {
-    return type === SPONSOR_TYPE.BankTransfer ? PAYMENT_METHOD.BankTransfer : "Cash";
-  }
-  sponsorTypeForMethod(method: string | null): SponsorType {
-    return method === PAYMENT_METHOD.BankTransfer ? SPONSOR_TYPE.BankTransfer : SPONSOR_TYPE.Cash;
-  }
   categoryLabel(category: SponsorCategory): string {
     return (
       SPONSOR_CATEGORIES.find((item) => item.id === category)?.label ?? category
     );
   }
   promisedAmountLabel(item: Sponsor): string {
-    const amount = Number(item.promised_amount ?? item.value ?? 0);
+    const amount = Number(item.promised_amount ?? 0);
     return amount > 0 ? this.eur(amount) : "Nessun importo";
   }
   eur(value: number): string {
@@ -695,8 +678,6 @@ export class SponsorsComponent implements OnInit {
       category: SPONSOR_CATEGORY.Bronzo,
       contact_name: "",
       contact_info: "",
-      type: SPONSOR_TYPE.Cash,
-      value: 0,
       promised_amount: 0,
       received_amount: 0,
       payment_method: PAYMENT_METHODS[0],
@@ -710,7 +691,6 @@ export class SponsorsComponent implements OnInit {
   syncValueMode(): void {
     if (this.form.withoutPromisedAmount) {
       this.form.promised_amount = 0;
-      this.form.value = 0;
     }
   }
 

@@ -13,14 +13,13 @@ import {
   RequestStatusCounts,
 } from "../../core/types/models";
 import {
+  DEFAULT_TOURNAMENT_CODE,
   DIRECT_TOURNAMENT_CODES,
   DUO_TOURNAMENT_CODES,
   FILTER_ALL,
   PAGE_SIZE,
-  PARTICIPANT_GENDER,
   PARTICIPATION_REQUEST_STATUS,
   PARTICIPATION_REQUEST_STATUSES,
-  TOURNAMENT_SPORT,
 } from "../../core/types/constants";
 import { PaginationComponent } from "../../shared/components/pagination.component";
 import {
@@ -117,7 +116,7 @@ type TransferForm = {
       <div class="relative">
         <input
           type="search"
-          placeholder="Cerca per nome o email…"
+          placeholder="Cerca per nome…"
           class="w-full rounded-lg border border-soft bg-surface px-4 py-2.5 text-sm outline-none placeholder:text-muted"
           [value]="searchQuery()"
           (input)="onSearchInput($any($event.target).value)"
@@ -745,11 +744,12 @@ export class ParticipationRequestsComponent implements OnInit {
   }
 
   isFootballRequest(request: ParticipationRequestWithTournament): boolean {
-    return request.tournaments?.sport === TOURNAMENT_SPORT.Football;
+    const code = request.tournaments?.code ?? '';
+    return code === DEFAULT_TOURNAMENT_CODE.Football5 || code === DEFAULT_TOURNAMENT_CODE.Football5Under15;
   }
 
   isVolleyballRequest(request: ParticipationRequestWithTournament): boolean {
-    return request.tournaments?.sport === TOURNAMENT_SPORT.Volleyball;
+    return request.tournaments?.code === DEFAULT_TOURNAMENT_CODE.Volleyball;
   }
 
   isDirectRequest(request: ParticipationRequestWithTournament): boolean {
@@ -767,7 +767,6 @@ export class ParticipationRequestsComponent implements OnInit {
       first_name: this.namePart(request.first_name),
       last_name: this.namePart(request.last_name),
       contact: this.normalizePhone(request.phone) || null,
-      gender: PARTICIPANT_GENDER.Male,
       registered: this.isVolleyballRequest(request)
         ? this.transferForm.participant_registered
         : false,
@@ -782,7 +781,6 @@ export class ParticipationRequestsComponent implements OnInit {
                 {
                   ...person2,
                   contact: person2.contact || null,
-                  gender: PARTICIPANT_GENDER.Male,
                   registered: false,
                 },
               ]

@@ -20,12 +20,11 @@ import {
   TournamentWithTeams,
 } from "../../../core/types/models";
 import {
+  DEFAULT_TOURNAMENT_CODE,
   DIRECT_TOURNAMENT_CODES,
   DUO_TOURNAMENT_CODES,
   FILTER_ALL,
-  PARTICIPANT_GENDER,
   TOURNAMENT_MIN_PARTICIPANTS_BY_CODE,
-  TOURNAMENT_SPORT,
 } from "../../../core/types/constants";
 import {
   FilterOption,
@@ -165,7 +164,7 @@ type DirectForm = {
     <!-- Participant Modal -->
     <lfg-participant-modal
       [open]="() => modalMode() === 'participant'"
-      [isFipavSport]="() => tournament().sport === 'pallavolo'"
+      [isFipavSport]="() => tournament().code === DEFAULT_TOURNAMENT_CODE.Volleyball"
       [formValue]="participantForm"
       [editing]="!!editingParticipant()"
       [loading]="saving"
@@ -200,6 +199,8 @@ export class TorneiTabIscrittiComponent implements OnChanges {
   @Input({ required: true }) tournament!: () => TournamentWithTeams;
   @Input({ required: true }) tournamentId!: string;
   @Output() reloadRequired = new EventEmitter<void>();
+
+  protected readonly DEFAULT_TOURNAMENT_CODE = DEFAULT_TOURNAMENT_CODE;
 
   readonly auth = inject(AuthService);
   private readonly service = inject(RegistrationsService);
@@ -340,7 +341,6 @@ export class TorneiTabIscrittiComponent implements OnChanges {
       first_name: participant.first_name,
       last_name: participant.last_name,
       contact: participant.contact || "",
-      gender: participant.gender || PARTICIPANT_GENDER.Male,
       registered: participant.registered || false,
     };
     this.modalMode.set("participant");
@@ -437,7 +437,7 @@ export class TorneiTabIscrittiComponent implements OnChanges {
       const registeredCount = team?.team_participants.filter(
         (p) => p.registered && p.id !== current?.id,
       ).length ?? 0;
-      if (t.sport === TOURNAMENT_SPORT.Volleyball && payload.registered && registeredCount >= 1) {
+      if (t.code === DEFAULT_TOURNAMENT_CODE.Volleyball && payload.registered && registeredCount >= 1) {
         throw new Error("Per il Green Volley è consentito massimo 1 tesserato FIPAV per squadra.");
       }
       const normalized: InsertTeamParticipant = {
@@ -445,7 +445,7 @@ export class TorneiTabIscrittiComponent implements OnChanges {
         first_name: payload.first_name.trim(),
         last_name: payload.last_name.trim(),
         contact: payload.contact?.trim() || null,
-        registered: t.sport === TOURNAMENT_SPORT.Volleyball ? Boolean(payload.registered) : false,
+        registered: t.code === DEFAULT_TOURNAMENT_CODE.Volleyball ? Boolean(payload.registered) : false,
       };
       if (current) {
         await this.service.updateParticipant(current.id, normalized);
@@ -486,12 +486,12 @@ export class TorneiTabIscrittiComponent implements OnChanges {
         await this.service.updateTeam(current.id, { name: teamName, paid: payload.paid });
         if (current.team_participants?.[0]) {
           await this.service.updateParticipant(current.team_participants[0].id, {
-            team_id: current.id, ...p1, gender: PARTICIPANT_GENDER.Male, registered: false,
+            team_id: current.id, ...p1, registered: false,
           });
         }
         if (this.isDuo() && current.team_participants?.[1]) {
           await this.service.updateParticipant(current.team_participants[1].id, {
-            team_id: current.id, ...p2, gender: PARTICIPANT_GENDER.Male, registered: false,
+            team_id: current.id, ...p2, registered: false,
           });
         }
       } else {
@@ -499,9 +499,9 @@ export class TorneiTabIscrittiComponent implements OnChanges {
           tournament_id: t.id, name: teamName, captain_name: null, captain_contact: null,
           vice_captain_name: null, vice_captain_contact: null, fee: t.fee, paid: payload.paid, notes: null,
         });
-        await this.service.createParticipant({ team_id: team.id, ...p1, gender: PARTICIPANT_GENDER.Male, registered: false });
+        await this.service.createParticipant({ team_id: team.id, ...p1, registered: false });
         if (this.isDuo()) {
-          await this.service.createParticipant({ team_id: team.id, ...p2, gender: PARTICIPANT_GENDER.Male, registered: false });
+          await this.service.createParticipant({ team_id: team.id, ...p2, registered: false });
         }
       }
       this.closeModal();
@@ -537,7 +537,7 @@ export class TorneiTabIscrittiComponent implements OnChanges {
   }
 
   private emptyParticipantForm(): InsertTeamParticipant {
-    return { team_id: "", first_name: "", last_name: "", contact: "", gender: PARTICIPANT_GENDER.Male, registered: false };
+    return { team_id: "", first_name: "", last_name: "", contact: "", registered: false };
   }
 
   private emptyDirectForm(): DirectForm {

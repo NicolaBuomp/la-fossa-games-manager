@@ -18,11 +18,11 @@ import {
 } from "../../core/services/tournaments.service";
 import { PublicTournament } from "../../core/types/models";
 import {
+  DEFAULT_TOURNAMENT_CODE,
   PAYMENT_METHOD,
   PUBLIC_SPONSOR_LEAD_DELIVERABLES,
   SPONSOR_CATEGORY,
   SPONSOR_STATUS,
-  SPONSOR_TYPE,
   TOURNAMENT_MATCH_STATUS,
 } from "../../core/types/constants";
 import { LANDING_GAMES } from "./landing-content";
@@ -446,8 +446,6 @@ export class LandingComponent implements OnInit, OnDestroy, AfterViewInit {
           contact_name: `${this.participationForm.first_name.trim()} ${this.participationForm.last_name.trim()}`,
           contact_info: normalizedPhone,
           category: SPONSOR_CATEGORY.Bronzo,
-          type: SPONSOR_TYPE.Cash,
-          value: 0,
           promised_amount: 0,
           received_amount: 0,
           payment_method: PAYMENT_METHOD.Cash,
@@ -667,7 +665,7 @@ export class LandingComponent implements OnInit, OnDestroy, AfterViewInit {
   ): boolean {
     return (
       this.sameTournamentName(tournament.name, game.name) ||
-      (game.name === "Green Volley" && tournament.sport === "pallavolo")
+      (game.name === "Green Volley" && tournament.code === DEFAULT_TOURNAMENT_CODE.Volleyball)
     );
   }
 

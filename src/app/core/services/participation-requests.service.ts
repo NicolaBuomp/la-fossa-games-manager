@@ -18,7 +18,7 @@ import { SupabaseService } from "./supabase.service";
 type RequestStatus = ParticipationRequest["status"];
 type TransferParticipant = Pick<
   InsertTeamParticipant,
-  "first_name" | "last_name" | "contact" | "gender" | "registered"
+  "first_name" | "last_name" | "contact" | "registered"
 >;
 
 export interface ParticipationRequestTransferPayload {
@@ -56,7 +56,7 @@ export class ParticipationRequestsService {
       }
       if (search) {
         filtered = filtered.or(
-          `first_name.ilike.%${search}%,last_name.ilike.%${search}%,email.ilike.%${search}%`,
+          `first_name.ilike.%${search}%,last_name.ilike.%${search}%`,
         );
       }
       return filtered.order("created_at", { ascending: false }).range(from, to);
@@ -66,7 +66,7 @@ export class ParticipationRequestsService {
       this.supabase.client
         .from(SUPABASE_TABLE.ParticipationRequests)
         .select(
-          "*, tournaments(name, code, sport, fee), participation_request_notes(*, profiles(full_name, email))",
+          "*, tournaments(name, code, fee), participation_request_notes(*, profiles(full_name, email))",
           { count: "exact" },
         ),
     );
@@ -80,7 +80,7 @@ export class ParticipationRequestsService {
       this.supabase.client
         .from(SUPABASE_TABLE.ParticipationRequests)
         .select(
-          "*, tournaments(name, code, sport, fee), participation_request_notes(*)",
+          "*, tournaments(name, code, fee), participation_request_notes(*)",
           { count: "exact" },
         ),
     );
@@ -93,7 +93,7 @@ export class ParticipationRequestsService {
     const baseOnly = await applyFilters(
       this.supabase.client
         .from(SUPABASE_TABLE.ParticipationRequests)
-        .select("*, tournaments(name, code, sport, fee)", { count: "exact" }),
+        .select("*, tournaments(name, code, fee)", { count: "exact" }),
     );
 
     if (baseOnly.error) throw error;

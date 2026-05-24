@@ -13,10 +13,8 @@ import {
 import {
   DEFAULT_TOURNAMENTS,
   DEFAULT_TOURNAMENT_CODES,
-  PARTICIPANT_GENDER,
   SUPABASE_TABLE,
   TOURNAMENT_PUBLIC_STATUS,
-  TOURNAMENT_SPORT,
   TOURNAMENT_STATUS,
 } from "../types/constants";
 import { SupabaseService } from "./supabase.service";
@@ -89,7 +87,6 @@ export class RegistrationsService {
       DEFAULT_TOURNAMENTS.map((tournament) => ({
         code: tournament.code,
         name: tournament.name,
-        sport: tournament.sport,
         fee: tournament.fee ?? 0,
         status: TOURNAMENT_STATUS.RegistrationsOpen,
         public_status: TOURNAMENT_PUBLIC_STATUS.RegistrationsOpen,
@@ -112,7 +109,6 @@ export class RegistrationsService {
       team_participants: [...(team.team_participants ?? [])]
         .map((participant) => ({
           ...participant,
-          gender: participant.gender ?? PARTICIPANT_GENDER.Male,
           registered: Boolean(participant.registered),
         }))
         .sort((a, b) =>
@@ -129,7 +125,6 @@ export class RegistrationsService {
   ): TournamentWithTeams {
     return {
       ...tournament,
-      sport: tournament.sport ?? TOURNAMENT_SPORT.Other,
       fee: Number(tournament.fee || 0),
       status: tournament.status ?? TOURNAMENT_STATUS.RegistrationsOpen,
       public_status: tournament.public_status ?? TOURNAMENT_PUBLIC_STATUS.RegistrationsOpen,

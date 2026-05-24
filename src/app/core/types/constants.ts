@@ -1,14 +1,11 @@
 import {
   AuditAction,
   ExpenseStatus,
-  ParticipantGender,
   ParticipationRequestStatus,
   SponsorCategory,
   SponsorStatus,
-  SponsorType,
   TournamentMatchStatus,
   TournamentPublicStatus,
-  TournamentSport,
   TournamentStatus,
   TransactionSourceTable,
   TransactionType,
@@ -54,10 +51,6 @@ export const SPONSOR_STATUS = {
   Paid: "pagato",
 } as const satisfies Record<string, SponsorStatus>;
 
-export const SPONSOR_TYPE = {
-  Cash: "cash",
-  BankTransfer: "bonifico",
-} as const satisfies Record<string, SponsorType>;
 
 export const SPONSOR_CATEGORY = {
   Bronzo: "bronzo",
@@ -72,16 +65,6 @@ export const EXPENSE_STATUS = {
   Refunded: "rimborsata",
 } as const satisfies Record<string, ExpenseStatus>;
 
-export const TOURNAMENT_SPORT = {
-  Football: "calcio",
-  Volleyball: "pallavolo",
-  Other: "altro",
-} as const satisfies Record<string, TournamentSport>;
-
-export const PARTICIPANT_GENDER = {
-  Male: "uomo",
-  Female: "donna",
-} as const satisfies Record<string, ParticipantGender>;
 
 export const TOURNAMENT_STATUS = {
   Draft: "draft",
@@ -280,54 +263,14 @@ export const DIRECT_TOURNAMENT_CODES: readonly string[] = [
 ];
 
 export const DEFAULT_TOURNAMENTS = [
-  {
-    code: DEFAULT_TOURNAMENT_CODE.Football5,
-    name: "Calcio a 5",
-    sport: TOURNAMENT_SPORT.Football,
-    fee: 0,
-  },
-  {
-    code: DEFAULT_TOURNAMENT_CODE.Football5Under15,
-    name: "Calcio a 5 Under 15",
-    sport: TOURNAMENT_SPORT.Football,
-    fee: 0,
-  },
-  {
-    code: DEFAULT_TOURNAMENT_CODE.Volleyball,
-    name: "Green Volley",
-    sport: TOURNAMENT_SPORT.Volleyball,
-    fee: 50,
-  },
-  {
-    code: DEFAULT_TOURNAMENT_CODE.Briscola,
-    name: "Briscola",
-    sport: TOURNAMENT_SPORT.Other,
-    fee: 0,
-  },
-  {
-    code: DEFAULT_TOURNAMENT_CODE.Fifa,
-    name: "Fifa",
-    sport: TOURNAMENT_SPORT.Other,
-    fee: 0,
-  },
-  {
-    code: DEFAULT_TOURNAMENT_CODE.PingPong,
-    name: "Ping Pong",
-    sport: TOURNAMENT_SPORT.Other,
-    fee: 0,
-  },
-  {
-    code: DEFAULT_TOURNAMENT_CODE.TableFootball,
-    name: "Calcio Balilla",
-    sport: TOURNAMENT_SPORT.Other,
-    fee: 0,
-  },
-] as const satisfies ReadonlyArray<{
-  code: string;
-  name: string;
-  sport: TournamentSport;
-  fee: number;
-}>;
+  { code: DEFAULT_TOURNAMENT_CODE.Football5, name: "Calcio a 5", fee: 0 },
+  { code: DEFAULT_TOURNAMENT_CODE.Football5Under15, name: "Calcio a 5 Under 15", fee: 0 },
+  { code: DEFAULT_TOURNAMENT_CODE.Volleyball, name: "Green Volley", fee: 50 },
+  { code: DEFAULT_TOURNAMENT_CODE.Briscola, name: "Briscola", fee: 0 },
+  { code: DEFAULT_TOURNAMENT_CODE.Fifa, name: "Fifa", fee: 0 },
+  { code: DEFAULT_TOURNAMENT_CODE.PingPong, name: "Ping Pong", fee: 0 },
+  { code: DEFAULT_TOURNAMENT_CODE.TableFootball, name: "Calcio Balilla", fee: 0 },
+] as const satisfies ReadonlyArray<{ code: string; name: string; fee: number }>;
 
 export const TOURNAMENT_MIN_PARTICIPANTS_BY_CODE: Readonly<
   Record<string, number>
@@ -339,16 +282,6 @@ export const TOURNAMENT_MIN_PARTICIPANTS_BY_CODE: Readonly<
   [DEFAULT_TOURNAMENT_CODE.TableFootball]: 2,
 } as const;
 
-export const TOURNAMENT_SPORT_OPTIONS = [
-  { id: TOURNAMENT_SPORT.Football, label: "Calcio" },
-  { id: TOURNAMENT_SPORT.Volleyball, label: "Pallavolo" },
-  { id: TOURNAMENT_SPORT.Other, label: "Altro" },
-] as const satisfies ReadonlyArray<Option<TournamentSport>>;
-
-export const PARTICIPANT_GENDER_OPTIONS = [
-  { id: PARTICIPANT_GENDER.Male, label: "Uomo" },
-  { id: PARTICIPANT_GENDER.Female, label: "Donna" },
-] as const satisfies ReadonlyArray<Option<ParticipantGender>>;
 
 export const EXPENSE_CATEGORIES = [
   "Attrezzatura",

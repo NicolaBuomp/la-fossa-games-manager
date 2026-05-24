@@ -18,7 +18,6 @@ describe("ParticipationRequestsComponent", () => {
     tournament_id: "tournament-1",
     first_name: "mario",
     last_name: "rossi",
-    email: null,
     phone: "333 123 4567",
     privacy_accepted: true,
     whatsapp_accepted: true,
@@ -30,7 +29,6 @@ describe("ParticipationRequestsComponent", () => {
     tournaments: {
       name: "Calcio a 5",
       code: "calcio-a-5",
-      sport: "calcio",
       fee: 0,
     },
     participation_request_notes: [],
@@ -92,7 +90,6 @@ describe("ParticipationRequestsComponent", () => {
       tournaments: {
         name: "Calcio a 5",
         code: "calcio-a-5",
-        sport: "calcio",
         fee: 0,
       },
     });
@@ -128,7 +125,6 @@ describe("ParticipationRequestsComponent", () => {
       tournaments: {
         name: "Briscola",
         code: "briscola",
-        sport: "altro",
         fee: 0,
       },
     });
@@ -149,14 +145,12 @@ describe("ParticipationRequestsComponent", () => {
         first_name: "Mario",
         last_name: "Rossi",
         contact: "3331234567",
-        gender: "uomo",
         registered: false,
       },
       {
         first_name: "Luigi",
         last_name: "Verdi",
         contact: "334",
-        gender: "uomo",
         registered: false,
       },
     ]);

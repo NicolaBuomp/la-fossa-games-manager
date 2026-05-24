@@ -6,7 +6,6 @@ import {
 } from "../../../core/types/models";
 import {
   TOURNAMENT_MIN_PARTICIPANTS_BY_CODE,
-  TOURNAMENT_SPORT,
 } from "../../../core/types/constants";
 import { StatusBadgeComponent } from "../../../shared/components/ui.component";
 
@@ -37,7 +36,6 @@ import { StatusBadgeComponent } from "../../../shared/components/ui.component";
               } @else {
                 <h3
                   class="break-words text-base font-bold leading-snug cursor-pointer hover:text-accent transition-colors"
-                  (click)="openTeamDetail.emit(team.id)"
                 >
                   {{ team.name }}
                 </h3>
@@ -50,7 +48,7 @@ import { StatusBadgeComponent } from "../../../shared/components/ui.component";
                   }
                 </p>
                 <p class="mt-1 text-xs font-semibold">
-                  {{ participantCount(team) }} partecipante(i)
+                  {{ participantCount(team) }} partecipant{{ participantCount(team) !== 1 ? "i" : "e" }}
                 </p>
               }
               @if (team.notes) {
@@ -182,7 +180,7 @@ export class RegistrationsTableComponent {
 
   canAddParticipant(team: TournamentTeamWithParticipants): boolean {
     const tournament = this.tournament();
-    if (!tournament || tournament.sport === TOURNAMENT_SPORT.Football) return false;
+    if (!tournament) return false;
     const limit = TOURNAMENT_MIN_PARTICIPANTS_BY_CODE[tournament.code ?? ""] ?? null;
     return !limit || team.team_participants.length < limit;
   }

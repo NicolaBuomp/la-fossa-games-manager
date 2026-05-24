@@ -1,9 +1,7 @@
 export type UserRole = 'staff' | 'admin' | 'owner' | 'tesoriere';
 export type SponsorStatus = 'contattato' | 'in_trattativa' | 'confermato' | 'pagato';
-export type SponsorType = 'cash' | 'bonifico';
 export type SponsorCategory = 'bronzo' | 'argento' | 'oro' | 'platino';
 export type ExpenseStatus = 'pagata' | 'da_rimborsare' | 'rimborsata';
-export type TournamentSport = 'calcio' | 'pallavolo' | 'altro';
 export type TournamentStatus =
   | 'draft'
   | 'registrations_open'
@@ -22,7 +20,6 @@ export type TournamentMatchStatus =
   | 'live'
   | 'completed'
   | 'cancelled';
-export type ParticipantGender = 'uomo' | 'donna';
 export type ParticipationRequestStatus = 'nuova' | 'in_gestione' | 'contattata' | 'archiviata' | 'trasferita';
 export type AuditAction = 'insert' | 'update' | 'delete';
 
@@ -120,8 +117,6 @@ export interface Sponsor {
   category: SponsorCategory;
   contact_name: string | null;
   contact_info: string | null;
-  type: SponsorType;
-  value: number;
   promised_amount: number;
   received_amount: number;
   payment_method: string | null;
@@ -154,7 +149,6 @@ export interface Tournament {
   id: string;
   code: string | null;
   name: string;
-  sport: TournamentSport;
   fee: number;
   date: string | null;
   status: TournamentStatus;
@@ -248,7 +242,6 @@ export interface TeamParticipant {
   first_name: string;
   last_name: string;
   contact: string | null;
-  gender: ParticipantGender;
   registered: boolean;
   created_by: string | null;
   updated_by: string | null;
@@ -273,7 +266,7 @@ export interface OperationalTournament extends TournamentWithTeams {
 export interface PublicTournament {
   id: string;
   name: string;
-  sport: TournamentSport;
+  code: string | null;
   fee: number;
   date: string | null;
   public_status?: TournamentPublicStatus;
@@ -284,7 +277,6 @@ export interface ParticipationRequest {
   tournament_id: string;
   first_name: string;
   last_name: string;
-  email: string | null;
   phone: string;
   privacy_accepted: boolean;
   whatsapp_accepted: boolean;
@@ -308,7 +300,7 @@ export interface ParticipationRequestNoteWithProfile extends ParticipationReques
 }
 
 export interface ParticipationRequestWithTournament extends ParticipationRequest {
-  tournaments: Pick<Tournament, 'name' | 'code' | 'sport' | 'fee'> | null;
+  tournaments: Pick<Tournament, 'name' | 'code' | 'fee'> | null;
   participation_request_notes: ParticipationRequestNoteWithProfile[];
 }
 
@@ -351,9 +343,7 @@ export type InsertTournament = Omit<
 export type UpdateTournamentPublication = Pick<Tournament, 'status' | 'public_status' | 'published_at'>;
 export type InsertTournamentTeam = Omit<TournamentTeam, 'id' | 'created_by' | 'updated_by' | 'created_at' | 'updated_at'>;
 export type InsertTeamParticipant = Omit<TeamParticipant, 'id' | 'created_by' | 'updated_by' | 'created_at' | 'updated_at'>;
-export type InsertParticipationRequest = Omit<ParticipationRequest, 'id' | 'email' | 'status' | 'updated_by' | 'created_at' | 'updated_at'> & {
-  email?: string | null;
-};
+export type InsertParticipationRequest = Omit<ParticipationRequest, 'id' | 'status' | 'updated_by' | 'created_at' | 'updated_at'>;
 
 export interface PagedResult<T> {
   data: T[];

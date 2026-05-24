@@ -35,8 +35,6 @@ describe("DashboardComponent", () => {
     category: "bronzo",
     contact_name: null,
     contact_info: null,
-    type: "cash",
-    value,
     promised_amount: value,
     received_amount: status === "pagato" ? value : 0,
     payment_method: "Contanti",

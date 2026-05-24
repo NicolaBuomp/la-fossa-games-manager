@@ -1,10 +1,6 @@
 import { Component, EventEmitter, Input, Output, signal } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { InsertTeamParticipant } from "../../../core/types/models";
-import {
-  PARTICIPANT_GENDER,
-  PARTICIPANT_GENDER_OPTIONS,
-} from "../../../core/types/constants";
 import { ModalComponent } from "../../../shared/components/ui.component";
 
 @Component({
@@ -43,27 +39,14 @@ import { ModalComponent } from "../../../shared/components/ui.component";
           </div>
 
           <label class="grid gap-1 text-sm font-bold">
-            Contatto (email/tel)
+            Telefono
             <input
               type="text"
               name="contact"
               [(ngModel)]="form.contact"
-              placeholder="Es. mario@email.com o 3XXXXXXXXX"
+              placeholder="Es. 3XXXXXXXXX"
               class="rounded-lg border border-soft bg-surface-muted px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"
             />
-          </label>
-
-          <label class="grid gap-1 text-sm font-bold">
-            Genere
-            <select
-              name="gender"
-              [(ngModel)]="form.gender"
-              class="rounded-lg border border-soft bg-surface-muted px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"
-            >
-              @for (gender of genderOptions; track gender.id) {
-                <option [value]="gender.id">{{ gender.label }}</option>
-              }
-            </select>
           </label>
 
           @if (isFipavSport()) {
@@ -121,10 +104,7 @@ export class ParticipantModalComponent {
       first_name: "",
       last_name: "",
       contact: "",
-      gender: PARTICIPANT_GENDER.Male,
       registered: false,
     };
   }
-
-  protected readonly genderOptions = PARTICIPANT_GENDER_OPTIONS;
 }

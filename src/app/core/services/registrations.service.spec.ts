@@ -39,7 +39,6 @@ describe("RegistrationsService", () => {
     id: "tournament-1",
     code: "pallavolo",
     name: "Green Volley",
-    sport: "pallavolo",
     fee: 50,
     date: null,
     status: "registrations_open",
@@ -85,7 +84,6 @@ describe("RegistrationsService", () => {
                     first_name: "Luca",
                     last_name: "Verdi",
                     contact: null,
-                    gender: null as unknown as "uomo",
                     registered: 1 as unknown as boolean,
                     created_by: null,
                     updated_by: null,
@@ -98,7 +96,6 @@ describe("RegistrationsService", () => {
                     first_name: "Anna",
                     last_name: "Bianchi",
                     contact: null,
-                    gender: "donna",
                     registered: false,
                     created_by: null,
                     updated_by: null,
@@ -144,9 +141,6 @@ describe("RegistrationsService", () => {
         (participant) => participant.last_name,
       ),
     ).toEqual(["Bianchi", "Verdi"]);
-    expect(result[0].tournament_teams[1].team_participants[1].gender).toBe(
-      "uomo",
-    );
     expect(result[0].tournament_teams[1].team_participants[1].registered).toBe(
       true,
     );

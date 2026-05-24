@@ -1,10 +1,6 @@
 import { Component, EventEmitter, Input, Output, signal } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { InsertTournament, Tournament } from "../../../core/types/models";
-import {
-  TOURNAMENT_SPORT,
-  TOURNAMENT_SPORT_OPTIONS,
-} from "../../../core/types/constants";
 import { ModalComponent } from "../../../shared/components/ui.component";
 
 @Component({
@@ -30,19 +26,6 @@ import { ModalComponent } from "../../../shared/components/ui.component";
             />
           </label>
 
-          <label class="grid gap-1 text-sm font-bold">
-            Sport <span class="text-red-500">*</span>
-            <select
-              required
-              name="sport"
-              [(ngModel)]="form.sport"
-              class="rounded-lg border border-soft bg-surface-muted px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"
-            >
-              @for (sport of sportOptions; track sport.id) {
-                <option [value]="sport.id">{{ sport.label }}</option>
-              }
-            </select>
-          </label>
 
           <label class="grid gap-1 text-sm font-bold">
             Quota d'iscrizione (€)
@@ -116,7 +99,6 @@ export class TournamentModalComponent {
       this.editing.set(true);
       this.form = {
         name: t.name,
-        sport: t.sport,
         fee: t.fee,
         date: t.date,
         code: t.code,
@@ -135,13 +117,10 @@ export class TournamentModalComponent {
   private emptyForm(): InsertTournament {
     return {
       name: "",
-      sport: TOURNAMENT_SPORT.Football,
       fee: 0,
       date: "",
       code: null,
       notes: "",
     };
   }
-
-  protected readonly sportOptions = TOURNAMENT_SPORT_OPTIONS;
 }

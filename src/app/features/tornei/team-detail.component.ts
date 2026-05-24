@@ -6,11 +6,10 @@ import { RegistrationsService } from "../../core/services/registrations.service"
 import { SnackbarService } from "../../core/services/snackbar.service";
 import { TournamentsService } from "../../core/services/tournaments.service";
 import {
+  DEFAULT_TOURNAMENT_CODE,
   DIRECT_TOURNAMENT_CODES,
   DUO_TOURNAMENT_CODES,
-  PARTICIPANT_GENDER,
   TOURNAMENT_MIN_PARTICIPANTS_BY_CODE,
-  TOURNAMENT_SPORT,
 } from "../../core/types/constants";
 import {
   InsertTeamParticipant,
@@ -358,7 +357,7 @@ export class TeamDetailComponent implements OnInit {
     DUO_TOURNAMENT_CODES.includes(this.tournament()?.code ?? ""),
   );
   isFipavSport = computed(
-    () => this.tournament()?.sport === TOURNAMENT_SPORT.Volleyball,
+    () => this.tournament()?.code === DEFAULT_TOURNAMENT_CODE.Volleyball,
   );
 
   sortedParticipants = computed(() => {
@@ -488,7 +487,7 @@ export class TeamDetailComponent implements OnInit {
         last_name: payload.last_name.trim(),
         contact: payload.contact?.trim() || null,
         registered:
-          t?.sport === TOURNAMENT_SPORT.Volleyball
+          t?.code === DEFAULT_TOURNAMENT_CODE.Volleyball
             ? Boolean(payload.registered)
             : false,
       };
@@ -519,7 +518,7 @@ export class TeamDetailComponent implements OnInit {
         last_name: payload.last_name.trim(),
         contact: payload.contact?.trim() || null,
         registered:
-          t?.sport === TOURNAMENT_SPORT.Volleyball
+          t?.code === DEFAULT_TOURNAMENT_CODE.Volleyball
             ? Boolean(payload.registered)
             : false,
       };
@@ -581,7 +580,6 @@ export class TeamDetailComponent implements OnInit {
       first_name: "",
       last_name: "",
       contact: "",
-      gender: PARTICIPANT_GENDER.Male,
       registered: false,
     };
   }

@@ -7,7 +7,6 @@ import {
   PAGE_SIZE,
   PUBLIC_SPONSOR_LEAD_DELIVERABLES,
   SPONSOR_STATUS,
-  SPONSOR_TYPE,
   SUPABASE_TABLE,
 } from '../types/constants';
 
@@ -55,13 +54,13 @@ export class SponsorsService extends CrudService<Sponsor, InsertSponsor> {
   async summary(userId?: string): Promise<SponsorsSummary> {
     let query = this.supabase.client
       .from(SUPABASE_TABLE.Sponsors)
-      .select('status, promised_amount, value, received_amount');
+      .select('status, promised_amount, received_amount');
     if (userId) {
       query = query.or(`responsible_user_id.eq.${userId},created_by.eq.${userId}`);
     }
     const { data, error } = await query;
     if (error) throw error;
-    const rows = (data ?? []) as Pick<Sponsor, 'status' | 'promised_amount' | 'value' | 'received_amount'>[];
+    const rows = (data ?? []) as Pick<Sponsor, 'status' | 'promised_amount' | 'received_amount'>[];
     return {
       contactedCount: rows.filter((r) => r.status === SPONSOR_STATUS.Contacted).length,
       negotiatingCount: rows.filter((r) => r.status === SPONSOR_STATUS.Negotiating).length,
@@ -70,7 +69,7 @@ export class SponsorsService extends CrudService<Sponsor, InsertSponsor> {
       ).length,
       promisedTotal: rows
         .filter((r) => r.status === SPONSOR_STATUS.Confirmed || r.status === SPONSOR_STATUS.Paid)
-        .reduce((s, r) => s + Number(r.promised_amount ?? r.value ?? 0), 0),
+        .reduce((s, r) => s + Number(r.promised_amount ?? 0), 0),
       receivedTotal: rows.reduce((s, r) => s + Number(r.received_amount || 0), 0),
     };
   }
@@ -80,8 +79,6 @@ export class SponsorsService extends CrudService<Sponsor, InsertSponsor> {
       .from(SUPABASE_TABLE.Sponsors)
       .select('id', { count: 'exact', head: true })
       .eq('status', SPONSOR_STATUS.Contacted)
-      .eq('type', SPONSOR_TYPE.Cash)
-      .eq('value', 0)
       .eq('deliverables', PUBLIC_SPONSOR_LEAD_DELIVERABLES);
     if (error) throw error;
     return count ?? 0;
