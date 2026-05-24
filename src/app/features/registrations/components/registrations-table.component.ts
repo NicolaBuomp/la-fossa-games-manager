@@ -14,6 +14,7 @@ import { StatusBadgeComponent } from "../../../shared/components/ui.component";
   selector: "lfg-registrations-table",
   standalone: true,
   imports: [StatusBadgeComponent],
+  host: { class: "block" },
   template: `
     <div class="grid gap-3">
       @for (team of items(); track team.id) {
@@ -49,7 +50,7 @@ import { StatusBadgeComponent } from "../../../shared/components/ui.component";
                   }
                 </p>
                 <p class="mt-1 text-xs font-semibold">
-                  {{ team.team_participants.length }} partecipante(i)
+                  {{ participantCount(team) }} partecipante(i)
                 </p>
               }
               @if (team.notes) {
@@ -184,5 +185,13 @@ export class RegistrationsTableComponent {
     if (!tournament || tournament.sport === TOURNAMENT_SPORT.Football) return false;
     const limit = TOURNAMENT_MIN_PARTICIPANTS_BY_CODE[tournament.code ?? ""] ?? null;
     return !limit || team.team_participants.length < limit;
+  }
+
+  participantCount(team: TournamentTeamWithParticipants): number {
+    if (team.team_participants.length > 0) return team.team_participants.length;
+    let fallback = 0;
+    if (team.captain_name?.trim()) fallback += 1;
+    if (team.vice_captain_name?.trim()) fallback += 1;
+    return fallback;
   }
 }

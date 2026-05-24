@@ -101,7 +101,7 @@ import { TeamParticipantRowComponent } from "./components/team-participant-row.c
 
         <!-- Team meta -->
         <p class="mt-3 text-xs font-semibold opacity-50">
-          {{ team()!.team_participants.length }} partecipanti
+          {{ participantCount(team()!) }} partecipanti
           @if (tournament()?.fee) {
             · Quota: €{{ tournament()!.fee }}
           }
@@ -565,6 +565,14 @@ export class TeamDetailComponent implements OnInit {
     } catch {
       return dateStr;
     }
+  }
+
+  participantCount(team: TournamentTeamWithParticipants): number {
+    if (team.team_participants.length > 0) return team.team_participants.length;
+    let fallback = 0;
+    if (team.captain_name?.trim()) fallback += 1;
+    if (team.vice_captain_name?.trim()) fallback += 1;
+    return fallback;
   }
 
   private emptyParticipantForm(): InsertTeamParticipant {

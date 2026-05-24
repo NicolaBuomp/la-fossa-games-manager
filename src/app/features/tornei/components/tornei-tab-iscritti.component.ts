@@ -247,7 +247,14 @@ export class TorneiTabIscrittiComponent implements OnChanges {
   participantCount = computed(() => {
     const t = this.tournament();
     if (this.isDirect()) return this.teamCount() * (this.isDuo() ? 2 : 1);
-    return (t.tournament_teams ?? []).reduce((sum, team) => sum + (team.team_participants?.length ?? 0), 0);
+    return (t.tournament_teams ?? []).reduce((sum, team) => {
+      const participants = team.team_participants?.length ?? 0;
+      if (participants > 0) return sum + participants;
+      let fallback = 0;
+      if (team.captain_name?.trim()) fallback += 1;
+      if (team.vice_captain_name?.trim()) fallback += 1;
+      return sum + fallback;
+    }, 0);
   });
   paidCount = computed(() => (this.tournament().tournament_teams ?? []).filter((t) => t.paid).length);
   pendingCount = computed(() => (this.tournament().tournament_teams ?? []).filter((t) => !t.paid && this.tournament().fee).length);
