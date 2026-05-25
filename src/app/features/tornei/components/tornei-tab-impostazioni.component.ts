@@ -82,7 +82,7 @@ import { InsertTournament, Tournament } from "../../../core/types/models";
     </div>
 
     <!-- Mobile: sticky save bar -->
-    <div class="fixed bottom-0 left-0 right-0 border-t border-soft bg-surface p-3 sm:hidden" style="z-index: 40;">
+    <div class="fixed bottom-14 left-0 right-0 border-t border-soft bg-surface p-3 sm:hidden" style="z-index: 40;">
       <button
         type="button"
         class="bg-accent text-on-accent w-full rounded-lg py-3 text-sm font-black uppercase disabled:opacity-60"
