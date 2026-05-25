@@ -70,14 +70,14 @@ import { StatusBadgeComponent } from "../../../shared/components/ui.component";
               >
                 <button
                   type="button"
-                  class="min-h-10 rounded-md bg-surface-muted px-3 py-2 text-xs font-bold uppercase transition hover:bg-surface-muted/80 sm:min-h-0 sm:py-1.5"
+                  class="min-h-11 rounded-md bg-surface-muted px-3 py-2 text-xs font-bold uppercase transition hover:bg-surface-muted/80 sm:min-h-0 sm:py-1.5"
                   (click)="togglePaid.emit(team)"
                 >
                   {{ team.paid ? "Non pagata" : "Pagata" }}
                 </button>
                 <button
                   type="button"
-                  class="min-h-10 rounded-md bg-surface-muted px-3 py-2 text-xs font-bold uppercase transition hover:bg-surface-muted/80 sm:min-h-0 sm:py-1.5"
+                  class="min-h-11 rounded-md bg-surface-muted px-3 py-2 text-xs font-bold uppercase transition hover:bg-surface-muted/80 sm:min-h-0 sm:py-1.5"
                   (click)="
                     isDirect()
                       ? editDirectEntry.emit(team)
@@ -89,7 +89,7 @@ import { StatusBadgeComponent } from "../../../shared/components/ui.component";
                 @if (auth.isAdmin()) {
                   <button
                     type="button"
-                    class="state-danger col-span-2 min-h-10 rounded-md border px-3 py-2 text-xs font-bold uppercase transition hover:border-opacity-80 sm:col-span-1 sm:min-h-0 sm:py-1.5"
+                    class="state-danger col-span-2 min-h-11 rounded-md border px-3 py-2 text-xs font-bold uppercase transition hover:border-opacity-80 sm:col-span-1 sm:min-h-0 sm:py-1.5"
                     (click)="deleteTeam.emit(team.id)"
                   >
                     Elimina
@@ -111,7 +111,7 @@ import { StatusBadgeComponent } from "../../../shared/components/ui.component";
                   <div class="flex justify-end gap-2">
                     <button
                       type="button"
-                      class="min-h-9 rounded-md bg-surface px-3 text-muted hover:text-primary sm:min-h-0 sm:bg-transparent sm:px-0"
+                      class="min-h-11 rounded-md bg-surface px-3 text-muted hover:text-primary sm:min-h-0 sm:bg-transparent sm:px-0"
                       (click)="editParticipant.emit(p)"
                     >
                       Modifica
@@ -119,7 +119,7 @@ import { StatusBadgeComponent } from "../../../shared/components/ui.component";
                     @if (auth.isAdmin()) {
                       <button
                         type="button"
-                        class="min-h-9 rounded-md bg-surface px-3 text-muted hover:text-red-500 sm:min-h-0 sm:bg-transparent sm:px-0"
+                        class="min-h-11 rounded-md bg-surface px-3 text-muted hover:text-red-500 sm:min-h-0 sm:bg-transparent sm:px-0"
                         (click)="deleteParticipant.emit(p.id)"
                       >
                         Elimina
@@ -135,7 +135,7 @@ import { StatusBadgeComponent } from "../../../shared/components/ui.component";
             <div class="mt-3 border-t border-soft pt-3">
               <button
                 type="button"
-                class="min-h-10 w-full rounded-md bg-surface-muted px-3 py-2 text-xs font-bold uppercase transition hover:bg-surface-muted/80 sm:w-auto sm:py-1.5"
+                class="min-h-11 w-full rounded-md bg-surface-muted px-3 py-2 text-xs font-bold uppercase transition hover:bg-surface-muted/80 sm:w-auto sm:py-1.5"
                 (click)="addParticipant.emit(team.id)"
               >
                 Aggiungi persona

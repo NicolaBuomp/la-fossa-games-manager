@@ -27,14 +27,14 @@ import { TournamentWithTeams } from "../../../core/types/models";
           <div class="grid grid-cols-2 gap-2 sm:flex">
             <button
               type="button"
-              class="min-h-10 rounded-md bg-surface-muted px-3 py-2 text-xs font-bold uppercase transition hover:bg-surface-muted/80 sm:min-h-0 sm:py-1.5"
+              class="min-h-11 rounded-md bg-surface-muted px-3 py-2 text-xs font-bold uppercase transition hover:bg-surface-muted/80 sm:min-h-0 sm:py-1.5"
               (click)="editTournament.emit()"
             >
               Modifica
             </button>
             <button
               type="button"
-              class="bg-strong text-on-strong min-h-10 rounded-md px-3 py-2 text-xs font-bold uppercase transition hover:opacity-90 sm:min-h-0 sm:py-1.5"
+              class="bg-strong text-on-strong min-h-11 rounded-md px-3 py-2 text-xs font-bold uppercase transition hover:opacity-90 sm:min-h-0 sm:py-1.5"
               (click)="addTeamOrParticipant.emit()"
             >
               {{

@@ -233,6 +233,7 @@ export class EmptyStateComponent {
           class="max-h-[92dvh] w-full overflow-y-auto rounded-t-2xl bg-surface text-primary shadow-2xl animate-slide-up sm:animate-modal-in sm:max-w-2xl sm:rounded-2xl"
           (click)="$event.stopPropagation()"
         >
+          <div class="mx-auto mb-1 mt-2.5 h-1 w-10 shrink-0 rounded-full bg-surface-muted sm:hidden" aria-hidden="true"></div>
           <header
             class="sticky top-0 z-10 flex items-center justify-between gap-4 border-b border-soft bg-surface px-5 py-4"
           >
@@ -373,11 +374,12 @@ export class StatusBadgeComponent {
       (cancel)="onCancel($event)"
       (click)="onBackdropClick($event)"
     >
-      <div class="flex min-h-full items-center justify-center p-4">
+      <div class="flex min-h-full items-end justify-center p-0 sm:items-center sm:p-4">
         <section
-          class="w-full max-w-sm rounded-2xl bg-surface p-6 text-primary shadow-2xl"
+          class="w-full rounded-t-2xl bg-surface p-6 text-primary shadow-2xl animate-slide-up sm:animate-modal-in sm:max-w-sm sm:rounded-2xl"
           (click)="$event.stopPropagation()"
         >
+          <div class="mx-auto mb-4 h-1 w-10 shrink-0 rounded-full bg-surface-muted sm:hidden" aria-hidden="true"></div>
           <h3 class="font-display text-xl uppercase leading-tight text-primary">
             Conferma
           </h3>

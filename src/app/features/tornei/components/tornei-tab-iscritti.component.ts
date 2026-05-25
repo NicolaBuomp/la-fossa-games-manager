@@ -142,7 +142,7 @@ type DirectForm = {
     <!-- Mobile FAB -->
     <button
       type="button"
-      class="bg-accent text-on-accent fixed bottom-8 right-7 z-30 flex h-16 w-16 items-center justify-center rounded-full shadow-lg text-2xl font-black sm:hidden"
+      class="bg-accent text-on-accent fixed bottom-24 right-5 z-30 flex h-16 w-16 items-center justify-center rounded-full shadow-lg text-2xl font-black sm:hidden"
       style="line-height:1"
       (click)="onAddNew()"
       aria-label="Aggiungi"
