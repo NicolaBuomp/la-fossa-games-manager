@@ -179,6 +179,12 @@ export const SHELL_NAV_ITEMS = [
     group: "Finanze",
   },
   {
+    path: "/app/fatturazione",
+    label: "Fatture",
+    short: "F",
+    group: "Finanze",
+  },
+  {
     path: "/app/tesoreria",
     label: "Tesoriere",
     short: "T",
