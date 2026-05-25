@@ -240,6 +240,11 @@ type SponsorForm = InsertSponsor & { withoutPromisedAmount: boolean };
                   <div class="mt-3 flex flex-wrap gap-1.5">
                     <span class="rounded-full bg-surface-muted px-2.5 py-1 text-[10px] font-bold uppercase">{{ categoryLabel(item.category) }}</span>
                     <span class="rounded-full bg-surface-muted px-2.5 py-1 text-[10px] font-bold uppercase">{{ item.payment_method }}</span>
+                    @if (item.da_fatturare) {
+                      <span class="rounded-full bg-orange-50 px-2.5 py-1 text-[10px] font-bold uppercase text-orange-700">
+                        {{ item.fattura_emessa ? "Fattura emessa" : "Da fatturare" }}
+                      </span>
+                    }
                   </div>
                   @if (item.notes) {
                     <p class="mt-2.5 text-sm italic text-muted">{{ item.notes }}</p>
@@ -416,6 +421,12 @@ export class SponsorsComponent implements OnInit {
         type: "checkbox",
         help: "Usalo per contatti, lead e trattative da richiamare: resta tracciato ma non entra nei totali economici.",
       },
+      {
+        name: "da_fatturare",
+        label: "Da fatturare",
+        type: "checkbox",
+        help: "Spunta se per questo sponsor deve essere emessa una fattura.",
+      },
       { name: "notes", label: "Note", type: "textarea", rows: 3 },
     );
 
@@ -517,6 +528,8 @@ export class SponsorsComponent implements OnInit {
       status: item.status,
       deliverables: item.deliverables,
       notes: item.notes,
+      da_fatturare: item.da_fatturare ?? false,
+      fattura_emessa: item.fattura_emessa ?? false,
       withoutPromisedAmount: Number(item.promised_amount ?? 0) === 0,
     };
     this.modalOpen.set(true);
@@ -685,6 +698,8 @@ export class SponsorsComponent implements OnInit {
       status: SPONSOR_STATUS.Contacted,
       deliverables: "",
       notes: "",
+      da_fatturare: false,
+      fattura_emessa: false,
       withoutPromisedAmount: true,
     };
   }

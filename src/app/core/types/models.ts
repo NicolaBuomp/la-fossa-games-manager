@@ -130,6 +130,8 @@ export interface Sponsor {
   status: SponsorStatus;
   deliverables: string | null;
   notes: string | null;
+  da_fatturare: boolean;
+  fattura_emessa: boolean;
   created_by: string | null;
   updated_by: string | null;
   created_at: string;

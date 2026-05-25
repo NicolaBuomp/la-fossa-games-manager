@@ -1,5 +1,10 @@
 -- Add display names for transaction audit users so the transactions page does
 -- not need to load the full profiles table just to render "Inserito da".
+-- Add invoice flags to sponsors so sponsor payments can be tracked like incomes.
+alter table public.sponsors
+  add column if not exists da_fatturare boolean not null default false,
+  add column if not exists fattura_emessa boolean not null default false;
+
 drop view if exists public.transactions_view;
 
 create view public.transactions_view as
@@ -113,8 +118,8 @@ create view public.transactions_view as
     s.delivered_to_treasurer,
     s.delivered_at,
     s.delivered_by,
-    false                     as da_fatturare,
-    false                     as fattura_emessa,
+    s.da_fatturare,
+    s.fattura_emessa,
     s.created_by,
     s.updated_by,
     coalesce(nullif(btrim(created_profile.full_name), ''), nullif(btrim(created_profile.email), ''), s.created_by::text) as created_by_name,

@@ -454,6 +454,8 @@ export class LandingComponent implements OnInit, OnDestroy, AfterViewInit {
           deliverables: PUBLIC_SPONSOR_LEAD_DELIVERABLES,
           notes:
             "Lead sponsor generato dal form pubblico. Ricontattare via WhatsApp.",
+          da_fatturare: false,
+          fattura_emessa: false,
         });
       } else {
         await this.participation.createRequest({
