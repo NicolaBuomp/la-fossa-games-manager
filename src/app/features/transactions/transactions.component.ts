@@ -369,7 +369,7 @@ export class TransactionsComponent implements OnInit {
   readonly pageSize = PAGE_SIZE;
   summary = signal<TransactionSummary | null>(null);
   profilesList = signal<Profile[]>([]);
-  userNames = signal<Record<string, string>>({});
+  profilesLoaded = signal(false);
   error = signal("");
   saving = signal(false);
   confirmPending = signal<(() => Promise<void>) | null>(null);
@@ -540,12 +540,12 @@ export class TransactionsComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    void Promise.all([this.load(), this.loadSummary(), this.loadProfiles()]);
+    void this.load();
   }
 
   async load(): Promise<void> {
     try {
-      const result = await this.txService.list({
+      const result = await this.txService.listWithSummary({
         type: this.typeFilter(),
         deliveryStatus: this.deliveryFilter(),
         search: this.searchQuery(),
@@ -554,28 +554,19 @@ export class TransactionsComponent implements OnInit {
       });
       this.items.set(result.data);
       this.totalItems.set(result.total);
+      this.summary.set(result.summary);
     } catch (e) {
       this.setError(this.message(e));
     }
   }
 
-  async loadSummary(): Promise<void> {
-    try {
-      this.summary.set(await this.txService.summary());
-    } catch {
-      // non-critical: KPIs degrade gracefully
-    }
-  }
+  async ensureProfilesLoaded(): Promise<void> {
+    if (this.profilesLoaded()) return;
 
-  async loadProfiles(): Promise<void> {
     try {
       const profilesData = await this.profiles.list();
       this.profilesList.set(profilesData);
-      this.userNames.set(
-        Object.fromEntries(
-          profilesData.map((p) => [p.id, this.profileDisplayName(p)]),
-        ),
-      );
+      this.profilesLoaded.set(true);
     } catch (e) {
       this.setError(this.message(e));
     }
@@ -613,6 +604,7 @@ export class TransactionsComponent implements OnInit {
     this.editingIncome.set(null);
     this.incomeForm = this.emptyIncomeForm();
     this.incomeModalOpen.set(true);
+    void this.ensureProfilesLoaded();
   }
 
   newExpense(): void {
@@ -620,6 +612,7 @@ export class TransactionsComponent implements OnInit {
     this.editingExpense.set(null);
     this.expenseForm = this.emptyExpenseForm();
     this.expenseModalOpen.set(true);
+    void this.ensureProfilesLoaded();
   }
 
   edit(item: Transaction): void {
@@ -637,6 +630,7 @@ export class TransactionsComponent implements OnInit {
         da_fatturare: item.da_fatturare ?? false,
       };
       this.incomeModalOpen.set(true);
+      void this.ensureProfilesLoaded();
     } else if (item.source_table === TRANSACTION_SOURCE_TABLE.Expenses) {
       this.editingExpense.set({ id: item.source_id } as Expense);
       this.expenseForm = {
@@ -650,6 +644,7 @@ export class TransactionsComponent implements OnInit {
         notes: null,
       };
       this.expenseModalOpen.set(true);
+      void this.ensureProfilesLoaded();
     }
   }
 
@@ -666,7 +661,7 @@ export class TransactionsComponent implements OnInit {
       if (current?.id) await this.incomesService.update(current.id, payload);
       else await this.incomesService.create(payload);
       this.incomeModalOpen.set(false);
-      await Promise.all([this.load(), this.loadSummary()]);
+      await this.load();
     } catch (e) {
       this.setError(this.message(e));
     } finally {
@@ -687,7 +682,7 @@ export class TransactionsComponent implements OnInit {
       if (current?.id) await this.expensesService.update(current.id, payload);
       else await this.expensesService.create(payload);
       this.expenseModalOpen.set(false);
-      await Promise.all([this.load(), this.loadSummary()]);
+      await this.load();
     } catch (e) {
       this.setError(this.message(e));
     } finally {
@@ -713,7 +708,7 @@ export class TransactionsComponent implements OnInit {
           await this.incomesService.remove(item.source_id);
         else if (item.source_table === TRANSACTION_SOURCE_TABLE.Expenses)
           await this.expensesService.remove(item.source_id);
-        await Promise.all([this.load(), this.loadSummary()]);
+        await this.load();
       } catch (e) {
         this.setError(this.message(e));
       }
@@ -770,9 +765,20 @@ export class TransactionsComponent implements OnInit {
   }
 
   insertMeta(item: Transaction): string {
-    const name =
-      this.userNames()[item.created_by ?? ""] ?? "Utente non disponibile";
-    return `Inserito da ${name} · ${this.formatDateTime(item.created_at)}`;
+    const createdAt = new Date(item.created_at).getTime();
+    const updatedAt = new Date(item.updated_at).getTime();
+    const wasUpdated =
+      Number.isFinite(createdAt) &&
+      Number.isFinite(updatedAt) &&
+      Math.abs(updatedAt - createdAt) > 1000;
+
+    if (wasUpdated) {
+      const name = item.updated_by_name ?? "Utente non disponibile";
+      return `Modificato da ${name} - ${this.formatDateTime(item.updated_at)}`;
+    }
+
+    const name = item.created_by_name ?? "Utente non disponibile";
+    return `Inserito da ${name} - ${this.formatDateTime(item.created_at)}`;
   }
 
   profileDisplayName(profile: Profile): string {

@@ -22,6 +22,10 @@ export interface TransactionFilters {
   pageSize?: number;
 }
 
+export interface TransactionsListWithSummary extends PagedResult<Transaction> {
+  summary: TransactionSummary;
+}
+
 @Injectable({ providedIn: 'root' })
 export class TransactionsService {
   constructor(private readonly supabase: SupabaseService) {}
@@ -63,6 +67,34 @@ export class TransactionsService {
     const { data, error, count } = await query;
     if (error) throw error;
     return { data: (data ?? []) as Transaction[], total: count ?? 0 };
+  }
+
+  async listWithSummary(filters: TransactionFilters = {}): Promise<TransactionsListWithSummary> {
+    const { data, error } = await this.supabase.client.rpc(SUPABASE_RPC.ListTransactionsWithSummary, {
+      p_type: filters.type && filters.type !== FILTER_ALL ? filters.type : null,
+      p_category: filters.category ?? null,
+      p_delivery_status: filters.deliveryStatus && filters.deliveryStatus !== FILTER_ALL ? filters.deliveryStatus : null,
+      p_date_from: filters.dateFrom ?? null,
+      p_date_to: filters.dateTo ?? null,
+      p_search: filters.search ?? null,
+      p_page: filters.page ?? 1,
+      p_page_size: filters.pageSize ?? PAGE_SIZE,
+    });
+    if (error) throw error;
+
+    const result = data as TransactionsListWithSummary | null;
+    return {
+      data: (result?.data ?? []) as Transaction[],
+      total: Number(result?.total ?? 0),
+      summary: {
+        totalIncomes: Number(result?.summary?.totalIncomes ?? 0),
+        totalExpenses: Number(result?.summary?.totalExpenses ?? 0),
+        incomeCount: Number(result?.summary?.incomeCount ?? 0),
+        expenseCount: Number(result?.summary?.expenseCount ?? 0),
+        pendingDelivery: Number(result?.summary?.pendingDelivery ?? 0),
+        pendingDeliveryCount: Number(result?.summary?.pendingDeliveryCount ?? 0),
+      },
+    };
   }
 
   async summary(): Promise<TransactionSummary> {
