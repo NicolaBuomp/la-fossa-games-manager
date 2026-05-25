@@ -232,7 +232,7 @@ import {
               }
 
               @if (item.type === transactionType.Income) {
-                <div class="mt-2">
+                <div class="mt-2 flex flex-wrap gap-1.5">
                   @if (item.delivered_to_treasurer) {
                     <span
                       class="inline-flex items-center gap-1 rounded-full border border-green-200 bg-green-50 px-2 py-0.5 text-xs font-semibold text-green-700"
@@ -246,6 +246,21 @@ import {
                     >
                       Da consegnare al tesoriere
                     </span>
+                  }
+                  @if (item.da_fatturare) {
+                    @if (item.fattura_emessa) {
+                      <span
+                        class="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700"
+                      >
+                        ✓ Fattura emessa
+                      </span>
+                    } @else {
+                      <span
+                        class="inline-flex items-center gap-1 rounded-full border border-orange-200 bg-orange-50 px-2 py-0.5 text-xs font-semibold text-orange-700"
+                      >
+                        Fattura da emettere
+                      </span>
+                    }
                   }
                 </div>
               }
@@ -289,7 +304,7 @@ import {
                       routerLink="/app/registrations"
                       class="rounded-md bg-surface-muted px-3 py-1.5 text-xs font-bold uppercase"
                     >
-                      Vai a Iscritti →
+                      Vai a Tornei
                     </a>
                   } @else if (
                     item.source_table === transactionSourceTable.Sponsors
@@ -298,7 +313,7 @@ import {
                       routerLink="/app/sponsors"
                       class="rounded-md bg-surface-muted px-3 py-1.5 text-xs font-bold uppercase"
                     >
-                      Vai a Sponsor →
+                      Vai a Sponsor
                     </a>
                   }
                 </div>
@@ -463,6 +478,12 @@ export class TransactionsComponent implements OnInit {
       ],
     },
     { name: "notes", label: "Note", type: "textarea", rows: 3 },
+    {
+      name: "da_fatturare",
+      label: "Da fatturare",
+      type: "checkbox",
+      help: "Spunta se per questa entrata deve essere emessa una fattura",
+    },
   ]);
 
   readonly expenseFormFields = computed<CrudFormField[]>(() => [
@@ -613,6 +634,7 @@ export class TransactionsComponent implements OnInit {
         received_by: item.person ?? null,
         payment_method: item.payment_method,
         notes: null,
+        da_fatturare: item.da_fatturare ?? false,
       };
       this.incomeModalOpen.set(true);
     } else if (item.source_table === TRANSACTION_SOURCE_TABLE.Expenses) {
@@ -766,6 +788,7 @@ export class TransactionsComponent implements OnInit {
       received_by: "",
       payment_method: PAYMENT_METHODS[0],
       notes: "",
+      da_fatturare: false,
     };
   }
 

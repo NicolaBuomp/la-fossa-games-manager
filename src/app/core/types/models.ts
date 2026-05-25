@@ -81,6 +81,8 @@ export interface Income {
   delivered_to_treasurer: boolean;
   delivered_at: string | null;
   delivered_by: string | null;
+  da_fatturare: boolean;
+  fattura_emessa: boolean;
   created_by: string | null;
   updated_by: string | null;
   created_at: string;
@@ -105,6 +107,8 @@ export interface Transaction {
   delivered_to_treasurer: boolean;
   delivered_at: string | null;
   delivered_by: string | null;
+  da_fatturare: boolean | null;
+  fattura_emessa: boolean | null;
   created_by: string | null;
   updated_by: string | null;
   created_at: string;
@@ -150,7 +154,6 @@ export interface Tournament {
   code: string | null;
   name: string;
   fee: number;
-  date: string | null;
   status: TournamentStatus;
   public_status: TournamentPublicStatus;
   published_at: string | null;
@@ -268,7 +271,6 @@ export interface PublicTournament {
   name: string;
   code: string | null;
   fee: number;
-  date: string | null;
   public_status?: TournamentPublicStatus;
 }
 
@@ -321,7 +323,7 @@ export interface AuditLog {
 }
 
 export type InsertExpense = Omit<Expense, 'id' | 'created_by' | 'updated_by' | 'created_at' | 'updated_at'>;
-export type InsertIncome = Omit<Income, 'id' | 'delivered_to_treasurer' | 'delivered_at' | 'delivered_by' | 'created_by' | 'updated_by' | 'created_at' | 'updated_at'>;
+export type InsertIncome = Omit<Income, 'id' | 'delivered_to_treasurer' | 'delivered_at' | 'delivered_by' | 'fattura_emessa' | 'created_by' | 'updated_by' | 'created_at' | 'updated_at'>;
 
 export interface DeliveryItem {
   source_table: TransactionSourceTable;

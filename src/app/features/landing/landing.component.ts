@@ -484,10 +484,7 @@ export class LandingComponent implements OnInit, OnDestroy, AfterViewInit {
 
   tournamentLabel(tournament: PublicTournament): string {
     const fee = tournament.fee ? ` · quota ${this.eur(tournament.fee)}` : "";
-    const date = tournament.date
-      ? ` · ${new Intl.DateTimeFormat("it-IT").format(new Date(tournament.date))}`
-      : "";
-    return `${tournament.name}${date}${fee}`;
+    return `${tournament.name}${fee}`;
   }
 
   countdownItems(): { label: string; value: string }[] {

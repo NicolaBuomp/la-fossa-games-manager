@@ -6,7 +6,18 @@ import { SUPABASE_TABLE } from '../types/constants';
 
 @Injectable({ providedIn: 'root' })
 export class IncomesService extends CrudService<Income, InsertIncome> {
-  constructor(supabase: SupabaseService) {
-    super(supabase, SUPABASE_TABLE.Incomes, 'date');
+  constructor(private readonly sb: SupabaseService) {
+    super(sb, SUPABASE_TABLE.Incomes, 'date');
+  }
+
+  async updateFatturazione(
+    id: string,
+    patch: Partial<Pick<Income, 'da_fatturare' | 'fattura_emessa'>>,
+  ): Promise<void> {
+    const { error } = await this.sb.client
+      .from(SUPABASE_TABLE.Incomes)
+      .update(patch)
+      .eq('id', id);
+    if (error) throw error;
   }
 }

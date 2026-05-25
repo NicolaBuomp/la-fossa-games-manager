@@ -107,7 +107,7 @@ interface DashboardFinancials {
                   aggiornare il resto del gestionale.
                 </p>
               </div>
-              <div class="grid gap-2 sm:grid-cols-2 lg:min-w-[22rem]">
+              <div class="grid gap-4">
                 @if (pendingTournamentRequests() > 0) {
                   <a
                     routerLink="/app/participation-requests"

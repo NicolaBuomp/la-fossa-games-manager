@@ -72,20 +72,20 @@ src/app/
 ### Routes
 
 ```
-/                   → LandingComponent (public)
-/login              → LoginComponent (public)
-/app                → ShellComponent [authGuard]
-  /app/dashboard    → DashboardComponent [adminGuard]
-  /app/expenses     → ExpensesComponent [adminGuard]
-  /app/incomes      → IncomesComponent [adminGuard]
-  /app/sponsors     → SponsorsComponent [adminGuard]
-  /app/registrations          → RegistrationsComponent [authGuard]
-  /app/participation-requests → ParticipationRequestsComponent [authGuard]
-  /app/profile      → ProfileComponent [authGuard]
-  /app/users        → UsersComponent [adminGuard]
+/                    LandingComponent (public)
+/login               LoginComponent (public)
+/app                 ShellComponent [authGuard]
+  /app/dashboard     DashboardComponent [adminGuard]
+  /app/expenses      ExpensesComponent [adminGuard]
+  /app/incomes       IncomesComponent [adminGuard]
+  /app/sponsors      SponsorsComponent [adminGuard]
+  /app/registrations           RegistrationsComponent [authGuard]
+  /app/participation-requests  ParticipationRequestsComponent [authGuard]
+  /app/profile       ProfileComponent [authGuard]
+  /app/users         UsersComponent [adminGuard]
 ```
 
-`appHomeGuard` redirects `/app` → `/app/dashboard` (admin) or `/app/registrations` (staff).
+`appHomeGuard` redirects `/app`  `/app/dashboard` (admin) or `/app/registrations` (staff).
 
 ---
 
@@ -110,10 +110,10 @@ src/app/
 
 ```typescript
 type Tone = "default" | "income" | "expense" | "warning";
-// 'income'  → emerald/green
-// 'expense' → red-orange
-// 'warning' → amber
-// 'default' → ink/neutral
+// 'income'   emerald/green
+// 'expense'  red-orange
+// 'warning'  amber
+// 'default'  ink/neutral
 ```
 
 ### Component prefix
@@ -152,7 +152,7 @@ type InsertExpense = Omit<
 - **Profile** — user account with `role`, `active`, `username`, `full_name`
 - **Expense / Income** — financial records with `date`, `category`, `amount`, `payment_method`, `paid_by`/`received_by`
 - **Sponsor** — CRM-style pipeline: `company_name`, `contact_name`, `value`, `status`, `type`, `deliverables`
-- **Tournament → TournamentTeam → TeamParticipant** — three-level hierarchy
+- **Tournament  TournamentTeam  TeamParticipant** — three-level hierarchy
 - **Registration** — flat view for direct-entry tournaments (couples / solo)
 - **ParticipationRequest** — public form submissions with status machine and `participation_request_notes`
 - **AuditLog** — automatic change tracking (`insert` / `update` / `delete`)
@@ -210,11 +210,11 @@ Signals: `tournamentRequests`, `sponsorRequests`. Call `refresh()` on navigation
 
 Admin operations via Supabase Edge Functions:
 
-- `createUser(input: CreateUserInput)` → calls `admin-create-user`
-- `resetPassword(id)` → calls `admin-reset-password`
+- `createUser(input: CreateUserInput)`  calls `admin-create-user`
+- `resetPassword(id)`  calls `admin-reset-password`
 - `updateRole(id, role)`, `setActive(id, active)`
-- `updateOwnFullName(fullName)` → RPC `update_own_profile_name`
-- `displayNames(ids[])` → RPC `user_display_names`
+- `updateOwnFullName(fullName)`  RPC `update_own_profile_name`
+- `displayNames(ids[])`  RPC `user_display_names`
 
 ---
 
@@ -305,10 +305,10 @@ new Intl.NumberFormat("it-IT", { style: "currency", currency: "EUR" }).format(
 | ----------------------- | ------------------- | ------------------------------------------------------------ |
 | `SummaryCardComponent`  | `lfg-summary-card`  | `label`, `value`, `hint?`, `tone?`                           |
 | `KpiPanelComponent`     | `lfg-kpi-panel`     | `title`, `eyebrow?`, `storageKey` (localStorage)             |
-| `EmptyStateComponent`   | `lfg-empty-state`   | `title`, `text`, `actionLabel?` → `(action)`                 |
-| `ModalComponent`        | `lfg-modal`         | `open`, `title` → `(close)`                                  |
+| `EmptyStateComponent`   | `lfg-empty-state`   | `title`, `text`, `actionLabel?`  `(action)`                 |
+| `ModalComponent`        | `lfg-modal`         | `open`, `title`  `(close)`                                  |
 | `StatusBadgeComponent`  | `lfg-status-badge`  | `label`, `className?`                                        |
-| `ConfirmModalComponent` | `lfg-confirm-modal` | `open`, `message`, `confirmLabel?` → `(confirm)`, `(cancel)` |
+| `ConfirmModalComponent` | `lfg-confirm-modal` | `open`, `message`, `confirmLabel?`  `(confirm)`, `(cancel)` |
 
 KPI panel collapse state is persisted as `lfg-kpi-{storageKey}` in `localStorage`.
 
@@ -354,7 +354,7 @@ Team-based tournaments manage `TournamentTeam` + nested `TeamParticipant`. Direc
 ### Sponsors status machine
 
 ```
-contattato → in_trattativa → confermato → pagato
+contattato  in_trattativa  confermato  pagato
 ```
 
 A **sponsor lead** is: `status='contattato'`, `type='cash'`, `value=0`, `deliverables='Richiesta informazioni sponsor dal sito pubblico'`. These come from the public landing form and trigger a nav badge.
@@ -362,7 +362,7 @@ A **sponsor lead** is: `status='contattato'`, `type='cash'`, `value=0`, `deliver
 ### Participation requests status machine
 
 ```
-nuova → in_gestione → contattata → archiviata
+nuova  in_gestione  contattata  archiviata
                     ↑____________________________| (can reopen)
 ```
 
@@ -390,7 +390,7 @@ Guards: `authGuard` (authenticated + active), `adminGuard` (authenticated + acti
 ## Navigation (ShellComponent)
 
 Desktop: fixed sidebar (72px wide on mobile collapsed, full width on lg+).
-Mobile: sticky header with hamburger → full-height overlay menu.
+Mobile: sticky header with hamburger  full-height overlay menu.
 
 Nav items with badges (admin-only):
 
@@ -417,7 +417,7 @@ Mobile-first. Modals slide up from bottom on mobile (`animate-slide-up`), center
 
 | Function                  | Called from    | Purpose                               |
 | ------------------------- | -------------- | ------------------------------------- |
-| `username_login_email`    | AuthService    | Resolve username → email for login    |
+| `username_login_email`    | AuthService    | Resolve username  email for login    |
 | `admin-create-user`       | ProfileService | Create new user with temp password    |
 | `admin-reset-password`    | ProfileService | Reset user password                   |
 | `update_own_profile_name` | ProfileService | User updates their own full name      |

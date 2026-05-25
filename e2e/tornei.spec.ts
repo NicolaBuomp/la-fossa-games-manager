@@ -75,7 +75,7 @@ test.describe("Tornei (autenticato)", () => {
       const count = await cards.count();
       if (count > 0) {
         await expect(cards.first()).toBeVisible();
-        await expect(cards.first().getByText(/apri →/i)).toBeVisible();
+        await expect(cards.first().getByText(/apri /i)).toBeVisible();
       }
     });
 
