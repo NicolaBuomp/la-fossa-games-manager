@@ -11,6 +11,7 @@ import {
   FILTER_ALL,
   PAGE_SIZE,
   PARTICIPATION_REQUEST_STATUS,
+  SUPABASE_RPC,
   SUPABASE_TABLE,
 } from "../types/constants";
 import { SupabaseService } from "./supabase.service";
@@ -105,17 +106,16 @@ export class ParticipationRequestsService {
   }
 
   async countsByStatus(): Promise<RequestStatusCounts> {
-    const { data, error } = await this.supabase.client
-      .from(SUPABASE_TABLE.ParticipationRequests)
-      .select("status")
-      .neq("status", PARTICIPATION_REQUEST_STATUS.Transferred);
+    const { data, error } = await this.supabase.client.rpc(
+      SUPABASE_RPC.GetParticipationRequestCounts,
+    );
     if (error) throw error;
-    const rows = (data ?? []) as Pick<ParticipationRequest, "status">[];
+    const r = data as Record<string, unknown> | null;
     return {
-      newCount: rows.filter((r) => r.status === PARTICIPATION_REQUEST_STATUS.New).length,
-      managingCount: rows.filter((r) => r.status === PARTICIPATION_REQUEST_STATUS.Managing).length,
-      contactedCount: rows.filter((r) => r.status === PARTICIPATION_REQUEST_STATUS.Contacted).length,
-      archivedCount: rows.filter((r) => r.status === PARTICIPATION_REQUEST_STATUS.Archived).length,
+      newCount:       Number(r?.['newCount'] ?? 0),
+      managingCount:  Number(r?.['managingCount'] ?? 0),
+      contactedCount: Number(r?.['contactedCount'] ?? 0),
+      archivedCount:  Number(r?.['archivedCount'] ?? 0),
     };
   }
 

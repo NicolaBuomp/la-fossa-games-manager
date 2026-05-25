@@ -228,6 +228,8 @@ export const SUPABASE_TABLE = {
 export const SUPABASE_RPC = {
   GenerateGroupStage: "generate_group_stage",
   GetDashboardFinancials: "get_dashboard_financials",
+  GetParticipationRequestCounts: "get_participation_request_counts",
+  GetSponsorsSummary: "get_sponsors_summary",
   ListTransactionsWithSummary: "list_transactions_with_summary",
   MarkTransactionDelivered: "mark_transaction_delivered",
   RecalculateGroupStandings: "recalculate_group_standings",
