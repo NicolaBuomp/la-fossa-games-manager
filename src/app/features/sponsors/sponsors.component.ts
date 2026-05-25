@@ -130,27 +130,6 @@ type SponsorForm = InsertSponsor & { withoutPromisedAmount: boolean };
           />
         </section>
       </lfg-kpi-panel>
-      <div class="flex justify-end">
-        <label
-          class="flex items-center gap-3 rounded-lg bg-surface px-3 py-2 text-sm font-bold ring-1 ring-black/15"
-        >
-          <span>Vista compatta</span>
-          <input
-            type="checkbox"
-            class="peer sr-only"
-            [ngModel]="compactView()"
-            (ngModelChange)="compactView.set($event)"
-          />
-          <span
-            class="h-5 w-9 rounded-full bg-neutral-200 p-0.5 transition peer-checked:[background:var(--color-surface-strong)]"
-          >
-            <span
-              class="block h-4 w-4 rounded-full bg-white shadow-sm transition"
-              [class.translate-x-4]="compactView()"
-            ></span>
-          </span>
-        </label>
-      </div>
       @if (error()) {
         <p class="rounded-lg bg-red-50 p-3 text-sm text-red-700">
           {{ error() }}
@@ -170,38 +149,9 @@ type SponsorForm = InsertSponsor & { withoutPromisedAmount: boolean };
           icon="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"
           (action)="newItem()"
         />
-      } @else if (!items().length) {
-        <lfg-empty-state
-          title="Nessuno sponsor per questo stato"
-          text="Cambia filtro per vedere altri sponsor."
-          icon="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"
-        />
       } @else {
-        <div
-          [class]="
-            compactView()
-              ? 'grid gap-2 xl:grid-cols-3'
-              : 'grid gap-3 xl:grid-cols-2'
-          "
-        >
+        <div class="grid gap-3 xl:grid-cols-2">
           @for (item of items(); track item.id) {
-            @if (compactView()) {
-              <!-- COMPACT VIEW -->
-              <article class="flex items-center justify-between gap-3 rounded-lg border border-soft bg-surface px-3 py-2">
-                <div class="flex min-w-0 flex-1 items-center gap-2">
-                  <lfg-status-badge [label]="statusLabel(item.status)" [className]="statusClass(item.status)" />
-                  <h2 class="truncate text-sm font-bold">{{ item.company_name }}</h2>
-                </div>
-                <div class="flex flex-shrink-0 items-center gap-2">
-                  <span class="text-sm font-black">{{ promisedAmountLabel(item) }}</span>
-                  <button class="min-h-9 rounded-md bg-surface-muted px-2 py-1 text-[10px] font-bold uppercase sm:min-h-0" (click)="edit(item)">Modifica</button>
-                  @if (auth.isAdmin()) {
-                    <button class="min-h-9 rounded-md bg-red-50 px-2 py-1 text-[10px] font-bold uppercase text-red-600 sm:min-h-0" (click)="askRemove(item)">Elimina</button>
-                  }
-                </div>
-              </article>
-            } @else {
-              <!-- FULL VIEW -->
               <article class="overflow-hidden rounded-xl border border-soft bg-surface">
                 <!-- Body -->
                 <div class="p-4">
@@ -285,7 +235,6 @@ type SponsorForm = InsertSponsor & { withoutPromisedAmount: boolean };
                   </div>
                 </div>
               </article>
-            }
           }
         </div>
         <lfg-pagination
@@ -332,7 +281,6 @@ export class SponsorsComponent implements OnInit {
   updatingSponsorId = signal<string | null>(null);
   statusFilter = signal<SponsorStatus | typeof FILTER_ALL>(FILTER_ALL);
   searchQuery = signal("");
-  compactView = signal(false);
   confirmPending = signal<(() => Promise<void>) | null>(null);
   confirmMessage = signal("");
   private searchTimer: ReturnType<typeof setTimeout> | null = null;
@@ -419,6 +367,9 @@ export class SponsorsComponent implements OnInit {
         name: "withoutPromisedAmount",
         label: "Sponsor senza importo per ora",
         type: "checkbox",
+        disabled: () =>
+          Number(this.form.promised_amount || 0) > 0 ||
+          Number(this.form.received_amount || 0) > 0,
         help: "Usalo per contatti, lead e trattative da richiamare: resta tracciato ma non entra nei totali economici.",
       },
       {
@@ -642,6 +593,9 @@ export class SponsorsComponent implements OnInit {
     this.syncValueMode();
     const received = Number(this.form.received_amount || 0);
     const promised = Number(this.form.promised_amount || 0);
+    if (promised > 0 || received > 0) {
+      this.form.withoutPromisedAmount = false;
+    }
     if (received > promised) {
       this.form.promised_amount = received;
     }
@@ -659,10 +613,6 @@ export class SponsorsComponent implements OnInit {
     return (
       SPONSOR_CATEGORIES.find((item) => item.id === category)?.label ?? category
     );
-  }
-  promisedAmountLabel(item: Sponsor): string {
-    const amount = Number(item.promised_amount ?? 0);
-    return amount > 0 ? this.eur(amount) : "Nessun importo";
   }
   eur(value: number): string {
     return new Intl.NumberFormat("it-IT", {
