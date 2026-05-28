@@ -10,7 +10,6 @@ describe("TorneiCardComponent", () => {
       code: "calcio-a-5",
       name: "Calcio a 5",
       fee: 30,
-      date: null,
       status: "registrations_open",
       public_status: "published",
       published_at: null,

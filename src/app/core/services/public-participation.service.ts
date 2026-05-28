@@ -10,7 +10,7 @@ export class PublicParticipationService {
   async listAvailableTournaments(): Promise<PublicTournament[]> {
     const { data, error } = await this.supabase.client
       .from(SUPABASE_TABLE.Tournaments)
-      .select('id, name, code, fee, date, public_status')
+      .select('id, name, code, fee, public_status')
       .neq('public_status', TOURNAMENT_PUBLIC_STATUS.Hidden)
       .order('name', { ascending: true });
 
@@ -20,7 +20,6 @@ export class PublicParticipationService {
       name: tournament.name,
       code: tournament.code,
       fee: Number(tournament.fee || 0),
-      date: tournament.date,
       public_status: tournament.public_status,
     })) as PublicTournament[];
   }

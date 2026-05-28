@@ -47,13 +47,13 @@ alter table public.sponsors
 -- STEP 4: view unificata transactions_view
 -- Unisce: incomes, expenses, tournament_teams (paid=true), sponsors (status='pagato')
 -- Colonne chiave:
---   source_table  → tabella di origine ('incomes','expenses','tournament_teams','sponsors')
---   source_id     → id del record originale
---   type          → 'income' | 'expense'
---   amount        → importo
---   description   → testo descrittivo
---   category      → categoria
---   date          → data
+--   source_table   tabella di origine ('incomes','expenses','tournament_teams','sponsors')
+--   source_id      id del record originale
+--   type           'income' | 'expense'
+--   amount         importo
+--   description    testo descrittivo
+--   category       categoria
+--   date           data
 --   payment_method
 --   delivered_to_treasurer  (null per le spese)
 --   delivered_at            (null per le spese)

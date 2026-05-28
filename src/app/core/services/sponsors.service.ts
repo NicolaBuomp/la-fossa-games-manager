@@ -7,6 +7,7 @@ import {
   PAGE_SIZE,
   PUBLIC_SPONSOR_LEAD_DELIVERABLES,
   SPONSOR_STATUS,
+  SUPABASE_RPC,
   SUPABASE_TABLE,
 } from '../types/constants';
 
@@ -52,25 +53,17 @@ export class SponsorsService extends CrudService<Sponsor, InsertSponsor> {
   }
 
   async summary(userId?: string): Promise<SponsorsSummary> {
-    let query = this.supabase.client
-      .from(SUPABASE_TABLE.Sponsors)
-      .select('status, promised_amount, received_amount');
-    if (userId) {
-      query = query.or(`responsible_user_id.eq.${userId},created_by.eq.${userId}`);
-    }
-    const { data, error } = await query;
+    const { data, error } = await this.supabase.client.rpc(SUPABASE_RPC.GetSponsorsSummary, {
+      p_user_id: userId ?? null,
+    });
     if (error) throw error;
-    const rows = (data ?? []) as Pick<Sponsor, 'status' | 'promised_amount' | 'received_amount'>[];
+    const r = data as Record<string, unknown> | null;
     return {
-      contactedCount: rows.filter((r) => r.status === SPONSOR_STATUS.Contacted).length,
-      negotiatingCount: rows.filter((r) => r.status === SPONSOR_STATUS.Negotiating).length,
-      confirmedPaidCount: rows.filter(
-        (r) => r.status === SPONSOR_STATUS.Confirmed || r.status === SPONSOR_STATUS.Paid,
-      ).length,
-      promisedTotal: rows
-        .filter((r) => r.status === SPONSOR_STATUS.Confirmed || r.status === SPONSOR_STATUS.Paid)
-        .reduce((s, r) => s + Number(r.promised_amount ?? 0), 0),
-      receivedTotal: rows.reduce((s, r) => s + Number(r.received_amount || 0), 0),
+      contactedCount:     Number(r?.['contactedCount'] ?? 0),
+      negotiatingCount:   Number(r?.['negotiatingCount'] ?? 0),
+      confirmedPaidCount: Number(r?.['confirmedPaidCount'] ?? 0),
+      promisedTotal:      Number(r?.['promisedTotal'] ?? 0),
+      receivedTotal:      Number(r?.['receivedTotal'] ?? 0),
     };
   }
 

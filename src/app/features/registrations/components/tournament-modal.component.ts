@@ -40,16 +40,6 @@ import { ModalComponent } from "../../../shared/components/ui.component";
           </label>
 
           <label class="grid gap-1 text-sm font-bold">
-            Data evento
-            <input
-              type="date"
-              name="date"
-              [(ngModel)]="form.date"
-              class="rounded-lg border border-soft bg-surface-muted px-3 py-3 font-normal disabled:cursor-not-allowed disabled:opacity-70"
-            />
-          </label>
-
-          <label class="grid gap-1 text-sm font-bold">
             Note
             <textarea
               name="notes"
@@ -100,7 +90,6 @@ export class TournamentModalComponent {
       this.form = {
         name: t.name,
         fee: t.fee,
-        date: t.date,
         code: t.code,
         notes: t.notes,
       };
@@ -118,7 +107,6 @@ export class TournamentModalComponent {
     return {
       name: "",
       fee: 0,
-      date: "",
       code: null,
       notes: "",
     };

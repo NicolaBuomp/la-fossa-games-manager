@@ -194,9 +194,9 @@ type SponsorForm = InsertSponsor & { withoutPromisedAmount: boolean };
                 </div>
                 <div class="flex flex-shrink-0 items-center gap-2">
                   <span class="text-sm font-black">{{ promisedAmountLabel(item) }}</span>
-                  <button class="rounded-md bg-surface-muted px-2 py-1 text-[10px] font-bold uppercase" (click)="edit(item)">Modifica</button>
+                  <button class="min-h-9 rounded-md bg-surface-muted px-2 py-1 text-[10px] font-bold uppercase sm:min-h-0" (click)="edit(item)">Modifica</button>
                   @if (auth.isAdmin()) {
-                    <button class="rounded-md bg-red-50 px-2 py-1 text-[10px] font-bold uppercase text-red-600" (click)="askRemove(item)">Elimina</button>
+                    <button class="min-h-9 rounded-md bg-red-50 px-2 py-1 text-[10px] font-bold uppercase text-red-600 sm:min-h-0" (click)="askRemove(item)">Elimina</button>
                   }
                 </div>
               </article>
@@ -240,6 +240,11 @@ type SponsorForm = InsertSponsor & { withoutPromisedAmount: boolean };
                   <div class="mt-3 flex flex-wrap gap-1.5">
                     <span class="rounded-full bg-surface-muted px-2.5 py-1 text-[10px] font-bold uppercase">{{ categoryLabel(item.category) }}</span>
                     <span class="rounded-full bg-surface-muted px-2.5 py-1 text-[10px] font-bold uppercase">{{ item.payment_method }}</span>
+                    @if (item.da_fatturare) {
+                      <span class="rounded-full bg-orange-50 px-2.5 py-1 text-[10px] font-bold uppercase text-orange-700">
+                        {{ item.fattura_emessa ? "Fattura emessa" : "Da fatturare" }}
+                      </span>
+                    }
                   </div>
                   @if (item.notes) {
                     <p class="mt-2.5 text-sm italic text-muted">{{ item.notes }}</p>
@@ -253,7 +258,7 @@ type SponsorForm = InsertSponsor & { withoutPromisedAmount: boolean };
                       @if (status.id !== item.status) {
                         <button
                           [disabled]="updatingSponsorId() === item.id"
-                          class="rounded-md border border-soft bg-surface px-2.5 py-1.5 text-[10px] font-bold uppercase transition hover:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-50"
+                          class="min-h-9 rounded-md border border-soft bg-surface px-2.5 py-1.5 text-[10px] font-bold uppercase transition hover:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-50 sm:min-h-0"
                           (click)="setStatus(item, status.id)"
                         >
                           {{ status.label }}
@@ -264,14 +269,14 @@ type SponsorForm = InsertSponsor & { withoutPromisedAmount: boolean };
                   <!-- Actions -->
                   <div class="flex gap-2">
                     <button
-                      class="rounded-md bg-surface px-3 py-1.5 text-xs font-bold uppercase ring-1 ring-black/10 transition hover:bg-surface-muted"
+                      class="min-h-9 rounded-md bg-surface px-3 py-1.5 text-xs font-bold uppercase ring-1 ring-black/10 transition hover:bg-surface-muted sm:min-h-0"
                       (click)="edit(item)"
                     >
                       Modifica
                     </button>
                     @if (auth.isAdmin()) {
                       <button
-                        class="rounded-md bg-red-50 px-3 py-1.5 text-xs font-bold uppercase text-red-600 transition hover:bg-red-100"
+                        class="min-h-9 rounded-md bg-red-50 px-3 py-1.5 text-xs font-bold uppercase text-red-600 transition hover:bg-red-100 sm:min-h-0"
                         (click)="askRemove(item)"
                       >
                         Elimina
@@ -416,6 +421,12 @@ export class SponsorsComponent implements OnInit {
         type: "checkbox",
         help: "Usalo per contatti, lead e trattative da richiamare: resta tracciato ma non entra nei totali economici.",
       },
+      {
+        name: "da_fatturare",
+        label: "Da fatturare",
+        type: "checkbox",
+        help: "Spunta se per questo sponsor deve essere emessa una fattura.",
+      },
       { name: "notes", label: "Note", type: "textarea", rows: 3 },
     );
 
@@ -517,6 +528,8 @@ export class SponsorsComponent implements OnInit {
       status: item.status,
       deliverables: item.deliverables,
       notes: item.notes,
+      da_fatturare: item.da_fatturare ?? false,
+      fattura_emessa: item.fattura_emessa ?? false,
       withoutPromisedAmount: Number(item.promised_amount ?? 0) === 0,
     };
     this.modalOpen.set(true);
@@ -685,6 +698,8 @@ export class SponsorsComponent implements OnInit {
       status: SPONSOR_STATUS.Contacted,
       deliverables: "",
       notes: "",
+      da_fatturare: false,
+      fattura_emessa: false,
       withoutPromisedAmount: true,
     };
   }

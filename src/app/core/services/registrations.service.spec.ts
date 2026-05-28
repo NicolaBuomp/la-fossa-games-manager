@@ -40,7 +40,6 @@ describe("RegistrationsService", () => {
     code: "pallavolo",
     name: "Green Volley",
     fee: 50,
-    date: null,
     status: "registrations_open",
     public_status: "registrations_open",
     published_at: null,

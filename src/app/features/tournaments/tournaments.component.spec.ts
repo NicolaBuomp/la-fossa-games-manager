@@ -14,7 +14,6 @@ describe("TournamentsComponent", () => {
       code: "pallavolo",
       name: "Green Volley",
       fee: 50,
-      date: null,
       status: "registrations_open",
       public_status: "hidden",
       published_at: null,

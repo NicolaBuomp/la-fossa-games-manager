@@ -48,7 +48,7 @@ import { TOURNAMENT_MATCH_STATUS, TOURNAMENT_PUBLIC_STATUSES, TOURNAMENT_STATUSE
       <!-- CTA -->
       <div class="mt-4 flex items-center justify-end">
         <span class="text-xs font-black uppercase tracking-wide text-muted transition-colors group-hover:text-accent">
-          Apri →
+          Apri 
         </span>
       </div>
     </article>

@@ -44,6 +44,13 @@ export const routes: Routes = [
           ),
       },
       {
+        path: "fatturazione",
+        loadComponent: () =>
+          import("./features/fatturazione/fatturazione.component").then(
+            (m) => m.FatturazioneComponent,
+          ),
+      },
+      {
         path: "tesoreria",
         canActivate: [treasurerGuard],
         loadComponent: () =>

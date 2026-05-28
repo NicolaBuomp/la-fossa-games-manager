@@ -145,6 +145,7 @@ import { inject } from "@angular/core";
           class="animate-slide-up w-full max-w-sm rounded-t-2xl bg-surface p-6 sm:rounded-2xl"
           (click)="$event.stopPropagation()"
         >
+          <div class="mx-auto mb-4 h-1 w-10 rounded-full bg-surface-muted sm:hidden" aria-hidden="true"></div>
           <p class="text-xs font-black uppercase tracking-[0.16em] text-muted">
             {{ m.tournament_groups?.name || m.round_label || "Partita" }}
           </p>

@@ -42,6 +42,8 @@ describe("DashboardComponent", () => {
     status,
     deliverables: null,
     notes: null,
+    da_fatturare: false,
+    fattura_emessa: false,
     created_by: null,
     updated_by: null,
     created_at: "2026-05-01T10:00:00Z",

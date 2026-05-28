@@ -454,6 +454,8 @@ export class LandingComponent implements OnInit, OnDestroy, AfterViewInit {
           deliverables: PUBLIC_SPONSOR_LEAD_DELIVERABLES,
           notes:
             "Lead sponsor generato dal form pubblico. Ricontattare via WhatsApp.",
+          da_fatturare: false,
+          fattura_emessa: false,
         });
       } else {
         await this.participation.createRequest({
@@ -484,10 +486,7 @@ export class LandingComponent implements OnInit, OnDestroy, AfterViewInit {
 
   tournamentLabel(tournament: PublicTournament): string {
     const fee = tournament.fee ? ` · quota ${this.eur(tournament.fee)}` : "";
-    const date = tournament.date
-      ? ` · ${new Intl.DateTimeFormat("it-IT").format(new Date(tournament.date))}`
-      : "";
-    return `${tournament.name}${date}${fee}`;
+    return `${tournament.name}${fee}`;
   }
 
   countdownItems(): { label: string; value: string }[] {

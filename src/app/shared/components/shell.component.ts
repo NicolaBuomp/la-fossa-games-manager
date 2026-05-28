@@ -114,81 +114,37 @@ interface NavItem {
 
       <section class="min-w-0 flex-1">
         <header
-          class="sticky top-0 z-20 border-b border-soft bg-app px-5 py-4 backdrop-blur lg:hidden"
+          class="sticky top-0 z-20 border-b border-soft bg-app px-5 py-3 backdrop-blur lg:hidden"
         >
           <div class="flex items-center justify-between gap-4">
-            <div class="flex min-w-0 items-center gap-3">
-              <button
-                type="button"
-                class="relative grid h-10 w-10 shrink-0 place-items-center rounded-full border border-soft bg-surface text-primary"
-                aria-label="Apri menu"
-                [attr.aria-expanded]="mobileMenuOpen()"
-                (click)="openMobileMenu()"
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  class="h-5 w-5"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  aria-hidden="true"
-                >
-                  <path d="M4 7h16" />
-                  <path d="M4 12h16" />
-                  <path d="M4 17h16" />
-                </svg>
-                @if (totalBadgeCount() > 0) {
-                  <span class="bg-accent text-on-accent absolute -right-1 -top-1 grid min-h-5 min-w-5 place-items-center rounded-full px-1 text-[10px] font-black leading-none">
-                    {{ totalBadgeCount() }}
-                  </span>
-                }
-              </button>
-              <div class="min-w-0">
-                <p class="truncate font-display text-xl uppercase">
-                  La Fossa <span class="text-accent">Games</span>
-                </p>
-                <p
-                  class="truncate text-[10px] font-bold uppercase tracking-[0.18em] text-muted"
-                >
-                  Gestionale evento
-                </p>
-              </div>
+            <div class="min-w-0">
+              <p class="truncate font-display text-xl uppercase">
+                La Fossa <span class="text-accent">Games</span>
+              </p>
             </div>
-            <div class="flex items-center gap-2">
-              <a
-                routerLink="/app/profile"
-                aria-label="Apri profilo"
-                class="grid h-10 w-10 place-items-center rounded-full border border-soft bg-surface text-primary"
+            <a
+              routerLink="/app/profile"
+              aria-label="Apri profilo"
+              class="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-soft bg-surface text-primary"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                class="h-5 w-5"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                aria-hidden="true"
               >
-                <svg
-                  viewBox="0 0 24 24"
-                  class="h-5 w-5"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  aria-hidden="true"
-                >
-                  <path d="M20 21a8 8 0 0 0-16 0" />
-                  <circle cx="12" cy="7" r="4" />
-                </svg>
-              </a>
-              <button
-                class="hover-accent rounded-full border border-soft bg-surface-muted px-4 py-2 text-xs font-bold uppercase tracking-wide text-primary transition"
-                (click)="auth.signOut()"
-              >
-                Esci
-              </button>
-            </div>
+                <path d="M20 21a8 8 0 0 0-16 0" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
+            </a>
           </div>
         </header>
 
         @if (mobileMenuOpen()) {
-          <div
-            class="animate-fade-in fixed inset-0 z-40 bg-black/35 lg:hidden"
-            (click)="closeMobileMenu()"
-          ></div>
           <aside
-            class="animate-slide-in-left fixed inset-y-0 left-0 z-50 flex w-72 max-w-[82vw] flex-col border-r border-soft bg-surface shadow-2xl lg:hidden"
+            class="animate-slide-up fixed inset-0 z-50 flex flex-col bg-surface lg:hidden"
           >
             <div class="flex items-start justify-between gap-4 px-5 py-5">
               <div>
@@ -293,14 +249,14 @@ interface NavItem {
         }
 
         <main
-          class="mx-auto w-full max-w-7xl px-4 pb-8 pt-5 sm:px-6 lg:px-8 lg:py-8 md:pb-24 lg:pb-8"
+          class="mx-auto w-full max-w-7xl px-4 pt-5 pb-28 sm:px-6 lg:px-8 lg:py-8"
         >
           <router-outlet />
         </main>
 
-        <!-- Bottom nav tablet (md: 768–1023px) -->
+        <!-- Bottom nav mobile+tablet (< 1024px) -->
         <nav
-          class="bg-surface border-t border-soft fixed inset-x-0 bottom-0 z-30 hidden md:flex lg:hidden"
+          class="bg-surface border-t border-soft fixed inset-x-0 bottom-0 z-30 flex lg:hidden"
           aria-label="Navigazione principale"
         >
           @for (item of bottomNavItems(); track item.path) {
@@ -330,6 +286,9 @@ interface NavItem {
                   }
                   @case ('/app/transactions') {
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  }
+                  @case ('/app/fatturazione') {
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6M9 11h6M9 15h3m-6 6h12a2 2 0 002-2V5a2 2 0 00-2-2H6a2 2 0 00-2 2v14a2 2 0 002 2z"/>
                   }
                 }
               </svg>

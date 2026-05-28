@@ -21,7 +21,7 @@ import { Component, computed, input, output } from "@angular/core";
             [disabled]="page() >= totalPages()"
             (click)="pageChange.emit(page() + 1)"
           >
-            Succ →
+            Succ 
           </button>
         </div>
       </div>

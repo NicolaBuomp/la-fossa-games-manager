@@ -1,6 +1,13 @@
 import { Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
-import { DeliveryItem, PagedResult, Transaction, TransactionSummary, TransactionType } from '../types/models';
+import {
+  DeliveryItem,
+  PagedResult,
+  Transaction,
+  TransactionSourceTable,
+  TransactionSummary,
+  TransactionType,
+} from '../types/models';
 import {
   DELIVERY_STATUS,
   DeliveryStatusFilter,
@@ -20,6 +27,10 @@ export interface TransactionFilters {
   search?: string;
   page?: number;
   pageSize?: number;
+}
+
+export interface TransactionsListWithSummary extends PagedResult<Transaction> {
+  summary: TransactionSummary;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -65,6 +76,34 @@ export class TransactionsService {
     return { data: (data ?? []) as Transaction[], total: count ?? 0 };
   }
 
+  async listWithSummary(filters: TransactionFilters = {}): Promise<TransactionsListWithSummary> {
+    const { data, error } = await this.supabase.client.rpc(SUPABASE_RPC.ListTransactionsWithSummary, {
+      p_type: filters.type && filters.type !== FILTER_ALL ? filters.type : null,
+      p_category: filters.category ?? null,
+      p_delivery_status: filters.deliveryStatus && filters.deliveryStatus !== FILTER_ALL ? filters.deliveryStatus : null,
+      p_date_from: filters.dateFrom ?? null,
+      p_date_to: filters.dateTo ?? null,
+      p_search: filters.search ?? null,
+      p_page: filters.page ?? 1,
+      p_page_size: filters.pageSize ?? PAGE_SIZE,
+    });
+    if (error) throw error;
+
+    const result = data as TransactionsListWithSummary | null;
+    return {
+      data: (result?.data ?? []) as Transaction[],
+      total: Number(result?.total ?? 0),
+      summary: {
+        totalIncomes: Number(result?.summary?.totalIncomes ?? 0),
+        totalExpenses: Number(result?.summary?.totalExpenses ?? 0),
+        incomeCount: Number(result?.summary?.incomeCount ?? 0),
+        expenseCount: Number(result?.summary?.expenseCount ?? 0),
+        pendingDelivery: Number(result?.summary?.pendingDelivery ?? 0),
+        pendingDeliveryCount: Number(result?.summary?.pendingDeliveryCount ?? 0),
+      },
+    };
+  }
+
   async summary(): Promise<TransactionSummary> {
     const { data, error } = await this.supabase.client
       .from(SUPABASE_TABLE.TransactionsView)
@@ -90,5 +129,28 @@ export class TransactionsService {
       p_delivered_by: deliveredBy,
     });
     if (error) throw error;
+  }
+
+  async updateInvoiceStatus(
+    item: Pick<Transaction, 'source_table' | 'source_id'>,
+    fatturaEmessa: boolean,
+  ): Promise<void> {
+    const table = this.invoiceTable(item.source_table);
+    if (!table) {
+      throw new Error('Questa transazione non supporta la fatturazione.');
+    }
+
+    const { error } = await this.supabase.client
+      .from(table)
+      .update({ da_fatturare: true, fattura_emessa: fatturaEmessa })
+      .eq('id', item.source_id);
+
+    if (error) throw error;
+  }
+
+  private invoiceTable(sourceTable: TransactionSourceTable): typeof SUPABASE_TABLE.Incomes | typeof SUPABASE_TABLE.Sponsors | null {
+    if (sourceTable === SUPABASE_TABLE.Incomes) return SUPABASE_TABLE.Incomes;
+    if (sourceTable === SUPABASE_TABLE.Sponsors) return SUPABASE_TABLE.Sponsors;
+    return null;
   }
 }

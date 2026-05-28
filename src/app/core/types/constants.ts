@@ -179,6 +179,12 @@ export const SHELL_NAV_ITEMS = [
     group: "Finanze",
   },
   {
+    path: "/app/fatturazione",
+    label: "Fatture",
+    short: "F",
+    group: "Finanze",
+  },
+  {
     path: "/app/tesoreria",
     label: "Tesoriere",
     short: "T",
@@ -222,6 +228,9 @@ export const SUPABASE_TABLE = {
 export const SUPABASE_RPC = {
   GenerateGroupStage: "generate_group_stage",
   GetDashboardFinancials: "get_dashboard_financials",
+  GetParticipationRequestCounts: "get_participation_request_counts",
+  GetSponsorsSummary: "get_sponsors_summary",
+  ListTransactionsWithSummary: "list_transactions_with_summary",
   MarkTransactionDelivered: "mark_transaction_delivered",
   RecalculateGroupStandings: "recalculate_group_standings",
   ResetTournamentSchedule: "reset_tournament_schedule",

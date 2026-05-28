@@ -184,7 +184,7 @@ type TransferForm = {
                 <!-- Accetta / Trasferisci — sempre visibile -->
                 <button
                   [disabled]="updatingRequestId() === request.id"
-                  class="bg-strong text-on-strong rounded-lg px-4 py-2 text-xs font-bold uppercase disabled:cursor-not-allowed disabled:opacity-60"
+                  class="bg-strong text-on-strong min-h-11 rounded-lg px-4 py-2 text-xs font-bold uppercase disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-0"
                   (click)="openTransferModal(request)"
                 >
                   {{ request.status === requestStatus.New ? "Accetta" : "Trasferisci" }}

@@ -55,7 +55,7 @@ import {
               (click)="confirmDeliveryOpen.set(true)"
             >
               {{
-                delivering() ? "Consegna in corso…" : "Consegna al tesoriere →"
+                delivering() ? "Consegna in corso…" : "Consegna al tesoriere "
               }}
             </button>
           </div>
@@ -81,6 +81,29 @@ import {
             [value]="eur(deliveredTotal())"
             tone="income"
             [hint]="deliveredItems().length + ' entrate'"
+          />
+        </section>
+      </lfg-kpi-panel>
+
+      <lfg-kpi-panel title="Riepilogo cassa" storageKey="tesoreria-cassa">
+        <section class="grid gap-3 sm:grid-cols-3">
+          <lfg-summary-card
+            label="Cassa fatturata"
+            [value]="eur(invoicedTotal())"
+            tone="income"
+            [hint]="invoicedIncomes().length + ' entrate'"
+          />
+          <lfg-summary-card
+            label="Cassa non fatturata"
+            [value]="eur(nonInvoicedTotal())"
+            tone="warning"
+            [hint]="nonInvoicedIncomes().length + ' entrate'"
+          />
+          <lfg-summary-card
+            label="Totale cassa"
+            [value]="eur(grandTotal())"
+            tone="income"
+            hint="Tutte le entrate"
           />
         </section>
       </lfg-kpi-panel>
@@ -355,6 +378,26 @@ export class TesoreriaComponent implements OnInit {
   readonly deliveredTotal = computed(() =>
     this.deliveredItems().reduce((s, i) => s + Number(i.amount || 0), 0),
   );
+  readonly invoicedIncomes = computed(() =>
+    this.allItems().filter(
+      (i) => i.type === TRANSACTION_TYPE.Income && i.da_fatturare === true,
+    ),
+  );
+  readonly nonInvoicedIncomes = computed(() =>
+    this.allItems().filter(
+      (i) => i.type === TRANSACTION_TYPE.Income && i.da_fatturare !== true,
+    ),
+  );
+  readonly invoicedTotal = computed(() =>
+    this.invoicedIncomes().reduce((s, i) => s + Number(i.amount || 0), 0),
+  );
+  readonly nonInvoicedTotal = computed(() =>
+    this.nonInvoicedIncomes().reduce((s, i) => s + Number(i.amount || 0), 0),
+  );
+  readonly grandTotal = computed(
+    () => this.invoicedTotal() + this.nonInvoicedTotal(),
+  );
+
   readonly deliveredThisMonth = computed(() => {
     const now = new Date();
     return this.deliveredItems()

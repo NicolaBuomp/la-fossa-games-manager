@@ -90,9 +90,6 @@ const TABS: { id: TorneiTab; label: string; adminOnly?: boolean }[] = [
               @if (tournament()!.fee) {
                 €{{ tournament()!.fee }}
               }
-              @if (tournament()!.date) {
-                @if (tournament()!.fee) { · }{{ dateLabel(tournament()!.date) }}
-              }
             </p>
           </div>
           <div class="flex flex-wrap gap-1.5 pt-0.5">
@@ -259,19 +256,6 @@ export class TorneiDetailComponent implements OnInit {
 
   goBack(): void {
     void this.router.navigate(["/app/tornei"]);
-  }
-
-  dateLabel(date: string | null | undefined): string {
-    if (!date) return "";
-    try {
-      return new Intl.DateTimeFormat("it-IT", {
-        day: "numeric",
-        month: "short",
-        year: "numeric",
-      }).format(new Date(date));
-    } catch {
-      return date;
-    }
   }
 
   statusLabel(status: string): string {

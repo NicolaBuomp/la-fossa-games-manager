@@ -45,23 +45,6 @@ import { InsertTournament, Tournament } from "../../../core/types/models";
           </div>
         </section>
 
-        <!-- DATE -->
-        <section>
-          <p class="mb-3 text-xs font-bold uppercase tracking-[0.18em] text-muted">Date</p>
-          <div class="rounded-xl border border-soft bg-surface p-4 shadow-sm">
-            <label class="flex flex-col gap-1 text-sm font-bold">
-              <span>Data evento</span>
-              <input
-                type="date"
-                name="date"
-                [(ngModel)]="form.date"
-                [disabled]="saving()"
-                class="rounded-lg border border-soft bg-surface-muted px-3 py-3 font-normal disabled:opacity-60"
-              />
-            </label>
-          </div>
-        </section>
-
         <!-- NOTE -->
         <section>
           <p class="mb-3 text-xs font-bold uppercase tracking-[0.18em] text-muted">Note</p>
@@ -99,7 +82,7 @@ import { InsertTournament, Tournament } from "../../../core/types/models";
     </div>
 
     <!-- Mobile: sticky save bar -->
-    <div class="fixed bottom-0 left-0 right-0 border-t border-soft bg-surface p-3 sm:hidden" style="z-index: 40;">
+    <div class="fixed bottom-14 left-0 right-0 border-t border-soft bg-surface p-3 sm:hidden" style="z-index: 40;">
       <button
         type="button"
         class="bg-accent text-on-accent w-full rounded-lg py-3 text-sm font-black uppercase disabled:opacity-60"
@@ -128,7 +111,6 @@ export class TorneiTabImpostazioniComponent implements OnChanges {
       this.form = {
         name: t.name,
         fee: t.fee,
-        date: t.date ?? "",
         code: t.code ?? null,
         notes: t.notes ?? "",
       };
@@ -153,6 +135,6 @@ export class TorneiTabImpostazioniComponent implements OnChanges {
   }
 
   private emptyForm(): InsertTournament {
-    return { name: "", fee: 0, date: "", code: null, notes: "" };
+    return { name: "", fee: 0, code: null, notes: "" };
   }
 }

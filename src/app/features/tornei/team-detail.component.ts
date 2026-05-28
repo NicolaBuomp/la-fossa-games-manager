@@ -282,7 +282,7 @@ import { TeamParticipantRowComponent } from "./components/team-participant-row.c
       @if (auth.isAdmin() && !isDirect() && canAddParticipant()) {
         <button
           type="button"
-          class="bg-accent text-on-accent fixed bottom-4 right-4 z-30 flex h-14 w-14 items-center justify-center rounded-full shadow-lg text-2xl font-black sm:hidden"
+          class="bg-accent text-on-accent fixed bottom-24 right-5 z-30 flex h-14 w-14 items-center justify-center rounded-full shadow-lg text-2xl font-black sm:hidden"
           style="line-height:1"
           (click)="openAddParticipant()"
           aria-label="Aggiungi giocatore"
