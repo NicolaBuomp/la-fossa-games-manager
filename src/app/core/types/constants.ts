@@ -51,7 +51,6 @@ export const SPONSOR_STATUS = {
   Paid: "pagato",
 } as const satisfies Record<string, SponsorStatus>;
 
-
 export const SPONSOR_CATEGORY = {
   Bronzo: "bronzo",
   Argento: "argento",
@@ -64,7 +63,6 @@ export const EXPENSE_STATUS = {
   ToRefund: "da_rimborsare",
   Refunded: "rimborsata",
 } as const satisfies Record<string, ExpenseStatus>;
-
 
 export const TOURNAMENT_STATUS = {
   Draft: "draft",
@@ -273,12 +271,20 @@ export const DIRECT_TOURNAMENT_CODES: readonly string[] = [
 
 export const DEFAULT_TOURNAMENTS = [
   { code: DEFAULT_TOURNAMENT_CODE.Football5, name: "Calcio a 5", fee: 0 },
-  { code: DEFAULT_TOURNAMENT_CODE.Football5Under15, name: "Calcio a 5 Under 15", fee: 0 },
+  {
+    code: DEFAULT_TOURNAMENT_CODE.Football5Under15,
+    name: "Calcio a 5 Under 15",
+    fee: 0,
+  },
   { code: DEFAULT_TOURNAMENT_CODE.Volleyball, name: "Green Volley", fee: 50 },
   { code: DEFAULT_TOURNAMENT_CODE.Briscola, name: "Briscola", fee: 0 },
   { code: DEFAULT_TOURNAMENT_CODE.Fifa, name: "Fifa", fee: 0 },
   { code: DEFAULT_TOURNAMENT_CODE.PingPong, name: "Ping Pong", fee: 0 },
-  { code: DEFAULT_TOURNAMENT_CODE.TableFootball, name: "Calcio Balilla", fee: 0 },
+  {
+    code: DEFAULT_TOURNAMENT_CODE.TableFootball,
+    name: "Calcio Balilla",
+    fee: 0,
+  },
 ] as const satisfies ReadonlyArray<{ code: string; name: string; fee: number }>;
 
 export const TOURNAMENT_MIN_PARTICIPANTS_BY_CODE: Readonly<
@@ -291,6 +297,16 @@ export const TOURNAMENT_MIN_PARTICIPANTS_BY_CODE: Readonly<
   [DEFAULT_TOURNAMENT_CODE.TableFootball]: 2,
 } as const;
 
+export const TOURNAMENT_MAX_PLAYERS_BY_CODE: Readonly<Record<string, number>> =
+  {
+    [DEFAULT_TOURNAMENT_CODE.Football5]: 8,
+    [DEFAULT_TOURNAMENT_CODE.Football5Under15]: 8,
+    [DEFAULT_TOURNAMENT_CODE.Volleyball]: 5,
+    [DEFAULT_TOURNAMENT_CODE.Briscola]: 2,
+    [DEFAULT_TOURNAMENT_CODE.Fifa]: 1,
+    [DEFAULT_TOURNAMENT_CODE.PingPong]: 1,
+    [DEFAULT_TOURNAMENT_CODE.TableFootball]: 2,
+  } as const;
 
 export const EXPENSE_CATEGORIES = [
   "Attrezzatura",

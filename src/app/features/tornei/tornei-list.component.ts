@@ -4,11 +4,15 @@ import { AuthService } from "../../core/services/auth.service";
 import { RegistrationsService } from "../../core/services/registrations.service";
 import { SnackbarService } from "../../core/services/snackbar.service";
 import { TournamentsService } from "../../core/services/tournaments.service";
-import { InsertTournament, OperationalTournament } from "../../core/types/models";
 import {
   TOURNAMENT_MATCH_STATUS,
+  TOURNAMENT_MAX_PLAYERS_BY_CODE,
   TOURNAMENT_PUBLIC_STATUS,
 } from "../../core/types/constants";
+import {
+  InsertTournament,
+  OperationalTournament,
+} from "../../core/types/models";
 import { EmptyStateComponent } from "../../shared/components/ui.component";
 import { TournamentModalComponent } from "../registrations/components/tournament-modal.component";
 import { TorneiCardComponent } from "./components/tornei-card.component";
@@ -16,17 +20,17 @@ import { TorneiCardComponent } from "./components/tornei-card.component";
 @Component({
   selector: "lfg-tornei-list",
   standalone: true,
-  imports: [
-    EmptyStateComponent,
-    TournamentModalComponent,
-    TorneiCardComponent,
-  ],
+  imports: [EmptyStateComponent, TournamentModalComponent, TorneiCardComponent],
   template: `
     <!-- Hero header -->
-    <header class="bg-strong text-on-strong -mx-4 -mt-4 mb-6 px-4 pb-6 pt-5 sm:-mx-6 sm:-mt-6 sm:px-6">
+    <header
+      class="bg-strong text-on-strong -mx-4 -mt-4 mb-6 px-4 pb-6 pt-5 sm:-mx-6 sm:-mt-6 sm:px-6"
+    >
       <div class="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p class="text-xs font-bold uppercase tracking-[0.18em] opacity-60">Gestione competizioni</p>
+          <p class="text-xs font-bold uppercase tracking-[0.18em] opacity-60">
+            Gestione competizioni
+          </p>
           <h1 class="font-display text-3xl uppercase">Tornei</h1>
         </div>
       </div>
@@ -34,19 +38,35 @@ import { TorneiCardComponent } from "./components/tornei-card.component";
       <!-- KPI pill row -->
       <div class="mt-4 flex gap-4 overflow-x-auto no-scrollbar">
         <div class="flex items-center gap-1.5 whitespace-nowrap">
-          <span class="text-accent font-black tabular-nums text-lg">{{ tournaments().length }}</span>
+          <span class="text-accent font-black tabular-nums text-lg">{{
+            tournaments().length
+          }}</span>
           <span class="text-xs font-semibold opacity-70">tornei</span>
         </div>
         <div class="flex items-center gap-1.5 whitespace-nowrap">
-          <span class="text-accent font-black tabular-nums text-lg">{{ totalTeams() }}</span>
+          <span class="text-accent font-black tabular-nums text-lg">{{
+            totalTeams()
+          }}</span>
           <span class="text-xs font-semibold opacity-70">squadre/iscritti</span>
         </div>
         <div class="flex items-center gap-1.5 whitespace-nowrap">
-          <span class="text-accent font-black tabular-nums text-lg">{{ publishedCount() }}</span>
+          <span class="text-accent font-black tabular-nums text-lg">{{
+            publishedCount()
+          }}</span>
           <span class="text-xs font-semibold opacity-70">pubblicati</span>
         </div>
         <div class="flex items-center gap-1.5 whitespace-nowrap">
-          <span class="font-black tabular-nums text-lg" [class]="openMatchCount() > 0 ? 'text-warning' : 'text-accent'">{{ openMatchCount() }}</span>
+          <span class="text-accent font-black tabular-nums text-lg">{{
+            totalExpectedPeople()
+          }}</span>
+          <span class="text-xs font-semibold opacity-70">persone previste</span>
+        </div>
+        <div class="flex items-center gap-1.5 whitespace-nowrap">
+          <span
+            class="font-black tabular-nums text-lg"
+            [class]="openMatchCount() > 0 ? 'text-warning' : 'text-accent'"
+            >{{ openMatchCount() }}</span
+          >
           <span class="text-xs font-semibold opacity-70">risultati aperti</span>
         </div>
       </div>
@@ -60,7 +80,7 @@ import { TorneiCardComponent } from "./components/tornei-card.component";
 
     @if (loading() && !tournaments().length) {
       <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-        @for (i of [1,2,3,4,5,6]; track i) {
+        @for (i of [1, 2, 3, 4, 5, 6]; track i) {
           <div class="h-44 animate-pulse rounded-xl bg-surface-muted"></div>
         }
       </div>
@@ -72,7 +92,11 @@ import { TorneiCardComponent } from "./components/tornei-card.component";
       />
     } @else {
       <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-        @for (tournament of tournaments(); track tournament.id; let i = $index) {
+        @for (
+          tournament of tournaments();
+          track tournament.id;
+          let i = $index
+        ) {
           <lfg-tornei-card
             [tournament]="tournament"
             [index]="i"
@@ -111,12 +135,23 @@ export class TorneiListComponent implements OnInit {
     this.tournaments().reduce((sum, t) => sum + t.tournament_teams.length, 0),
   );
 
-  publishedCount = computed(() =>
-    this.tournaments().filter(
-      (t) =>
-        t.public_status === TOURNAMENT_PUBLIC_STATUS.Published ||
-        t.public_status === TOURNAMENT_PUBLIC_STATUS.ResultsPublished,
-    ).length,
+  totalExpectedPeople = computed(() =>
+    this.tournaments().reduce(
+      (sum, t) =>
+        sum +
+        t.tournament_teams.length *
+          (t.code != null ? (TOURNAMENT_MAX_PLAYERS_BY_CODE[t.code] ?? 1) : 1),
+      0,
+    ),
+  );
+
+  publishedCount = computed(
+    () =>
+      this.tournaments().filter(
+        (t) =>
+          t.public_status === TOURNAMENT_PUBLIC_STATUS.Published ||
+          t.public_status === TOURNAMENT_PUBLIC_STATUS.ResultsPublished,
+      ).length,
   );
 
   openMatchCount = computed(() =>
@@ -144,7 +179,9 @@ export class TorneiListComponent implements OnInit {
       const data = await this.tournamentsService.listOperational();
       this.tournaments.set(data);
     } catch (err) {
-      this.error.set(err instanceof Error ? err.message : "Errore nel caricamento.");
+      this.error.set(
+        err instanceof Error ? err.message : "Errore nel caricamento.",
+      );
     } finally {
       this.loading.set(false);
     }

@@ -13,9 +13,19 @@ export const SPONSOR_ASSETS: SponsorAsset[] = [
     "category": "platino"
   },
   {
+    "name": "Pizza Sophia",
+    "src": "/assets/sponsor/argento/Pizza Sophia.jpg",
+    "category": "argento"
+  },
+  {
     "name": "Regno Dei Mazzoni",
     "src": "/assets/sponsor/argento/regno_dei_mazzoni.jpeg",
     "category": "argento"
+  },
+  {
+    "name": "Agenzia Funebre Parente & Nobile",
+    "src": "/assets/sponsor/bronzo/agenzia funebre parente & nobile.jpeg",
+    "category": "bronzo"
   },
   {
     "name": "Autofficina Gazzillo",
@@ -38,6 +48,16 @@ export const SPONSOR_ASSETS: SponsorAsset[] = [
     "category": "bronzo"
   },
   {
+    "name": "Ferramente & Colori Parente",
+    "src": "/assets/sponsor/bronzo/ferramente & colori parente.jpeg",
+    "category": "bronzo"
+  },
+  {
+    "name": "Gioielleria Sessa",
+    "src": "/assets/sponsor/bronzo/gioielleria sessa.jpeg",
+    "category": "bronzo"
+  },
+  {
     "name": "Gs Autofficina",
     "src": "/assets/sponsor/bronzo/Gs Autofficina.jpg",
     "category": "bronzo"
@@ -45,6 +65,11 @@ export const SPONSOR_ASSETS: SponsorAsset[] = [
   {
     "name": "La Casertana",
     "src": "/assets/sponsor/bronzo/La Casertana.jpg",
+    "category": "bronzo"
+  },
+  {
+    "name": "Nuova Diana Gas",
+    "src": "/assets/sponsor/bronzo/nuova diana gas.jpeg",
     "category": "bronzo"
   },
   {
