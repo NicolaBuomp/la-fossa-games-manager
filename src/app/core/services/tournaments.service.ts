@@ -318,12 +318,8 @@ export class TournamentsService {
       captain_contact: team.captain_contact ?? null,
       vice_captain_name: team.vice_captain_name ?? null,
       vice_captain_contact: team.vice_captain_contact ?? null,
-      created_by_name: team.created_by
-        ? (userNames[team.created_by] ?? null)
-        : null,
-      updated_by_name: team.updated_by
-        ? (userNames[team.updated_by] ?? null)
-        : null,
+      created_by_name: this.resolveUserName(team.created_by, userNames),
+      updated_by_name: this.resolveUserName(team.updated_by, userNames),
       team_participants: [...(team.team_participants ?? [])],
     };
   }
@@ -338,6 +334,14 @@ export class TournamentsService {
       ]),
     );
     return this.profiles.displayNames(ids);
+  }
+
+  private resolveUserName(
+    userId: string | null,
+    userNames: Record<string, string>,
+  ): string | null {
+    if (!userId) return null;
+    return userNames[userId] ?? userId;
   }
 
   private normalizeGroup(group: TournamentGroup): TournamentGroup {
