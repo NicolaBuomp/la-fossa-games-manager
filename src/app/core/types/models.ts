@@ -1,27 +1,36 @@
-export type UserRole = 'staff' | 'admin' | 'owner' | 'tesoriere';
-export type SponsorStatus = 'contattato' | 'in_trattativa' | 'confermato' | 'pagato';
-export type SponsorCategory = 'bronzo' | 'argento' | 'oro' | 'platino';
-export type ExpenseStatus = 'pagata' | 'da_rimborsare' | 'rimborsata';
+export type UserRole = "staff" | "admin" | "owner" | "tesoriere";
+export type SponsorStatus =
+  | "contattato"
+  | "in_trattativa"
+  | "confermato"
+  | "pagato";
+export type SponsorCategory = "bronzo" | "argento" | "oro" | "platino";
+export type ExpenseStatus = "pagata" | "da_rimborsare" | "rimborsata";
 export type TournamentStatus =
-  | 'draft'
-  | 'registrations_open'
-  | 'registrations_closed'
-  | 'groups_generated'
-  | 'in_progress'
-  | 'completed'
-  | 'archived';
+  | "draft"
+  | "registrations_open"
+  | "registrations_closed"
+  | "groups_generated"
+  | "in_progress"
+  | "completed"
+  | "archived";
 export type TournamentPublicStatus =
-  | 'hidden'
-  | 'registrations_open'
-  | 'published'
-  | 'results_published';
+  | "hidden"
+  | "registrations_open"
+  | "published"
+  | "results_published";
 export type TournamentMatchStatus =
-  | 'scheduled'
-  | 'live'
-  | 'completed'
-  | 'cancelled';
-export type ParticipationRequestStatus = 'nuova' | 'in_gestione' | 'contattata' | 'archiviata' | 'trasferita';
-export type AuditAction = 'insert' | 'update' | 'delete';
+  | "scheduled"
+  | "live"
+  | "completed"
+  | "cancelled";
+export type ParticipationRequestStatus =
+  | "nuova"
+  | "in_gestione"
+  | "contattata"
+  | "archiviata"
+  | "trasferita";
+export type AuditAction = "insert" | "update" | "delete";
 
 export interface Profile {
   id: string;
@@ -89,8 +98,12 @@ export interface Income {
   updated_at: string;
 }
 
-export type TransactionType = 'income' | 'expense';
-export type TransactionSourceTable = 'incomes' | 'expenses' | 'tournament_teams' | 'sponsors';
+export type TransactionType = "income" | "expense";
+export type TransactionSourceTable =
+  | "incomes"
+  | "expenses"
+  | "tournament_teams"
+  | "sponsors";
 
 export interface Transaction {
   id: string;
@@ -174,7 +187,7 @@ export interface TournamentGroupTeam {
   team_id: string;
   seed: number | null;
   created_at: string;
-  tournament_teams?: Pick<TournamentTeam, 'id' | 'name'> | null;
+  tournament_teams?: Pick<TournamentTeam, "id" | "name"> | null;
 }
 
 export interface TournamentGroup {
@@ -202,9 +215,9 @@ export interface TournamentMatch {
   field_label: string | null;
   created_at: string;
   updated_at: string;
-  home_team?: Pick<TournamentTeam, 'id' | 'name'> | null;
-  away_team?: Pick<TournamentTeam, 'id' | 'name'> | null;
-  tournament_groups?: Pick<TournamentGroup, 'name'> | null;
+  home_team?: Pick<TournamentTeam, "id" | "name"> | null;
+  away_team?: Pick<TournamentTeam, "id" | "name"> | null;
+  tournament_groups?: Pick<TournamentGroup, "name"> | null;
 }
 
 export interface TournamentStanding {
@@ -222,8 +235,8 @@ export interface TournamentStanding {
   points: number;
   rank: number;
   updated_at: string;
-  tournament_teams?: Pick<TournamentTeam, 'id' | 'name'> | null;
-  tournament_groups?: Pick<TournamentGroup, 'name'> | null;
+  tournament_teams?: Pick<TournamentTeam, "id" | "name"> | null;
+  tournament_groups?: Pick<TournamentGroup, "name"> | null;
 }
 
 export interface TournamentTeam {
@@ -239,6 +252,8 @@ export interface TournamentTeam {
   notes: string | null;
   created_by: string | null;
   updated_by: string | null;
+  created_by_name?: string | null;
+  updated_by_name?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -302,11 +317,11 @@ export interface ParticipationRequestNote {
 }
 
 export interface ParticipationRequestNoteWithProfile extends ParticipationRequestNote {
-  profiles: Pick<Profile, 'full_name' | 'email'> | null;
+  profiles: Pick<Profile, "full_name" | "email"> | null;
 }
 
 export interface ParticipationRequestWithTournament extends ParticipationRequest {
-  tournaments: Pick<Tournament, 'name' | 'code' | 'fee'> | null;
+  tournaments: Pick<Tournament, "name" | "code" | "fee"> | null;
   participation_request_notes: ParticipationRequestNoteWithProfile[];
 }
 
@@ -326,30 +341,59 @@ export interface AuditLog {
   context?: Record<string, unknown> | null;
 }
 
-export type InsertExpense = Omit<Expense, 'id' | 'created_by' | 'updated_by' | 'created_at' | 'updated_at'>;
-export type InsertIncome = Omit<Income, 'id' | 'delivered_to_treasurer' | 'delivered_at' | 'delivered_by' | 'fattura_emessa' | 'created_by' | 'updated_by' | 'created_at' | 'updated_at'>;
+export type InsertExpense = Omit<
+  Expense,
+  "id" | "created_by" | "updated_by" | "created_at" | "updated_at"
+>;
+export type InsertIncome = Omit<
+  Income,
+  | "id"
+  | "delivered_to_treasurer"
+  | "delivered_at"
+  | "delivered_by"
+  | "fattura_emessa"
+  | "created_by"
+  | "updated_by"
+  | "created_at"
+  | "updated_at"
+>;
 
 export interface DeliveryItem {
   source_table: TransactionSourceTable;
   source_id: string;
 }
-export type InsertSponsor = Omit<Sponsor, 'id' | 'created_by' | 'updated_by' | 'created_at' | 'updated_at'>;
+export type InsertSponsor = Omit<
+  Sponsor,
+  "id" | "created_by" | "updated_by" | "created_at" | "updated_at"
+>;
 export type InsertTournament = Omit<
   Tournament,
-  | 'id'
-  | 'code'
-  | 'status'
-  | 'public_status'
-  | 'published_at'
-  | 'created_by'
-  | 'updated_by'
-  | 'created_at'
-  | 'updated_at'
+  | "id"
+  | "code"
+  | "status"
+  | "public_status"
+  | "published_at"
+  | "created_by"
+  | "updated_by"
+  | "created_at"
+  | "updated_at"
 > & { code?: string | null };
-export type UpdateTournamentPublication = Pick<Tournament, 'status' | 'public_status' | 'published_at'>;
-export type InsertTournamentTeam = Omit<TournamentTeam, 'id' | 'created_by' | 'updated_by' | 'created_at' | 'updated_at'>;
-export type InsertTeamParticipant = Omit<TeamParticipant, 'id' | 'created_by' | 'updated_by' | 'created_at' | 'updated_at'>;
-export type InsertParticipationRequest = Omit<ParticipationRequest, 'id' | 'status' | 'updated_by' | 'created_at' | 'updated_at'>;
+export type UpdateTournamentPublication = Pick<
+  Tournament,
+  "status" | "public_status" | "published_at"
+>;
+export type InsertTournamentTeam = Omit<
+  TournamentTeam,
+  "id" | "created_by" | "updated_by" | "created_at" | "updated_at"
+>;
+export type InsertTeamParticipant = Omit<
+  TeamParticipant,
+  "id" | "created_by" | "updated_by" | "created_at" | "updated_at"
+>;
+export type InsertParticipationRequest = Omit<
+  ParticipationRequest,
+  "id" | "status" | "updated_by" | "created_at" | "updated_at"
+>;
 
 export interface PagedResult<T> {
   data: T[];

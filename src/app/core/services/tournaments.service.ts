@@ -1,6 +1,16 @@
 import { Injectable } from "@angular/core";
 import { RealtimeChannel } from "@supabase/supabase-js";
 import {
+  SUPABASE_RPC,
+  SUPABASE_TABLE,
+  TOURNAMENT_MATCH_STATUS,
+  TOURNAMENT_MATCH_STATUSES,
+  TOURNAMENT_PUBLIC_STATUS,
+  TOURNAMENT_PUBLIC_STATUSES,
+  TOURNAMENT_STATUS,
+  TOURNAMENT_STATUSES,
+} from "../types/constants";
+import {
   OperationalTournament,
   TournamentGroup,
   TournamentGroupTeam,
@@ -12,16 +22,7 @@ import {
   TournamentTeamWithParticipants,
   UpdateTournamentPublication,
 } from "../types/models";
-import {
-  SUPABASE_RPC,
-  SUPABASE_TABLE,
-  TOURNAMENT_MATCH_STATUS,
-  TOURNAMENT_MATCH_STATUSES,
-  TOURNAMENT_PUBLIC_STATUS,
-  TOURNAMENT_PUBLIC_STATUSES,
-  TOURNAMENT_STATUS,
-  TOURNAMENT_STATUSES,
-} from "../types/constants";
+import { ProfileService } from "./profile.service";
 import { SupabaseService } from "./supabase.service";
 
 export interface GenerateGroupStageResult {
@@ -101,7 +102,10 @@ const TOURNAMENT_SELECT = `
 
 @Injectable({ providedIn: "root" })
 export class TournamentsService {
-  constructor(private readonly supabase: SupabaseService) {}
+  constructor(
+    private readonly supabase: SupabaseService,
+    private readonly profiles: ProfileService,
+  ) {}
 
   async listOperational(): Promise<OperationalTournament[]> {
     const { data, error } = await this.supabase.client
@@ -109,8 +113,10 @@ export class TournamentsService {
       .select(TOURNAMENT_SELECT)
       .order("name", { ascending: true });
     if (error) throw error;
-    return ((data ?? []) as OperationalTournament[]).map((tournament) =>
-      this.normalizeTournament(tournament),
+    const tournaments = (data ?? []) as OperationalTournament[];
+    const userNames = await this.loadTournamentTeamUserNames(tournaments);
+    return tournaments.map((tournament) =>
+      this.normalizeTournament(tournament, userNames),
     );
   }
 
@@ -121,7 +127,11 @@ export class TournamentsService {
       .eq("id", id)
       .maybeSingle();
     if (error) throw error;
-    return data ? this.normalizeTournament(data as OperationalTournament) : null;
+    if (!data) return null;
+
+    const tournament = data as OperationalTournament;
+    const userNames = await this.loadTournamentTeamUserNames([tournament]);
+    return this.normalizeTournament(tournament, userNames);
   }
 
   async generateGroupStage(
@@ -254,7 +264,9 @@ export class TournamentsService {
           event: "*",
           schema: "public",
           table: SUPABASE_TABLE.TournamentMatches,
-          ...(tournamentId ? { filter: `tournament_id=eq.${tournamentId}` } : {}),
+          ...(tournamentId
+            ? { filter: `tournament_id=eq.${tournamentId}` }
+            : {}),
         },
         onChange,
       )
@@ -268,6 +280,7 @@ export class TournamentsService {
 
   private normalizeTournament(
     tournament: OperationalTournament,
+    userNames: Record<string, string> = {},
   ): OperationalTournament {
     return {
       ...tournament,
@@ -276,7 +289,7 @@ export class TournamentsService {
       public_status: this.normalizePublicStatus(tournament.public_status),
       published_at: tournament.published_at ?? null,
       tournament_teams: [...(tournament.tournament_teams ?? [])]
-        .map((team) => this.normalizeTeam(team))
+        .map((team) => this.normalizeTeam(team, userNames))
         .sort((a, b) => a.name.localeCompare(b.name, "it")),
       tournament_groups: [...(tournament.tournament_groups ?? [])]
         .map((group) => this.normalizeGroup(group))
@@ -296,6 +309,7 @@ export class TournamentsService {
 
   private normalizeTeam(
     team: TournamentTeamWithParticipants,
+    userNames: Record<string, string> = {},
   ): TournamentTeamWithParticipants {
     return {
       ...team,
@@ -304,8 +318,26 @@ export class TournamentsService {
       captain_contact: team.captain_contact ?? null,
       vice_captain_name: team.vice_captain_name ?? null,
       vice_captain_contact: team.vice_captain_contact ?? null,
+      created_by_name: team.created_by
+        ? (userNames[team.created_by] ?? null)
+        : null,
+      updated_by_name: team.updated_by
+        ? (userNames[team.updated_by] ?? null)
+        : null,
       team_participants: [...(team.team_participants ?? [])],
     };
+  }
+
+  private async loadTournamentTeamUserNames(
+    tournaments: OperationalTournament[],
+  ): Promise<Record<string, string>> {
+    const ids = tournaments.flatMap((tournament) =>
+      (tournament.tournament_teams ?? []).flatMap((team) => [
+        team.created_by,
+        team.updated_by,
+      ]),
+    );
+    return this.profiles.displayNames(ids);
   }
 
   private normalizeGroup(group: TournamentGroup): TournamentGroup {

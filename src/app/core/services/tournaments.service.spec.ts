@@ -1,5 +1,6 @@
-import { TournamentsService } from "./tournaments.service";
+import { ProfileService } from "./profile.service";
 import { SupabaseService } from "./supabase.service";
+import { TournamentsService } from "./tournaments.service";
 
 class Query {
   constructor(
@@ -65,7 +66,15 @@ describe("TournamentsService", () => {
         return Promise.resolve(responses[`rpc.${fn}`]);
       },
     };
-    return new TournamentsService({ client } as unknown as SupabaseService);
+    const profiles = {
+      displayNames: jasmine
+        .createSpy("displayNames")
+        .and.resolveTo(responses.displayNames ?? {}),
+    };
+    return new TournamentsService(
+      { client } as unknown as SupabaseService,
+      profiles as unknown as ProfileService,
+    );
   }
 
   it("normalizes operational tournament data", async () => {
@@ -102,6 +111,8 @@ describe("TournamentsService", () => {
                 notes: null,
                 created_by: null,
                 updated_by: null,
+                created_by_name: null,
+                updated_by_name: null,
                 created_at: "2026-05-01T10:00:00Z",
                 updated_at: "2026-05-01T10:00:00Z",
                 team_participants: [],
@@ -119,6 +130,8 @@ describe("TournamentsService", () => {
                 notes: null,
                 created_by: null,
                 updated_by: null,
+                created_by_name: null,
+                updated_by_name: null,
                 created_at: "2026-05-01T10:00:00Z",
                 updated_at: "2026-05-01T10:00:00Z",
                 team_participants: [],
@@ -188,6 +201,63 @@ describe("TournamentsService", () => {
     expect(result[0].tournament_teams[1].captain_name).toBeNull();
     expect(result[0].tournament_matches[0].home_score).toBe(2);
     expect(result[0].tournament_standings[0].points).toBe(3);
+  });
+
+  it("adds created_by_name and updated_by_name to tournament teams", async () => {
+    const service = serviceWith({
+      displayNames: {
+        "user-1": "Mario Rossi",
+        "user-2": "Luigi Verdi",
+      },
+      "tournaments.select": {
+        error: null,
+        data: [
+          {
+            id: "tournament-1",
+            code: "calcio-a-5",
+            name: "Summer Cup",
+            sport: "calcio",
+            fee: "30",
+            date: null,
+            status: null,
+            public_status: "published",
+            published_at: null,
+            notes: null,
+            created_by: null,
+            updated_by: null,
+            created_at: "2026-05-01T10:00:00Z",
+            updated_at: "2026-05-01T10:00:00Z",
+            tournament_teams: [
+              {
+                id: "team-1",
+                tournament_id: "tournament-1",
+                name: "Aquile",
+                captain_name: null,
+                captain_contact: null,
+                vice_captain_name: null,
+                vice_captain_contact: null,
+                fee: "30",
+                paid: false,
+                notes: null,
+                created_by: "user-1",
+                updated_by: "user-2",
+                created_at: "2026-05-01T10:00:00Z",
+                updated_at: "2026-05-02T12:00:00Z",
+                team_participants: [],
+              },
+            ],
+            tournament_groups: [],
+            tournament_matches: [],
+            tournament_standings: [],
+          },
+        ],
+      },
+    });
+
+    const result = await service.listOperational();
+
+    expect(result[0].tournament_teams[0].created_by_name).toBe("Mario Rossi");
+    expect(result[0].tournament_teams[0].updated_by_name).toBe("Luigi Verdi");
   });
 
   it("calls generate_group_stage with normalized group count", async () => {

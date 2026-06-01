@@ -1,12 +1,10 @@
 import { Component, EventEmitter, Input, Output } from "@angular/core";
+import { TOURNAMENT_MIN_PARTICIPANTS_BY_CODE } from "../../../core/types/constants";
 import {
   TeamParticipant,
   TournamentTeamWithParticipants,
   TournamentWithTeams,
 } from "../../../core/types/models";
-import {
-  TOURNAMENT_MIN_PARTICIPANTS_BY_CODE,
-} from "../../../core/types/constants";
 import { StatusBadgeComponent } from "../../../shared/components/ui.component";
 
 @Component({
@@ -48,7 +46,9 @@ import { StatusBadgeComponent } from "../../../shared/components/ui.component";
                   }
                 </p>
                 <p class="mt-1 text-xs font-semibold">
-                  {{ participantCount(team) }} partecipant{{ participantCount(team) !== 1 ? "i" : "e" }}
+                  {{ participantCount(team) }} partecipant{{
+                    participantCount(team) !== 1 ? "i" : "e"
+                  }}
                 </p>
               }
               @if (team.notes) {
@@ -56,6 +56,10 @@ import { StatusBadgeComponent } from "../../../shared/components/ui.component";
                   {{ team.notes }}
                 </p>
               }
+              <div class="mt-2 space-y-1 text-[11px] leading-4 text-muted">
+                <p>{{ createdMeta(team) }}</p>
+                <p>{{ updatedMeta(team) }}</p>
+              </div>
             </div>
 
             <div class="grid gap-2 sm:min-w-72">
@@ -181,7 +185,8 @@ export class RegistrationsTableComponent {
   canAddParticipant(team: TournamentTeamWithParticipants): boolean {
     const tournament = this.tournament();
     if (!tournament) return false;
-    const limit = TOURNAMENT_MIN_PARTICIPANTS_BY_CODE[tournament.code ?? ""] ?? null;
+    const limit =
+      TOURNAMENT_MIN_PARTICIPANTS_BY_CODE[tournament.code ?? ""] ?? null;
     return !limit || team.team_participants.length < limit;
   }
 
@@ -191,5 +196,20 @@ export class RegistrationsTableComponent {
     if (team.captain_name?.trim()) fallback += 1;
     if (team.vice_captain_name?.trim()) fallback += 1;
     return fallback;
+  }
+
+  createdMeta(team: TournamentTeamWithParticipants): string {
+    return `Inserita da ${team.created_by_name ?? "Utente non disponibile"} · ${this.formatDateTime(team.created_at)}`;
+  }
+
+  updatedMeta(team: TournamentTeamWithParticipants): string {
+    return `Ultima modifica: ${team.updated_by_name ?? team.created_by_name ?? "Utente non disponibile"} · ${this.formatDateTime(team.updated_at)}`;
+  }
+
+  private formatDateTime(value: string): string {
+    return new Intl.DateTimeFormat("it-IT", {
+      dateStyle: "short",
+      timeStyle: "short",
+    }).format(new Date(value));
   }
 }
