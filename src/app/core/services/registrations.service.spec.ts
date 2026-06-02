@@ -1,5 +1,6 @@
 import { RegistrationsService } from "./registrations.service";
 import { SupabaseService } from "./supabase.service";
+import { ProfileService } from "./profile.service";
 import { TournamentWithTeams } from "../types/models";
 
 class SelectInQuery {
@@ -26,11 +27,20 @@ class TableQuery {
 }
 
 describe("RegistrationsService", () => {
-  function serviceWith(responses: Record<string, unknown>): RegistrationsService {
+  function serviceWith(
+    responses: Record<string, unknown>,
+    userNames: Record<string, string> = {},
+  ): RegistrationsService {
     const client = {
       from: (table: string) => new TableQuery(table, responses),
     };
-    return new RegistrationsService({ client } as unknown as SupabaseService);
+    const profiles = {
+      displayNames: () => Promise.resolve(userNames),
+    } as unknown as ProfileService;
+    return new RegistrationsService(
+      { client } as unknown as SupabaseService,
+      profiles,
+    );
   }
 
   const tournament = (
@@ -143,6 +153,46 @@ describe("RegistrationsService", () => {
     expect(result[0].tournament_teams[1].team_participants[1].registered).toBe(
       true,
     );
+  });
+
+  it("resolves created_by_name and updated_by_name from profile display names", async () => {
+    const service = serviceWith(
+      {
+        "tournaments.upsert": { error: null },
+        "tournaments.select": {
+          error: null,
+          data: [
+            tournament({
+              tournament_teams: [
+                {
+                  id: "team-a",
+                  tournament_id: "tournament-1",
+                  name: "Alfa",
+                  captain_name: null,
+                  captain_contact: null,
+                  vice_captain_name: null,
+                  vice_captain_contact: null,
+                  fee: 50,
+                  paid: true,
+                  notes: null,
+                  created_by: "user-1",
+                  updated_by: "user-2",
+                  created_at: "2026-05-02T10:00:00Z",
+                  updated_at: "2026-05-02T10:00:00Z",
+                  team_participants: [],
+                },
+              ],
+            }),
+          ],
+        },
+      },
+      { "user-1": "Mario Rossi", "user-2": "Luigi Verdi" },
+    );
+
+    const result = await service.listTournaments();
+
+    expect(result[0].tournament_teams[0].created_by_name).toBe("Mario Rossi");
+    expect(result[0].tournament_teams[0].updated_by_name).toBe("Luigi Verdi");
   });
 
   it("maps tournament teams to legacy registrations sorted by creation date", async () => {

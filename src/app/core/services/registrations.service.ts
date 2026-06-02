@@ -17,13 +17,17 @@ import {
   TOURNAMENT_PUBLIC_STATUS,
   TOURNAMENT_STATUS,
 } from "../types/constants";
+import { ProfileService } from "./profile.service";
 import { SupabaseService } from "./supabase.service";
 
 export { DEFAULT_TOURNAMENT_CODES };
 
 @Injectable({ providedIn: "root" })
 export class RegistrationsService {
-  constructor(private readonly supabase: SupabaseService) {}
+  constructor(
+    private readonly supabase: SupabaseService,
+    private readonly profiles: ProfileService,
+  ) {}
 
   async list(): Promise<Registration[]> {
     const tournaments = await this.listTournaments();
@@ -65,11 +69,15 @@ export class RegistrationsService {
         tournament,
       ]),
     );
-    return DEFAULT_TOURNAMENTS.map((definition) => byCode.get(definition.code))
-      .filter((tournament): tournament is TournamentWithTeams =>
-        Boolean(tournament),
-      )
-      .map((tournament) => this.normalizeTournament(tournament));
+    const tournaments = DEFAULT_TOURNAMENTS.map((definition) =>
+      byCode.get(definition.code),
+    ).filter((tournament): tournament is TournamentWithTeams =>
+      Boolean(tournament),
+    );
+    const userNames = await this.loadTeamUserNames(tournaments);
+    return tournaments.map((tournament) =>
+      this.normalizeTournament(tournament, userNames),
+    );
   }
 
   async createTournament(payload: InsertTournament): Promise<Tournament> {
@@ -98,6 +106,7 @@ export class RegistrationsService {
 
   private normalizeTeam(
     team: TournamentTeamWithParticipants,
+    userNames: Record<string, string> = {},
   ): TournamentTeamWithParticipants {
     return {
       ...team,
@@ -105,6 +114,8 @@ export class RegistrationsService {
       captain_contact: team.captain_contact ?? null,
       vice_captain_name: team.vice_captain_name ?? null,
       vice_captain_contact: team.vice_captain_contact ?? null,
+      created_by_name: this.resolveUserName(team.created_by, userNames),
+      updated_by_name: this.resolveUserName(team.updated_by, userNames),
       fee: Number(team.fee || 0),
       team_participants: [...(team.team_participants ?? [])]
         .map((participant) => ({
@@ -122,6 +133,7 @@ export class RegistrationsService {
 
   private normalizeTournament(
     tournament: TournamentWithTeams,
+    userNames: Record<string, string> = {},
   ): TournamentWithTeams {
     return {
       ...tournament,
@@ -131,8 +143,28 @@ export class RegistrationsService {
       published_at: tournament.published_at ?? null,
       tournament_teams: [...(tournament.tournament_teams ?? [])]
         .sort((a, b) => a.name.localeCompare(b.name, "it"))
-        .map((team) => this.normalizeTeam(team)),
+        .map((team) => this.normalizeTeam(team, userNames)),
     };
+  }
+
+  private async loadTeamUserNames(
+    tournaments: TournamentWithTeams[],
+  ): Promise<Record<string, string>> {
+    const ids = tournaments.flatMap((tournament) =>
+      (tournament.tournament_teams ?? []).flatMap((team) => [
+        team.created_by,
+        team.updated_by,
+      ]),
+    );
+    return this.profiles.displayNames(ids);
+  }
+
+  private resolveUserName(
+    userId: string | null,
+    userNames: Record<string, string>,
+  ): string | null {
+    if (!userId) return null;
+    return userNames[userId] ?? userId;
   }
 
   async getTournamentWithTeams(id: string): Promise<TournamentWithTeams | null> {
@@ -142,7 +174,10 @@ export class RegistrationsService {
       .eq("id", id)
       .maybeSingle();
     if (error) throw error;
-    return data ? this.normalizeTournament(data as TournamentWithTeams) : null;
+    if (!data) return null;
+    const tournament = data as TournamentWithTeams;
+    const userNames = await this.loadTeamUserNames([tournament]);
+    return this.normalizeTournament(tournament, userNames);
   }
 
   async getTeamWithParticipants(teamId: string): Promise<TournamentTeamWithParticipants | null> {
@@ -152,7 +187,13 @@ export class RegistrationsService {
       .eq("id", teamId)
       .maybeSingle();
     if (error) throw error;
-    return data ? this.normalizeTeam(data as TournamentTeamWithParticipants) : null;
+    if (!data) return null;
+    const team = data as TournamentTeamWithParticipants;
+    const userNames = await this.profiles.displayNames([
+      team.created_by,
+      team.updated_by,
+    ]);
+    return this.normalizeTeam(team, userNames);
   }
 
   async updateTournament(
