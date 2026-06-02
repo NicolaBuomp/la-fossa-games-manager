@@ -25,7 +25,7 @@ describe("AuthService", () => {
     email: "user@example.com",
     username: "mario",
     full_name: "Mario Rossi",
-    role: "staff",
+    roles: ["staff"],
     active: true,
     created_at: "2026-05-01T10:00:00Z",
     ...overrides,
