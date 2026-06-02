@@ -376,7 +376,10 @@ describe("TorneiTabIscrittiComponent", () => {
     it("formatta i valori in euro", () => {
       const { component } = setup();
       const result = component.eur(1500);
-      expect(result).toContain("1.500");
+      // Indipendente dal locale ICU disponibile nell'ambiente di test:
+      // verifica le cifre e il simbolo, non il separatore delle migliaia.
+      expect(result.replace(/\D/g, "")).toBe("1500");
+      expect(result).toContain("€");
     });
   });
 });
