@@ -19,10 +19,6 @@ import {
 import { PublicTournament } from "../../core/types/models";
 import {
   DEFAULT_TOURNAMENT_CODE,
-  PAYMENT_METHOD,
-  PUBLIC_SPONSOR_LEAD_DELIVERABLES,
-  SPONSOR_CATEGORY,
-  SPONSOR_STATUS,
   TOURNAMENT_MATCH_STATUS,
 } from "../../core/types/constants";
 import { LANDING_GAMES } from "./landing-content";
@@ -443,19 +439,11 @@ export class LandingComponent implements OnInit, OnDestroy, AfterViewInit {
       if (this.participationForm.reason === "sponsor") {
         await this.participation.createSponsorLead({
           company_name: this.participationForm.company_name.trim(),
-          contact_name: `${this.participationForm.first_name.trim()} ${this.participationForm.last_name.trim()}`,
-          contact_info: normalizedPhone,
-          category: SPONSOR_CATEGORY.Bronzo,
-          promised_amount: 0,
-          received_amount: 0,
-          payment_method: PAYMENT_METHOD.Cash,
-          responsible_user_id: null,
-          status: SPONSOR_STATUS.Contacted,
-          deliverables: PUBLIC_SPONSOR_LEAD_DELIVERABLES,
-          notes:
-            "Lead sponsor generato dal form pubblico. Ricontattare via WhatsApp.",
-          da_fatturare: false,
-          fattura_emessa: false,
+          first_name: this.participationForm.first_name.trim(),
+          last_name: this.participationForm.last_name.trim(),
+          phone: normalizedPhone,
+          privacy_accepted: this.participationForm.privacy_accepted,
+          whatsapp_accepted: this.participationForm.whatsapp_accepted,
         });
       } else {
         await this.participation.createRequest({
