@@ -1,7 +1,29 @@
 import { Component, signal } from "@angular/core";
 
-const SUNSET_NOTICE_KEY = "lfg_sunset_notice_dismissed";
 const NEW_APP_URL = "https://la-fossa-events-management.vercel.app/";
+
+@Component({
+  selector: "lfg-sunset-banner",
+  standalone: true,
+  template: `
+    <div
+      class="bg-accent text-on-accent sticky top-0 z-[60] px-4 py-2 text-center text-xs font-black uppercase tracking-[0.14em]"
+      role="alert"
+    >
+      Supporto concluso: questo gestionale non è più aggiornato.
+      <a
+        [href]="newAppUrl"
+        class="underline transition hover:text-white"
+      >
+        Vai al nuovo gestionale
+      </a>
+      &mdash; se non hai un account, richiedi la registrazione.
+    </div>
+  `,
+})
+export class SunsetBannerComponent {
+  readonly newAppUrl = NEW_APP_URL;
+}
 
 @Component({
   selector: "lfg-sunset-notice",
@@ -51,14 +73,9 @@ const NEW_APP_URL = "https://la-fossa-events-management.vercel.app/";
 })
 export class SunsetNoticeComponent {
   readonly newAppUrl = NEW_APP_URL;
-  readonly visible = signal(!this.isDismissed());
+  readonly visible = signal(true);
 
   dismiss(): void {
-    sessionStorage.setItem(SUNSET_NOTICE_KEY, "true");
     this.visible.set(false);
-  }
-
-  private isDismissed(): boolean {
-    return sessionStorage.getItem(SUNSET_NOTICE_KEY) === "true";
   }
 }

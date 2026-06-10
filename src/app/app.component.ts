@@ -3,7 +3,10 @@ import { RouterOutlet } from "@angular/router";
 import { ThemeService } from "./core/services/theme.service";
 import { CookieBannerComponent } from "./shared/components/cookie-banner.component";
 import { SnackbarComponent } from "./shared/components/snackbar.component";
-import { SunsetNoticeComponent } from "./shared/components/sunset-notice.component";
+import {
+  SunsetBannerComponent,
+  SunsetNoticeComponent,
+} from "./shared/components/sunset-notice.component";
 
 @Component({
   selector: "lfg-root",
@@ -12,9 +15,11 @@ import { SunsetNoticeComponent } from "./shared/components/sunset-notice.compone
     RouterOutlet,
     CookieBannerComponent,
     SnackbarComponent,
+    SunsetBannerComponent,
     SunsetNoticeComponent,
   ],
   template: `
+    <lfg-sunset-banner />
     <router-outlet />
     <lfg-snackbar />
     <lfg-cookie-banner />

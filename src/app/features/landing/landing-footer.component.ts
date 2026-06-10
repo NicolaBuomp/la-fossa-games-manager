@@ -143,7 +143,12 @@ import { Component, Input, Output, EventEmitter } from "@angular/core";
             >
               <span>&copy; 2026 La Fossa Games</span>
               <div class="flex flex-wrap items-center gap-x-5 gap-y-2">
-                <a href="/login" class="text-white/30 transition hover:text-accent">
+                <a
+                  href="https://la-fossa-events-management.vercel.app/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="text-white/30 transition hover:text-accent"
+                >
                   Area manager
                 </a>
                 <a
