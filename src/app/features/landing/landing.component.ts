@@ -9,18 +9,10 @@ import {
   signal,
   ViewEncapsulation,
 } from "@angular/core";
-import { RealtimeChannel } from "@supabase/supabase-js";
 import { PublicParticipationService } from "../../core/services/public-participation.service";
 import { SnackbarService } from "../../core/services/snackbar.service";
-import {
-  PublicTournamentMatch,
-  TournamentsService,
-} from "../../core/services/tournaments.service";
 import { PublicTournament } from "../../core/types/models";
-import {
-  DEFAULT_TOURNAMENT_CODE,
-  TOURNAMENT_MATCH_STATUS,
-} from "../../core/types/constants";
+import { DEFAULT_TOURNAMENT_CODE } from "../../core/types/constants";
 import { LANDING_GAMES } from "./landing-content";
 import {
   ContactReason,
@@ -28,13 +20,11 @@ import {
   LandingGame,
   LandingParticipationForm,
   LandingSectionNavigation,
-  PublicMatchGroup,
 } from "./landing.models";
 import { LandingContactSectionComponent } from "./landing-contact-section.component";
 import { LandingFooterComponent } from "./landing-footer.component";
 import { LandingHeroComponent } from "./landing-hero.component";
 import { LandingOverviewSectionComponent } from "./landing-overview-section.component";
-import { LandingPublicResultsSectionComponent } from "./landing-public-results-section.component";
 import { LandingSponsorSectionComponent } from "./landing-sponsor-section.component";
 import { LandingTournamentsSectionComponent } from "./landing-tournaments-section.component";
 
@@ -43,7 +33,6 @@ import { LandingTournamentsSectionComponent } from "./landing-tournaments-sectio
   imports: [
     LandingHeroComponent,
     LandingTournamentsSectionComponent,
-    LandingPublicResultsSectionComponent,
     LandingOverviewSectionComponent,
     LandingSponsorSectionComponent,
     LandingContactSectionComponent,
@@ -237,7 +226,7 @@ import { LandingTournamentsSectionComponent } from "./landing-tournaments-sectio
       <div aria-hidden="true" class="page-grain pointer-events-none fixed inset-0 z-0"></div>
       <lfg-landing-hero [countdownItems]="countdownItems.bind(this)" [heroGlowTransform]="heroGlowTransform" [heroContentTransform]="heroContentTransform" (navigate)="scrollToSection($event)" />
       <lfg-landing-tournaments-section [games]="games" [selectedGame]="selectedGame" [tournaments]="tournaments" (openGame)="openGameDetails($event)" (closeGame)="closeGameDetails()" (requestGameInfo)="requestGameInfo($event)" />
-      <lfg-landing-public-results-section [publicMatches]="publicMatches" [loadingPublicMatches]="loadingPublicMatches" [publicMatchGroups]="publicMatchGroups" [livePublicMatches]="livePublicMatches" [publicResultsUpdatedAt]="publicResultsUpdatedAt" [resultsError]="resultsError" />
+      <!-- Sezione risultati pubblici disattivata: i risultati arriveranno dal DB del nuovo gestionale, non ancora disponibili. -->
       <lfg-landing-overview-section />
       <lfg-landing-sponsor-section (sponsorContact)="selectSponsorContact($event)" />
       <lfg-landing-contact-section [eventAddress]="eventAddress" [eventDateRange]="eventDateRange" [participationForm]="participationForm" [tournaments]="tournaments" [loadingTournaments]="loadingTournaments" [submitting]="submitting" [success]="success" [error]="error" [formTitle]="formTitle.bind(this)" [submitLabel]="submitLabel.bind(this)" [successMessage]="successMessage.bind(this)" [tournamentLabel]="tournamentLabel.bind(this)" (reasonChange)="onReasonChange()" (submitParticipation)="submitParticipation()" />
@@ -247,26 +236,16 @@ import { LandingTournamentsSectionComponent } from "./landing-tournaments-sectio
 })
 export class LandingComponent implements OnInit, OnDestroy, AfterViewInit {
   tournaments = signal<PublicTournament[]>([]);
-  publicMatches = signal<PublicTournamentMatch[]>([]);
   loadingTournaments = signal(false);
-  loadingPublicMatches = signal(false);
   submitting = signal(false);
   success = signal(false);
   error = signal("");
-  resultsError = signal("");
   participationForm = this.emptyParticipationForm();
   protected readonly eventDateRange = "22-26 giugno 2026";
   protected readonly eventAddress =
     "Via Vignale, 59, 81050 Santa Maria La Fossa CE";
   protected readonly countdown = signal<Countdown>(this.calculateCountdown());
   protected readonly selectedGame = signal<LandingGame | null>(null);
-  protected readonly publicMatchGroups = computed(() =>
-    this.groupPublicMatches(this.publicMatches()),
-  );
-  protected readonly livePublicMatches = computed(() =>
-    this.publicMatches().filter((match) => match.status === TOURNAMENT_MATCH_STATUS.Live),
-  );
-  protected readonly publicResultsUpdatedAt = signal<string | null>(null);
   private readonly heroParallaxOffset = signal(0);
   protected readonly heroGlowTransform = computed(
     () =>
@@ -277,12 +256,9 @@ export class LandingComponent implements OnInit, OnDestroy, AfterViewInit {
   );
   private readonly host = inject(ElementRef<HTMLElement>);
   private readonly participation = inject(PublicParticipationService);
-  private readonly tournamentsService = inject(TournamentsService);
   private readonly snackbar = inject(SnackbarService);
   private countdownIntervalId: ReturnType<typeof setInterval> | null = null;
   private revealObserver: IntersectionObserver | null = null;
-  private matchRealtimeChannel: RealtimeChannel | null = null;
-  private matchRefreshTimeoutId: ReturnType<typeof setTimeout> | null = null;
   private parallaxEnabled = false;
   private parallaxTicking = false;
   private readonly onScrollParallax = () => {
@@ -299,8 +275,6 @@ export class LandingComponent implements OnInit, OnDestroy, AfterViewInit {
 
   ngOnInit(): void {
     void this.loadTournaments();
-    void this.loadPublicMatches();
-    this.subscribeToPublicMatchChanges();
     this.countdownIntervalId = setInterval(() => {
       this.countdown.set(this.calculateCountdown());
     }, 1000);
@@ -317,15 +291,6 @@ export class LandingComponent implements OnInit, OnDestroy, AfterViewInit {
   ngOnDestroy(): void {
     if (this.countdownIntervalId) {
       clearInterval(this.countdownIntervalId);
-    }
-
-    if (this.matchRefreshTimeoutId) {
-      clearTimeout(this.matchRefreshTimeoutId);
-    }
-
-    if (this.matchRealtimeChannel) {
-      void this.tournamentsService.unsubscribe(this.matchRealtimeChannel);
-      this.matchRealtimeChannel = null;
     }
 
     if (this.parallaxEnabled) {
@@ -388,38 +353,6 @@ export class LandingComponent implements OnInit, OnDestroy, AfterViewInit {
     } finally {
       this.loadingTournaments.set(false);
     }
-  }
-
-  async loadPublicMatches(): Promise<void> {
-    this.loadingPublicMatches.set(true);
-    this.resultsError.set("");
-    try {
-      const matches = await this.tournamentsService.listPublicMatches();
-      this.publicMatches.set(matches);
-      this.publicResultsUpdatedAt.set(this.nowTimeLabel());
-    } catch (error) {
-      const message = this.message(error);
-      this.resultsError.set(message);
-    } finally {
-      this.loadingPublicMatches.set(false);
-    }
-  }
-
-  private subscribeToPublicMatchChanges(): void {
-    this.matchRealtimeChannel =
-      this.tournamentsService.subscribeToPublicMatchChanges(() => {
-        this.schedulePublicMatchRefresh();
-      });
-  }
-
-  private schedulePublicMatchRefresh(): void {
-    if (this.matchRefreshTimeoutId) {
-      clearTimeout(this.matchRefreshTimeoutId);
-    }
-    this.matchRefreshTimeoutId = setTimeout(() => {
-      this.matchRefreshTimeoutId = null;
-      void this.loadPublicMatches();
-    }, 300);
   }
 
   async submitParticipation(): Promise<void> {
@@ -583,29 +516,6 @@ export class LandingComponent implements OnInit, OnDestroy, AfterViewInit {
       this.participationForm.tournament_id &&
       this.participationForm.rules_accepted,
     );
-  }
-
-  private groupPublicMatches(
-    matches: PublicTournamentMatch[],
-  ): PublicMatchGroup[] {
-    const byTournament = new Map<string, PublicTournamentMatch[]>();
-    for (const match of matches) {
-      const current = byTournament.get(match.tournament_name) ?? [];
-      current.push(match);
-      byTournament.set(match.tournament_name, current);
-    }
-    return [...byTournament.entries()].map(([tournamentName, rows]) => ({
-      tournamentName,
-      matches: rows,
-    }));
-  }
-
-  private nowTimeLabel(): string {
-    return new Intl.DateTimeFormat("it-IT", {
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    }).format(new Date());
   }
 
   protected eur(value: number): string {
