@@ -48,7 +48,9 @@ const fileValues = envFiles.reduce((values, fileName) => {
   const envPath = path.join(root, fileName);
   if (!fs.existsSync(envPath)) {
     if (fileName.startsWith(".env.") && fileName !== ".env.local") {
-      console.warn(`[Warning] Environment file ${fileName} not found, skipping.`);
+      console.warn(
+        `[Warning] Environment file ${fileName} not found, skipping.`,
+      );
     }
     return values;
   }
@@ -74,18 +76,18 @@ if (mode === "prod") {
   supabaseUrl = pickValue("SUPABASE_DEV_URL");
   supabaseAnonKey = pickValue("SUPABASE_DEV_ANON_KEY");
 } else {
-  console.log("[Info] Using standard keys (SUPABASE_URL)");
-  supabaseUrl = pickValue("SUPABASE_URL");
-  supabaseAnonKey = pickValue("SUPABASE_ANON_KEY");
+  console.log("[Info] Using standard keys (LFG_SUPABASE_*)");
+  supabaseUrl = pickValue("LFG_SUPABASE_URL");
+  supabaseAnonKey = pickValue("LFG_SUPABASE_ANON_KEY");
 }
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  const required = mode 
-    ? `SUPABASE_${mode.toUpperCase()}_URL and SUPABASE_${mode.toUpperCase()}_ANON_KEY`
-    : "SUPABASE_URL and SUPABASE_ANON_KEY";
-    
+  const required = mode
+    ? `LFG_SUPABASE_${mode.toUpperCase()}_URL and LFG_SUPABASE_${mode.toUpperCase()}_ANON_KEY`
+    : "LFG_SUPABASE_URL and LFG_SUPABASE_ANON_KEY";
+
   throw new Error(
-    `Missing Supabase keys for mode "${mode || 'default'}". ` +
+    `Missing Supabase keys for mode "${mode || "default"}". ` +
       `Required keys: ${required}. ` +
       `Add them to one of: ${envFiles.join(", ")} or process env.`,
   );

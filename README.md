@@ -74,6 +74,7 @@ Apri `http://localhost:4200`.
 Per differenziare il collegamento al database di sviluppo e produzione usando un unico file `.env`:
 
 1. Nel tuo file `.env` (o `.env.local`), definisci le chiavi con i prefissi `DEV` e `PROD`:
+
    ```text
    SUPABASE_DEV_URL=...
    SUPABASE_DEV_ANON_KEY=...
@@ -84,17 +85,20 @@ Per differenziare il collegamento al database di sviluppo e produzione usando un
 
 2. Avvia o builda l'app usando i comandi dedicati:
 
-- **Sviluppo (usa chiavi _DEV):**
+- **Sviluppo (usa chiavi \_DEV):**
+
   ```bash
   npm run start:dev
   ```
 
-- **Produzione locale (usa chiavi _PROD):**
+- **Produzione locale (usa chiavi \_PROD):**
+
   ```bash
   npm run start:prod
   ```
 
 - **Build per Sviluppo:**
+
   ```bash
   npm run build:dev
   ```
@@ -104,7 +108,7 @@ Per differenziare il collegamento al database di sviluppo e produzione usando un
   npm run build:prod
   ```
 
-Il comando standard `npm start` continuerà a cercare le chiavi standard `SUPABASE_URL` e `SUPABASE_ANON_KEY`.
+Il comando standard `npm start` continuerà a cercare le chiavi standard `LFG_SUPABASE_URL` e `LFG_SUPABASE_ANON_KEY`.
 
 ## Seed opzionale
 
@@ -159,6 +163,11 @@ Per routing client-side su GitHub Pages, configura una fallback `404.html` ugual
 src/app/core/services      Supabase, auth, CRUD, export
 src/app/core/guards        auth.guard e admin.guard
 src/app/core/types         interfacce e costanti
+src/app/features           landing, login, dashboard e moduli MVP
+src/app/shared/components  shell e componenti UI riutilizzabili
+supabase/migrations        schema, trigger e policy RLS
+supabase/seed              seed opzionale sviluppo
+```/app/core/types         interfacce e costanti
 src/app/features           landing, login, dashboard e moduli MVP
 src/app/shared/components  shell e componenti UI riutilizzabili
 supabase/migrations        schema, trigger e policy RLS

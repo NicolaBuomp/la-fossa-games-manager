@@ -57,8 +57,8 @@ Deno.serve(async (request) => {
   }
 
   try {
-    const supabaseUrl = Deno.env.get("SUPABASE_URL");
-    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    const supabaseUrl = Deno.env.get("LFG_SUPABASE_URL");
+    const serviceRoleKey = Deno.env.get("LFG_SUPABASE_SERVICE_ROLE_KEY");
     if (!supabaseUrl || !serviceRoleKey) {
       return jsonResponse(request, 500, {
         error: "Missing server configuration",

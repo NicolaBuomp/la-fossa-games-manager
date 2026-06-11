@@ -10,8 +10,6 @@
     "sync:env:prod": "node scripts/generate-environment.cjs prod",
     "prestart": "npm run sync:sponsors && npm run sync:env",
     "start": "ng serve",
-    "start:dev": "npm run sync:sponsors && npm run sync:env:dev && ng serve --configuration development",
-    "start:prod": "npm run sync:sponsors && npm run sync:env:prod && ng serve --configuration production",
     "prebuild": "npm run sync:sponsors && npm run sync:env",
     "build": "ng build",
     "build:dev": "npm run sync:sponsors && npm run sync:env:dev && ng build --configuration development",
