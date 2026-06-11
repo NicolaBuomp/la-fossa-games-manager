@@ -15,3 +15,5 @@ supabase/.branches/**
 .vercel
 .claude/
 migration-exports/
+
+.vercel
