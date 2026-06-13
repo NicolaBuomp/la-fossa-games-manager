@@ -1,9 +1,4 @@
 import { Routes } from "@angular/router";
-import { adminGuard } from "./core/guards/admin.guard";
-import { appHomeGuard } from "./core/guards/app-home.guard";
-import { authGuard } from "./core/guards/auth.guard";
-import { treasurerGuard } from "./core/guards/treasurer.guard";
-import { ShellComponent } from "./shared/components/shell.component";
 
 export const routes: Routes = [
   {
@@ -14,111 +9,15 @@ export const routes: Routes = [
       ),
   },
   {
-    path: "login",
+    // Il gestionale è stato dismesso: tutte le sue pagine mostrano l'avviso
+    // di trasferimento al nuovo gestionale (vedi MigratedPageComponent).
+    path: "gestionale-trasferito",
     loadComponent: () =>
-      import("./features/auth/login.component").then((m) => m.LoginComponent),
+      import("./shared/components/migrated-page.component").then(
+        (m) => m.MigratedPageComponent,
+      ),
   },
-  {
-    path: "app",
-    component: ShellComponent,
-    canActivate: [authGuard],
-    children: [
-      {
-        path: "",
-        pathMatch: "full",
-        canActivate: [appHomeGuard],
-        children: [],
-      },
-      {
-        path: "dashboard",
-        loadComponent: () =>
-          import("./features/dashboard/dashboard.component").then(
-            (m) => m.DashboardComponent,
-          ),
-      },
-      {
-        path: "transactions",
-        loadComponent: () =>
-          import("./features/transactions/transactions.component").then(
-            (m) => m.TransactionsComponent,
-          ),
-      },
-      {
-        path: "fatturazione",
-        loadComponent: () =>
-          import("./features/fatturazione/fatturazione.component").then(
-            (m) => m.FatturazioneComponent,
-          ),
-      },
-      {
-        path: "tesoreria",
-        canActivate: [treasurerGuard],
-        loadComponent: () =>
-          import("./features/tesoreria/tesoreria.component").then(
-            (m) => m.TesoreriaComponent,
-          ),
-      },
-      {
-        path: "sponsors",
-        loadComponent: () =>
-          import("./features/sponsors/sponsors.component").then(
-            (m) => m.SponsorsComponent,
-          ),
-      },
-      {
-        path: "tornei",
-        loadComponent: () =>
-          import("./features/tornei/tornei-list.component").then(
-            (m) => m.TorneiListComponent,
-          ),
-      },
-      {
-        path: "tornei/:id",
-        loadComponent: () =>
-          import("./features/tornei/tornei-detail.component").then(
-            (m) => m.TorneiDetailComponent,
-          ),
-      },
-      {
-        path: "tornei/:id/squadre/:teamId",
-        loadComponent: () =>
-          import("./features/tornei/team-detail.component").then(
-            (m) => m.TeamDetailComponent,
-          ),
-      },
-      { path: "registrations", redirectTo: "tornei", pathMatch: "full" },
-      { path: "tournaments", redirectTo: "tornei", pathMatch: "full" },
-      {
-        path: "participation-requests",
-        loadComponent: () =>
-          import("./features/participation-requests/participation-requests.component").then(
-            (m) => m.ParticipationRequestsComponent,
-          ),
-      },
-      {
-        path: "profile",
-        loadComponent: () =>
-          import("./features/profile/profile.component").then(
-            (m) => m.ProfileComponent,
-          ),
-      },
-      {
-        path: "users",
-        canActivate: [adminGuard],
-        loadComponent: () =>
-          import("./features/users/users.component").then(
-            (m) => m.UsersComponent,
-          ),
-      },
-      {
-        path: "audit",
-        canActivate: [adminGuard],
-        loadComponent: () =>
-          import("./features/audit/audit.component").then(
-            (m) => m.AuditComponent,
-          ),
-      },
-    ],
-  },
+  { path: "login", redirectTo: "gestionale-trasferito", pathMatch: "full" },
+  { path: "app", redirectTo: "gestionale-trasferito", pathMatch: "prefix" },
   { path: "**", redirectTo: "" },
 ];
